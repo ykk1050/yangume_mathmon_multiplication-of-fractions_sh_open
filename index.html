@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>수학몬 마스터1.01- Monster RPG</title>
+  <title>수학몬 마스터1.02- Monster RPG</title>
   <style>
         body {
             box-sizing: border-box;
@@ -1119,7 +1119,7 @@
   <div class="app-container">
     <div class="header">
       <button class="reset-button" onclick="confirmResetGame()">🔄 초기화</button>
-      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.01</h1>
+      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.02</h1>
       <div class="title-info">
         <div class="current-title" id="currentTitle">⭐ 초보자</div>
         <div class="title-list" id="titleList">
@@ -1895,6 +1895,10 @@
     function generateProblem() {
       document.getElementById('startBtn').disabled = true; // <-- 이 줄을 추가하세요
       const problem = generateFractionProblem();
+      // 🌟🌟🌟 [핵심 수정] 이 위치에 코드를 추가합니다. 🌟🌟🌟
+      // 새로운 문제가 생성되었으므로 '총 문제 수'를 증가시킵니다.
+      gameState.totalProblems++;
+      // -----------------------------------------------------------------    
       gameState.currentProblem = problem;
       gameState.currentAnswer = problem.answer;
       document.getElementById('problem').innerHTML = problem.problemHtml;
@@ -1936,8 +1940,6 @@
             return; // 함수 종료
         }
 
-        // 🌟🌟🌟 [핵심 수정] 총 문제 수를 여기서 증가시킵니다. 🌟🌟🌟
-        gameState.totalProblems++; 
         // -----------------------------------------------------------------
 
         const userImproper = mixedToImproper(wholeInput, numeratorInput, denominatorInput);
@@ -1951,9 +1953,9 @@
             feedback.style.display = 'block';
             setTimeout(() => { feedback.style.display = 'none'; }, 2000);
             
-            // 🌟 형식 오류 발생 시 오답으로 처리
-            gameState.wrongAnswers++;
-            gameState.currentStreak = 0;
+            // 🌟 [수정 권장] 형식 오류는 '틀린 답'이 아니므로 아래 2줄을 삭제합니다.
+            //gameState.wrongAnswers++;
+            //gameState.currentStreak = 0;
             updatePracticeStats(); // 통계 업데이트
             saveData();
             
@@ -1968,9 +1970,9 @@
                 feedback.style.display = 'block';
                 setTimeout(() => { feedback.style.display = 'none'; }, 2000);
                 
-                // 🌟 형식 오류 발생 시 오답으로 처리
-                gameState.wrongAnswers++;
-                gameState.currentStreak = 0;
+                // 🌟 [수정 권장] 형식 오류는 '틀린 답'이 아니므로 아래 2줄을 삭제합니다.
+                //gameState.wrongAnswers++;
+                //gameState.currentStreak = 0;
                 updatePracticeStats(); // 통계 업데이트
                 saveData();
 

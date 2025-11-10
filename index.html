@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>수학몬 마스터1.062- Monster RPG</title>
+  <title>수학몬 마스터1.07- Monster RPG</title>
   <style>
         body {
             box-sizing: border-box;
@@ -1119,7 +1119,7 @@
   <div class="app-container">
     <div class="header">
       <button class="reset-button" onclick="confirmResetGame()">🔄 초기화</button>
-      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.062</h1>
+      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.07</h1>
       <div class="title-info">
         <div class="current-title" id="currentTitle">⭐ 초보자</div>
         <div class="title-list" id="titleList">
@@ -1616,22 +1616,30 @@
       document.getElementById('totalProblems').textContent = gameState.totalProblems;
       document.getElementById('correctAnswers').textContent = gameState.correctAnswers;
       document.getElementById('wrongAnswers').textContent = gameState.wrongAnswers;
-      // 👇 이 부분이 새로 추가됩니다.
+
+      // 👇 총 시도 횟수 계산 및 출력
       // --------------------------------------------------------------------------------
       const totalAttempts = gameState.correctAnswers + gameState.wrongAnswers;
       document.getElementById('totalAttempts').textContent = totalAttempts;
       // --------------------------------------------------------------------------------
+      
       document.getElementById('currentStreak').textContent = gameState.currentStreak;
       document.getElementById('bestStreak').textContent = gameState.bestStreak;
-      const accuracyRate = gameState.totalProblems > 0 ? Math.round((gameState.correctAnswers / gameState.totalProblems) * 100) : 0;
+      
+      // 👇 정답률 계산 로직 수정: totalProblems 대신 totalAttempts 사용
+      const accuracyRate = totalAttempts > 0 
+          ? Math.round((gameState.correctAnswers / totalAttempts) * 100) 
+          : 0;
+          
       document.getElementById('accuracyRate').textContent = accuracyRate + '%';
+      
       const streakCard = document.getElementById('currentStreakCard');
       if (gameState.currentStreak > 0) {
         streakCard.classList.add('streak');
       } else {
         streakCard.classList.remove('streak');
       }
-    }
+  }
 
     // Title System
     function checkAndUnlockTitles() {

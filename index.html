@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>test수학몬 마스터1.09- Monster RPG</title>
+  <title>수학몬 마스터1.00- Monster RPG</title>
   <style>
         body {
             box-sizing: border-box;
@@ -1119,7 +1119,7 @@
   <div class="app-container">
     <div class="header">
       <button class="reset-button" onclick="confirmResetGame()">🔄 초기화</button>
-      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.09</h1>
+      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.00</h1>
       <div class="title-info">
         <div class="current-title" id="currentTitle">⭐ 초보자</div>
         <div class="title-list" id="titleList">
@@ -1475,9 +1475,9 @@
       MAX_CAPTURE_TRAINING: 20,
       BASE_CAPTURE_RATES: {
         common: 40,
-        rare: 30,
-        epic: 20,
-        legendary: 10
+        rare: 20,
+        epic: 10,
+        legendary: 5
       },
       BALL_MULTIPLIERS: {
         monster_ball: 1.0,
@@ -1486,8 +1486,8 @@
         master_ball: 2.2
       },
       SPAWN_RATES: {
-        normal: { common: 60, rare: 25, epic: 12, legendary: 3 },
-        withFinder: { common: 40, rare: 30, epic: 20, legendary: 10 }
+        normal: { common: 60, rare: 29, epic: 10, legendary: 1 },
+        withFinder: { common: 50, rare: 29, epic: 16, legendary: 5 }
       }
     };
 
@@ -1561,7 +1561,7 @@
       { id: 'super_ball', name: '🔵 슈퍼볼', description: '포획볼보다 포획률이 높다.', price: 100, type: 'ball', power: 10 },
       { id: 'hyper_ball', name: '🟣 하이퍼볼', description: '슈퍼볼보다 포획률이 높다.', price: 250, type: 'ball', power: 14 },
       { id: 'master_ball', name: '🟡 마스터볼', description: '포획 확률이 가장 높다.', price: 500, type: 'ball', power: 25 },
-      { id: 'rare_finder', name: '🔍 레어 탐지기', description: '일반 환상 동물의 등장 확률을 낮추고(60%→40%), 레어(25%→30%), 에픽(12%→20%), 전설(3%→10%) 등급의 희귀 환상 동물 등장 확률을 높여줍니다.', price: 700, type: 'skill' },
+      { id: 'rare_finder', name: '🔍 레어 탐지기', description: '일반 환상 동물의 등장 확률을 낮추고(60%→50%), 레어(29%→29%), 에픽(10%→16%), 전설(1%→5%) 등급의 희귀 환상 동물 등장 확률을 높여줍니다.', price: 700, type: 'skill' },
       { id: 'capture_training', name: '💪 포획 자세 연습', description: '포획률을 영구적으로 2% 높여줍니다. (최대 10회까지 구매 가능)', price: 100, type: 'training' }
     ];
 

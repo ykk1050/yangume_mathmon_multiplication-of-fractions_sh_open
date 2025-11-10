@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>수학몬 마스터1.071- Monster RPG</title>
+  <title>수학몬 마스터1.072- Monster RPG</title>
   <style>
         body {
             box-sizing: border-box;
@@ -1119,7 +1119,7 @@
   <div class="app-container">
     <div class="header">
       <button class="reset-button" onclick="confirmResetGame()">🔄 초기화</button>
-      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.071</h1>
+      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.072</h1>
       <div class="title-info">
         <div class="current-title" id="currentTitle">⭐ 초보자</div>
         <div class="title-list" id="titleList">
@@ -1499,7 +1499,7 @@
       { name: '수학 학자', emoji: '🎓', requirement: '문제 50개 해결', check: () => gameState.totalProblems >= 50 },
       { name: '수학 마스터', emoji: '🧠', requirement: '문제 100개 해결', check: () => gameState.totalProblems >= 100 },
       { name: '수학 천재', emoji: '⚡', requirement: '문제 200개 해결', check: () => gameState.totalProblems >= 200 },
-      { name: '정확한 사수', emoji: '🎯', requirement: '정답률 90% 이상 (20문제 이상)', check: () => gameState.totalProblems >= 20 && (gameState.correctAnswers / gameState.totalProblems) >= 0.9 },
+      { name: '정확한 사수', emoji: '🎯', requirement: '정답률 90% 이상 (20문제 이상)', check: () => gameState.totalProblems >= 20 && (gameState.correctAnswers / totalAttempts) >= 0.9 },
       { name: '연속 달성자', emoji: '🔥', requirement: '연속 정답 5회', check: () => gameState.bestStreak >= 5 },
       { name: '연속 마스터', emoji: '🌟', requirement: '연속 정답 10회', check: () => gameState.bestStreak >= 10 },
       { name: '부자', emoji: '💰', requirement: '코인 1000개 보유', check: () => gameState.coins >= 1000 },

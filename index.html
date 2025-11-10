@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>수학몬 마스터1.00- Monster RPG</title>
+  <title>수학몬 마스터1.01- Monster RPG</title>
   <style>
         body {
             box-sizing: border-box;
@@ -1119,7 +1119,7 @@
   <div class="app-container">
     <div class="header">
       <button class="reset-button" onclick="confirmResetGame()">🔄 초기화</button>
-      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.00</h1>
+      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.01</h1>
       <div class="title-info">
         <div class="current-title" id="currentTitle">⭐ 초보자</div>
         <div class="title-list" id="titleList">
@@ -1999,14 +1999,25 @@
             if (gameState.currentStreak > gameState.bestStreak) {
                 gameState.bestStreak = gameState.currentStreak;
             }
-            
-            // NEW BALANCE: 30 coins base + 100 coins every 3 streak
+
             const baseCoins = GAME_BALANCE.COIN_PER_PROBLEM;
-            const streakBonus = Math.floor(gameState.currentStreak / GAME_BALANCE.STREAK_BONUS_INTERVAL) * GAME_BALANCE.STREAK_BONUS_AMOUNT;
-            const totalCoins = baseCoins + streakBonus;
-            
-            feedback.textContent = `🎉 정답! (+${totalCoins} 코인)${streakBonus > 0 ? ` 🔥 연속 보너스 +${streakBonus}!` : ''}`;
-            feedback.className = 'feedback correct';
+        
+            // [수정] 현재 연속 정답 횟수가 3의 배수인지 확인합니다. (나머지 연산자 % 사용)
+            const isBonusStreak = (gameState.currentStreak % GAME_BALANCE.STREAK_BONUS_INTERVAL === 0);
+            
+            // [수정] 3의 배수일 때만 100코인을 streakBonus로 설정합니다. (누적 X)
+            const streakBonus = isBonusStreak ? GAME_BALANCE.STREAK_BONUS_AMOUNT : 0;
+            const totalCoins = baseCoins + streakBonus;
+            
+            // [수정] 요청하신 문구로 변경
+            if (isBonusStreak) {
+                // 3, 6, 9회 등 보너스 획득 시 문구
+                feedback.textContent = `💰 기본 코인 ${baseCoins}개 + 보너스 코인 ${streakBonus}개 획득!`;
+            } else {
+                // 1, 2, 4, 5회 등 기본 획득 시 문구
+                feedback.textContent = `💰 기본 코인 ${baseCoins}개 획득! ${GAME_BALANCE.STREAK_BONUS_INTERVAL}연속 정답 시 보너스 코인 추가!`;
+            }
+            feedback.className = 'feedback correct';          
             
             if (gameState.infiniteCoinsEnabled) {
                 gameState.coins = 9999;

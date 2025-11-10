@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>수학몬 마스터1.051- Monster RPG</title>
+  <title>수학몬 마스터1.06- Monster RPG</title>
   <style>
         body {
             box-sizing: border-box;
@@ -1119,7 +1119,7 @@
   <div class="app-container">
     <div class="header">
       <button class="reset-button" onclick="confirmResetGame()">🔄 초기화</button>
-      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.051</h1>
+      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.06</h1>
       <div class="title-info">
         <div class="current-title" id="currentTitle">⭐ 초보자</div>
         <div class="title-list" id="titleList">
@@ -1151,6 +1151,10 @@
             <div class="stat-card"><h4>총 문제 수</h4><div class="value" id="totalProblems">0</div></div>
             <div class="stat-card"><h4>정답 횟수</h4><div class="value" id="correctAnswers">0</div></div>
             <div class="stat-card"><h4>오답 횟수</h4><div class="value" id="wrongAnswers">0</div></div>
+            <div class="stat-card">
+            <h4>총 시도 횟수</h4>
+            <div class="value" id="totalAttempts">0</div>
+        </div>
             <div class="stat-card streak" id="currentStreakCard"><h4>연속 정답 🔥</h4><div class="value" id="currentStreak">0</div></div>
             <div class="stat-card"><h4>최고 연속</h4><div class="value" id="bestStreak">0</div></div>
             <div class="stat-card"><h4>정답률</h4><div class="value" id="accuracyRate">0%</div></div>
@@ -1614,6 +1618,11 @@
       document.getElementById('totalProblems').textContent = gameState.totalProblems;
       document.getElementById('correctAnswers').textContent = gameState.correctAnswers;
       document.getElementById('wrongAnswers').textContent = gameState.wrongAnswers;
+      // 👇 이 부분이 새로 추가됩니다.
+      // --------------------------------------------------------------------------------
+      const totalAttempts = gameState.correctAnswers + gameState.wrongAnswers;
+      document.getElementById('totalAttempts').textContent = totalAttempts;
+      // --------------------------------------------------------------------------------
       document.getElementById('currentStreak').textContent = gameState.currentStreak;
       document.getElementById('bestStreak').textContent = gameState.bestStreak;
       const accuracyRate = gameState.totalProblems > 0 ? Math.round((gameState.correctAnswers / gameState.totalProblems) * 100) : 0;

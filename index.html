@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>수학몬 마스터1.03- Monster RPG</title>
+  <title>수학몬 마스터1.04- Monster RPG</title>
   <style>
         body {
             box-sizing: border-box;
@@ -1119,7 +1119,7 @@
   <div class="app-container">
     <div class="header">
       <button class="reset-button" onclick="confirmResetGame()">🔄 초기화</button>
-      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.03</h1>
+      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.04</h1>
       <div class="title-info">
         <div class="current-title" id="currentTitle">⭐ 초보자</div>
         <div class="title-list" id="titleList">
@@ -2131,20 +2131,24 @@
         return;
       }
 
-      const exploreCost = 15; // 탐색 비용
+      // --- 👇👇👇 [업그레이드] 15 골드 소모 로직 (간결화) 👇👇👇 ---
+      const exploreCost = 15; // 탐색 비용
+      
+      // 2. 골드 부족 시 실행 중단
       if (gameState.coins < exploreCost) {
           showNotification(`❌ 탐색 비용 ${exploreCost}골드가 부족합니다!`);
           return; // 골드 부족으로 함수 실행 중단
       }
       
-      // 골드 차감 및 UI 업데이트
+      // 3. 골드 차감 (setCoins 방식 대신 gameState 직접 수정 및 UI 갱신)
       gameState.coins -= exploreCost;
       updateUI(); // 코인 UI 즉시 업데이트
+      // -----------------------------------------------------------------
+
+      // 4. 탐색/포획 로직 진행
       
       document.getElementById('explorationPhase').style.display = 'none';
       
-
-
       document.getElementById('capturePhase').style.display = 'block';
       
       // NEW BALANCE: Updated spawn rates

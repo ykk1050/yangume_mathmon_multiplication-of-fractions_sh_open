@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>수학몬 마스터1.02- Monster RPG</title>
+  <title>수학몬 마스터1.03- Monster RPG</title>
   <style>
         body {
             box-sizing: border-box;
@@ -2130,8 +2130,21 @@
         showNotification('포획볼이 없습니다! 상점에서 포획볼을 구매하세요.');
         return;
       }
+
+      const exploreCost = 15; // 탐색 비용
+      if (gameState.coins < exploreCost) {
+          showNotification(`❌ 탐색 비용 ${exploreCost}골드가 부족합니다!`);
+          return; // 골드 부족으로 함수 실행 중단
+      }
+      
+      // 골드 차감 및 UI 업데이트
+      gameState.coins -= exploreCost;
+      updateUI(); // 코인 UI 즉시 업데이트
       
       document.getElementById('explorationPhase').style.display = 'none';
+      
+
+
       document.getElementById('capturePhase').style.display = 'block';
       
       // NEW BALANCE: Updated spawn rates

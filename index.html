@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>수학몬 마스터1.072- Monster RPG</title>
+  <title>수학몬 마스터1.08- Monster RPG</title>
   <style>
         body {
             box-sizing: border-box;
@@ -1119,7 +1119,7 @@
   <div class="app-container">
     <div class="header">
       <button class="reset-button" onclick="confirmResetGame()">🔄 초기화</button>
-      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.072</h1>
+      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.08</h1>
       <div class="title-info">
         <div class="current-title" id="currentTitle">⭐ 초보자</div>
         <div class="title-list" id="titleList">
@@ -1308,22 +1308,22 @@
                 <tr>
                   <td><strong>일반</strong></td>
                   <td>60%</td>
-                  <td>40%</td>
+                  <td>50%</td>
                 </tr>
                 <tr>
                   <td><strong>레어</strong></td>
-                  <td>25%</td>
-                  <td>30%</td>
+                  <td>29%</td>
+                  <td>29%</td>
                 </tr>
                 <tr>
                   <td><strong>에픽</strong></td>
-                  <td>12%</td>
-                  <td>20%</td>
+                  <td>10%</td>
+                  <td>16%</td>
                 </tr>
                 <tr>
                   <td><strong>전설</strong></td>
-                  <td>3%</td>
-                  <td>10%</td>
+                  <td>1%</td>
+                  <td>5%</td>
                 </tr>
               </tbody>
             </table>
@@ -2453,7 +2453,7 @@
         m.name === gameState.currentMonster.name && m.rarity === gameState.currentMonster.rarity
       );
       
-      const coinReward = { common: 20, rare: 50, epic: 100, legendary: 200 }[gameState.currentMonster.rarity];
+      const coinReward = { common: 100, rare: 130, epic: 330, legendary: 530 }[gameState.currentMonster.rarity];
       
       if (isDuplicate) {
         // 중복 포획: 코인만 획득, 통계에는 포함하지 않음

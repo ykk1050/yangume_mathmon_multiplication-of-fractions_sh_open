@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>수학몬 마스터1.08- Monster RPG</title>
+  <title>수학몬 마스터1.09- Monster RPG</title>
   <style>
         body {
             box-sizing: border-box;
@@ -1119,7 +1119,7 @@
   <div class="app-container">
     <div class="header">
       <button class="reset-button" onclick="confirmResetGame()">🔄 초기화</button>
-      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.08</h1>
+      <h1 class="app-title">수학몬 마스터_분수의 곱셈1.09</h1>
       <div class="title-info">
         <div class="current-title" id="currentTitle">⭐ 초보자</div>
         <div class="title-list" id="titleList">
@@ -1169,7 +1169,7 @@
             </div>
             <button class="btn btn-primary" onclick="checkAnswer()" id="submitBtn" disabled>확인</button>
           </div>
-          <p class="instruction-text">※ 답은 기약분수 형태로 입력해주세요</p>
+          <p class="instruction-text">※ 답은 기약분수 형태로 입력해주세요, 가끔 정답이 맞는데 틀렸다고 하는 경우가 있습니다. 그 경우 새로 접속해주세요.</p>
           <div id="feedback" class="feedback" style="display: none;"></div>
           <button class="btn btn-success" id="startBtn" onclick="generateProblem()">시작</button>
         </div>
@@ -1218,7 +1218,7 @@
                   </div>
                 </div>
                 <button class="btn btn-primary" id="captureSubmitBtn" onclick="submitCaptureAnswer()">포획 시도</button>              </div>
-              <p class="instruction-text">※ 답은 기약분수 형태로 입력해주세요</p>
+              <p class="instruction-text">※ 답은 기약분수 형태로 입력해주세요, 가끔 정답이 맞는데 틀렸다고 하는 경우가 있습니다. 그 경우 새로 접속해주세요.</p>
               <div id="captureQuizFeedback" class="feedback" style="display: none;"></div>
             </div>
             <button class="btn btn-danger" onclick="resetCapture()">포기하고 돌아가기</button>
@@ -1336,6 +1336,9 @@
               <button class="btn btn-cheat-inactive" onclick="toggleInfiniteCoins()">
                 <span id="coinCheatStatus">무한 코인: OFF</span>
               </button>
+              <button class="btn btn-cheat-inactive" onclick="toggleShowAnswers()">
+                <span id="answerCheatStatus">정답 미리보기: OFF</span>
+              </button>
             </div>
           </div>
 
@@ -1465,6 +1468,7 @@
       currentMonster: null,
       isAdminLoggedIn: false,
       infiniteCoinsEnabled: false,
+      showAnswers: false,
       captureTrainingLevel: 0
     };
 
@@ -1722,189 +1726,343 @@
     }
 
     // Fraction Math Functions
+    // ✅ 개선된 gcd 함수
     function gcd(a, b) {
-      return b === 0 ? a : gcd(b, a % b);
+    a = Math.round(Math.abs(a));
+    b = Math.round(Math.abs(b));
+    
+    if (a === 0) return b || 1;
+    if (b === 0) return a || 1;
+    
+    return gcd(b, a % b);
+}
+
+    
+    // function gcd(a, b) {
+    //     // 입력 단계에서 확실하게 정수로 변환
+    //     a = Math.round(Math.abs(a));
+    //     b = Math.round(Math.abs(b));
+        
+    //     // 0 처리
+    //     if (b === 0) return a || 1; // a도 0이면 1 반환
+        
+    //     return gcd(b, a % b);
+    // }
+
+    // ✅ 개선된 reduceFraction 함수
+    function reduceFraction(numerator, denominator) {
+    // ⭐ 핵심: 입력 단계에서 강제로 정수화
+    numerator = Math.round(numerator);
+    denominator = Math.round(denominator);
+    
+    // 0으로 나누는 경우 방지
+    if (denominator === 0) return { numerator: 0, denominator: 1 };
+    
+    // 분모가 음수일 경우 부호를 분자로 이동
+    if (denominator < 0) {
+        numerator = -numerator;
+        denominator = -denominator;
+    }
+    
+    // 0/n = 0/1로 정규화
+    if (numerator === 0) {
+        return { numerator: 0, denominator: 1 };
     }
 
-    function reduceFraction(numerator, denominator) {
-      // 0으로 나누는 경우 방지
-      if (denominator === 0) return { numerator: numerator, denominator: 0 };
-      
-      // 최대공약수 (GCD)를 구함
-      const g = gcd(Math.abs(numerator), Math.abs(denominator));
-      
-      // 🚨 [수정]: 나눗셈 결과를 반드시 정수로 반올림하여 부동 소수점 오류를 방지합니다.
-      return { 
-          numerator: Math.round(numerator / g), 
-          denominator: Math.round(denominator / g) 
-      };
-  }
+    // function reduceFraction(numerator, denominator) {
+    //     // ⭐ 핵심: 입력 단계에서 먼저 정수화
+    //     numerator = Math.round(numerator);
+    //     denominator = Math.round(denominator);
+        
+    //     // 0으로 나누는 경우 방지
+    //     if (denominator === 0) return { numerator: numerator, denominator: 1 };
+        
+    //     // 분모가 음수일 경우 부호를 분자로 이동
+    //     if (denominator < 0) {
+    //         numerator = -numerator;
+    //         denominator = -denominator;
+    //     }
+        // GCD 계산
+        const g = gcd(numerator, denominator);
+        
+        // ⭐ 이미 정수이므로 Math.round 불필요 (하지만 안전장치로 유지 가능)
+        const num = Math.round(numerator / g);
+        const den = Math.round(denominator / g);
+        
+        // ⭐ 이미 정수이므로 나눗셈 결과도 정수 (Math.round 불필요)
+        return {
+            numerator: numerator / g,
+            denominator: denominator / g
+        };
 
+        // return {
+        //     numerator: num,
+        //     denominator: den
+        // };
+    }
+
+
+//     function reduceFraction(numerator, denominator) {
+//         // [수정] 0으로 나누는 경우 방지
+//         if (denominator === 0) return { numerator: numerator, denominator: 0 };
+//         
+//         const g = gcd(numerator, denominator);
+//         
+//         // 🚨 [핵심 수정] 나눗셈 결과를 Math.round()로 감싸 강제로 "정수"로 만듭니다.
+//         let num = Math.round(numerator / g);
+//         let den = Math.round(denominator / g);
+//         
+//         // [수정] 분모가 음수일 경우 부호를 분자로 넘깁니다.
+//         if (den < 0) {
+//             num = -num;
+//             den = -den;
+//         }
+//         
+//         return { 
+//             numerator: num, 
+//             denominator: den 
+//         };
+//     }
+  // ✅ mixedToImproper도 개선
   function mixedToImproper(whole, numerator, denominator) {
-      if (denominator === 0) return { numerator: 0, denominator: 0 };
+      // ⭐ 입력 단계에서 정수화
+      whole = Math.round(whole);
+      numerator = Math.round(numerator);
+      denominator = Math.round(denominator);
       
-      // 입력 값에 미세한 소수점 오차가 있을 수 있으므로 정수로 처리합니다.
-      const w = Math.round(whole);
-      const n = Math.round(numerator);
-      const d = Math.round(denominator);
+      if (denominator === 0) return { numerator: 0, denominator: 1 };
+      
+      const num = whole * denominator + numerator;
+      return { numerator: num, denominator: denominator };
+  }  
 
-      const num = w * d + n;
-      return { numerator: num, denominator: d };
-  }
+//   function mixedToImproper(whole, numerator, denominator) {
+//       if (denominator === 0) return { numerator: 0, denominator: 0 };
+      
+//       // [수정] 모든 입력을 정수화하여 계산
+//       const w = Math.round(whole);
+//       const n = Math.round(numerator);
+//       const d = Math.round(denominator);
 
+//       const num = w * d + n;
+//       return { numerator: num, denominator: d };
+//   }
+  // ✅ 개선된 improperToMixed 함수
   function improperToMixed(numerator, denominator) {
-      if (denominator === 0) return { whole: 0, numerator: 0, denominator: 0 };
+      // ⭐ 입력 단계에서 정수화
+      numerator = Math.round(numerator);
+      denominator = Math.round(denominator);
       
-      // 입력 값에 미세한 소수점 오차가 있을 수 있으므로 정수로 처리합니다.
-      const num = Math.round(numerator);
-      const den = Math.round(denominator);
-
-      const whole = Math.floor(num / den);
-      const newNumerator = num % den;
+      if (denominator === 0) return { whole: 0, numerator: 0, denominator: 1 };
       
-      // 나머지 분수 부분은 reduceFraction을 통해 기약분수로 만듭니다.
-      const reducedRemainder = reduceFraction(newNumerator, den);
+      // 음수 처리
+      const isNegative = (numerator < 0) !== (denominator < 0);
+      numerator = Math.abs(numerator);
+      denominator = Math.abs(denominator);
       
-      return { 
-          whole: whole, 
-          numerator: reducedRemainder.numerator, 
-          denominator: reducedRemainder.denominator 
+      const whole = Math.floor(numerator / denominator);
+      const newNumerator = numerator % denominator;
+      
+      // 나머지 부분 기약분수로
+      const reducedRemainder = reduceFraction(newNumerator, denominator);
+      
+      return {
+          whole: isNegative ? -whole : whole,
+          numerator: reducedRemainder.numerator,
+          denominator: reducedRemainder.denominator
       };
   }
+
+//   function improperToMixed(numerator, denominator) {
+//       if (denominator === 0) return { whole: 0, numerator: 0, denominator: 0 };
+      
+//       // [수정] 모든 입력을 정수화하여 계산
+//       const num = Math.round(numerator);
+//       const den = Math.round(denominator);
+
+//       const whole = Math.floor(num / den);
+//       const newNumerator = num % den;
+
+
+//       // // 입력 값에 미세한 소수점 오차가 있을 수 있으므로 정수로 처리합니다.
+//       // const num = Math.round(numerator);
+//       // const den = Math.round(denominator);
+
+//       // const whole = Math.floor(num / den);
+//       // const newNumerator = num % den;
+//       // [수정] 나머지 분수 부분은 reduceFraction을 통해 (정수화된) 기약분수로 만듭니다.
+//       const reducedRemainder = reduceFraction(newNumerator, den);
+//         
+//       return { 
+//           whole: whole, 
+//           numerator: reducedRemainder.numerator, 
+//           denominator: reducedRemainder.denominator 
+//       };
+//   }
+    //
+
 
     function generateFractionProblem() {
-      let problemHtml, answer, answerMixed;
-      let attempts = 0;
-      const maxAttempts = 100;
-      
-      do {
-        attempts++;
-        if (attempts > maxAttempts) {
-          // Fallback to guaranteed proper fraction
-          const frac1 = { numerator: 1, denominator: 3 };
-          const frac2 = { numerator: 2, denominator: 5 };
-          problemHtml = `<div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> × <div class="fraction-display"><span>${frac2.numerator}</span><div class="fraction-line"></div><span>${frac2.denominator}</span></div> = ?`;
-          answer = reduceFraction(frac1.numerator * frac2.numerator, frac1.denominator * frac2.denominator);
-          answerMixed = improperToMixed(answer.numerator, answer.denominator);
-          break;
-        }
+        let problemHtml, answer, answerMixed;
+        let attempts = 0;
+        const maxAttempts = 100;
         
-        const type = Math.floor(Math.random() * 6); // 6 types of problems
+        do {
+            attempts++;
+            if (attempts > maxAttempts) {
+                // Fallback to guaranteed proper fraction
+                const frac1 = { numerator: 1, denominator: 3 };
+                const frac2 = { numerator: 2, denominator: 5 };
+                problemHtml = `<div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> × <div class="fraction-display"><span>${frac2.numerator}</span><div class="fraction-line"></div><span>${frac2.denominator}</span></div> = ?`;
+                
+                let num = Math.round(frac1.numerator) * Math.round(frac2.numerator);
+                let den = Math.round(frac1.denominator) * Math.round(frac2.denominator);
+                answer = reduceFraction(num, den);
+                
+                answerMixed = improperToMixed(answer.numerator, answer.denominator);
+                break;
+            }
+            
+            const type = Math.floor(Math.random() * 6); // 6 types of problems
+            
+            if (type === 0) {
+                // Proper Fraction × Proper Fraction
+                let frac1, frac2;
+                do {
+                    frac1 = { 
+                        numerator: Math.floor(Math.random() * 8) + 1, 
+                        denominator: Math.floor(Math.random() * 8) + 2 
+                    };
+                } while (frac1.numerator >= frac1.denominator);
+                
+                do {
+                    frac2 = { 
+                        numerator: Math.floor(Math.random() * 8) + 1, 
+                        denominator: Math.floor(Math.random() * 8) + 2 
+                    };
+                } while (frac2.numerator >= frac2.denominator);
+                
+                problemHtml = `<div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> × <div class="fraction-display"><span>${frac2.numerator}</span><div class="fraction-line"></div><span>${frac2.denominator}</span></div> = ?`;
+                
+                let num = Math.round(frac1.numerator) * Math.round(frac2.numerator);
+                let den = Math.round(frac1.denominator) * Math.round(frac2.denominator);
+                answer = reduceFraction(num, den);
+                
+            } else if (type === 1) {
+                // Mixed Number × Proper Fraction
+                let mixed1, frac1;
+                do {
+                    mixed1 = { 
+                        whole: Math.floor(Math.random() * 3) + 1, 
+                        numerator: Math.floor(Math.random() * 4) + 1, 
+                        denominator: Math.floor(Math.random() * 4) + 2 
+                    };
+
+                    // 🔧 분수 부분을 기약분수로 만들기
+                    const reduced = reduceFraction(mixed1.numerator, mixed1.denominator);
+                    mixed1.numerator = reduced.numerator;
+                    mixed1.denominator = reduced.denominator;
+
+                } while (mixed1.numerator >= mixed1.denominator);
+                
+                do {
+                    frac1 = { 
+                        numerator: Math.floor(Math.random() * 8) + 1, 
+                        denominator: Math.floor(Math.random() * 8) + 2 
+                    };
+                } while (frac1.numerator >= frac1.denominator);
+                
+                problemHtml = `<div class="mixed-number">${mixed1.whole}<div class="fraction-display"><span>${mixed1.numerator}</span><div class="fraction-line"></div><span>${mixed1.denominator}</span></div></div> × <div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> = ?`;
+                
+                const imp1 = mixedToImproper(mixed1.whole, mixed1.numerator, mixed1.denominator);
+                let num = Math.round(imp1.numerator) * Math.round(frac1.numerator);
+                let den = Math.round(imp1.denominator) * Math.round(frac1.denominator);
+                answer = reduceFraction(num, den);
+                
+            } else if (type === 2) {
+                // Natural Number × Proper Fraction
+                const nat1 = Math.floor(Math.random() * 7) + 2;
+                let frac1;
+                do {
+                    frac1 = { 
+                        numerator: Math.floor(Math.random() * 8) + 1, 
+                        denominator: Math.floor(Math.random() * 8) + 2 
+                    };
+                } while (frac1.numerator >= frac1.denominator);
+                
+                problemHtml = `${nat1} × <div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> = ?`;
+                
+                let num = Math.round(nat1) * Math.round(frac1.numerator);
+                let den = Math.round(frac1.denominator);
+                answer = reduceFraction(num, den);
+                
+            } else if (type === 3) {
+                // Proper Fraction × Natural Number
+                let frac1;
+                do {
+                    frac1 = { 
+                        numerator: Math.floor(Math.random() * 8) + 1, 
+                        denominator: Math.floor(Math.random() * 8) + 2 
+                    };
+                } while (frac1.numerator >= frac1.denominator);
+                
+                const nat1 = Math.floor(Math.random() * 7) + 2;
+                problemHtml = `<div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> × ${nat1} = ?`;
+                
+                let num = Math.round(frac1.numerator) * Math.round(nat1);
+                let den = Math.round(frac1.denominator);
+                answer = reduceFraction(num, den);
+                
+            } else if (type === 4) {
+                // Natural Number × Mixed Number
+                const nat1 = Math.floor(Math.random() * 5) + 2;
+                let mixed1;
+                do {
+                    mixed1 = { 
+                        whole: Math.floor(Math.random() * 3) + 1, 
+                        numerator: Math.floor(Math.random() * 4) + 1, 
+                        denominator: Math.floor(Math.random() * 4) + 2 
+                    };
+                } while (mixed1.numerator >= mixed1.denominator);
+                
+                problemHtml = `${nat1} × <div class="mixed-number">${mixed1.whole}<div class="fraction-display"><span>${mixed1.numerator}</span><div class="fraction-line"></div><span>${mixed1.denominator}</span></div></div> = ?`;
+                
+                const imp1 = mixedToImproper(mixed1.whole, mixed1.numerator, mixed1.denominator);
+                let num = Math.round(nat1) * Math.round(imp1.numerator);
+                let den = Math.round(imp1.denominator);
+                answer = reduceFraction(num, den);
+                
+            } else {
+                // Mixed Number × Natural Number
+                let mixed1;
+                do {
+                    mixed1 = { 
+                        whole: Math.floor(Math.random() * 3) + 1, 
+                        numerator: Math.floor(Math.random() * 4) + 1, 
+                        denominator: Math.floor(Math.random() * 4) + 2 
+                    };
+                } while (mixed1.numerator >= mixed1.denominator);
+                
+                const nat1 = Math.floor(Math.random() * 5) + 2;
+                problemHtml = `<div class="mixed-number">${mixed1.whole}<div class="fraction-display"><span>${mixed1.numerator}</span><div class="fraction-line"></div><span>${mixed1.denominator}</span></div></div> × ${nat1} = ?`;
+                
+                const imp1 = mixedToImproper(mixed1.whole, mixed1.numerator, mixed1.denominator);
+                let num = Math.round(imp1.numerator) * Math.round(nat1);
+                let den = Math.round(imp1.denominator);
+                answer = reduceFraction(num, den);
+            }
+            
+            // Calculate answer as mixed number for validation
+            answerMixed = improperToMixed(answer.numerator, answer.denominator);
+            
+        } while (
+            answer.denominator === 1 || // Whole number answer (e.g., 8/8 = 1)
+            (answerMixed.whole > 0 && answerMixed.numerator >= answerMixed.denominator) || // Improper fraction part in mixed number
+            (answerMixed.numerator === 0 && answerMixed.whole > 0) // Pure whole number (e.g., 3 0/1)
+        );
         
-        if (type === 0) {
-          // Proper Fraction × Proper Fraction
-          let frac1, frac2;
-          do {
-            frac1 = { 
-              numerator: Math.floor(Math.random() * 8) + 1, 
-              denominator: Math.floor(Math.random() * 8) + 2 
-            };
-          } while (frac1.numerator >= frac1.denominator);
-          
-          do {
-            frac2 = { 
-              numerator: Math.floor(Math.random() * 8) + 1, 
-              denominator: Math.floor(Math.random() * 8) + 2 
-            };
-          } while (frac2.numerator >= frac2.denominator);
-          
-          problemHtml = `<div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> × <div class="fraction-display"><span>${frac2.numerator}</span><div class="fraction-line"></div><span>${frac2.denominator}</span></div> = ?`;
-          answer = reduceFraction(frac1.numerator * frac2.numerator, frac1.denominator * frac2.denominator);
-          
-        } else if (type === 1) {
-          // Mixed Number × Proper Fraction
-          let mixed1, frac1;
-          do {
-            mixed1 = { 
-              whole: Math.floor(Math.random() * 3) + 1, 
-              numerator: Math.floor(Math.random() * 4) + 1, 
-              denominator: Math.floor(Math.random() * 4) + 2 
-            };
-          } while (mixed1.numerator >= mixed1.denominator);
-          
-          do {
-            frac1 = { 
-              numerator: Math.floor(Math.random() * 8) + 1, 
-              denominator: Math.floor(Math.random() * 8) + 2 
-            };
-          } while (frac1.numerator >= frac1.denominator);
-          
-          problemHtml = `<div class="mixed-number">${mixed1.whole}<div class="fraction-display"><span>${mixed1.numerator}</span><div class="fraction-line"></div><span>${mixed1.denominator}</span></div></div> × <div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> = ?`;
-          const imp1 = mixedToImproper(mixed1.whole, mixed1.numerator, mixed1.denominator);
-          answer = reduceFraction(imp1.numerator * frac1.numerator, imp1.denominator * frac1.denominator);
-          
-        } else if (type === 2) {
-          // Natural Number × Proper Fraction
-          const nat1 = Math.floor(Math.random() * 7) + 2;
-          let frac1;
-          do {
-            frac1 = { 
-              numerator: Math.floor(Math.random() * 8) + 1, 
-              denominator: Math.floor(Math.random() * 8) + 2 
-            };
-          } while (frac1.numerator >= frac1.denominator);
-          
-          problemHtml = `${nat1} × <div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> = ?`;
-          answer = reduceFraction(nat1 * frac1.numerator, frac1.denominator);
-          
-        } else if (type === 3) {
-          // Proper Fraction × Natural Number
-          let frac1;
-          do {
-            frac1 = { 
-              numerator: Math.floor(Math.random() * 8) + 1, 
-              denominator: Math.floor(Math.random() * 8) + 2 
-            };
-          } while (frac1.numerator >= frac1.denominator);
-          
-          const nat1 = Math.floor(Math.random() * 7) + 2;
-          problemHtml = `<div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> × ${nat1} = ?`;
-          answer = reduceFraction(frac1.numerator * nat1, frac1.denominator);
-          
-        } else if (type === 4) {
-          // Natural Number × Mixed Number
-          const nat1 = Math.floor(Math.random() * 5) + 2;
-          let mixed1;
-          do {
-            mixed1 = { 
-              whole: Math.floor(Math.random() * 3) + 1, 
-              numerator: Math.floor(Math.random() * 4) + 1, 
-              denominator: Math.floor(Math.random() * 4) + 2 
-            };
-          } while (mixed1.numerator >= mixed1.denominator);
-          
-          problemHtml = `${nat1} × <div class="mixed-number">${mixed1.whole}<div class="fraction-display"><span>${mixed1.numerator}</span><div class="fraction-line"></div><span>${mixed1.denominator}</span></div></div> = ?`;
-          const imp1 = mixedToImproper(mixed1.whole, mixed1.numerator, mixed1.denominator);
-          answer = reduceFraction(nat1 * imp1.numerator, imp1.denominator);
-          
-        } else {
-          // Mixed Number × Natural Number
-          let mixed1;
-          do {
-            mixed1 = { 
-              whole: Math.floor(Math.random() * 3) + 1, 
-              numerator: Math.floor(Math.random() * 4) + 1, 
-              denominator: Math.floor(Math.random() * 4) + 2 
-            };
-          } while (mixed1.numerator >= mixed1.denominator);
-          
-          const nat1 = Math.floor(Math.random() * 5) + 2;
-          problemHtml = `<div class="mixed-number">${mixed1.whole}<div class="fraction-display"><span>${mixed1.numerator}</span><div class="fraction-line"></div><span>${mixed1.denominator}</span></div></div> × ${nat1} = ?`;
-          const imp1 = mixedToImproper(mixed1.whole, mixed1.numerator, mixed1.denominator);
-          answer = reduceFraction(imp1.numerator * nat1, imp1.denominator);
-        }
-        
-        // Calculate answer as mixed number for validation
-        answerMixed = improperToMixed(answer.numerator, answer.denominator);
-        
-      } while (
-        answer.denominator === 1 || // Whole number answer (e.g., 8/8 = 1)
-        (answerMixed.whole > 0 && answerMixed.numerator >= answerMixed.denominator) || // Improper fraction part in mixed number
-        (answerMixed.numerator === 0 && answerMixed.whole > 0) // Pure whole number (e.g., 3 0/1)
-      );
-      
-      return { problemHtml, answer };
-    }
+        return { problemHtml, answer };
+    }       
 
     // Practice Functions
     function generateProblem() {
@@ -1925,7 +2083,27 @@
       document.getElementById('numeratorInput').value = '';
       document.getElementById('denominatorInput').value = '';
       document.getElementById('wholeInput').focus();
-      document.getElementById('feedback').style.display = 'none';
+      // --- [수정] 관리자 모드 정답 미리보기 로직 ---
+      const feedbackEl = document.getElementById('feedback');
+      if (gameState.showAnswers) {
+          // 관리자 모드가 켜져있으면 정답을 계산하여 표시합니다.
+          const answer = gameState.currentAnswer;
+          const mixed = improperToMixed(answer.numerator, answer.denominator);
+          
+          let answerString = "";
+          if (mixed.whole > 0) answerString += `${mixed.whole} `;
+          if (mixed.numerator > 0) answerString += `${mixed.numerator}/${mixed.denominator}`;
+          if (answerString === "") answerString = "0"; // 0일 경우
+
+          feedbackEl.textContent = `[ADMIN] 정답: ${answerString} (가분수: ${answer.numerator}/${answer.denominator})`;
+          feedbackEl.className = 'feedback admin-info'; // (CSS 스타일링을 위한 클래스)
+          feedbackEl.style.display = 'block';
+      } else {
+          // 관리자 모드가 꺼져있으면 피드백을 숨깁니다 (기존 로직).
+          feedbackEl.style.display = 'none';
+      }
+
+      //document.getElementById('feedback').style.display = 'none';
     }
 
     function checkAnswer() {
@@ -2316,7 +2494,26 @@
       document.getElementById('captureWholeInput').value = '';
       document.getElementById('captureNumeratorInput').value = '';
       document.getElementById('captureDenominatorInput').value = '';
-      document.getElementById('captureQuizFeedback').style.display = 'none';
+      // --- [수정] 관리자 모드 정답 미리보기 로직 ---
+      const feedbackEl = document.getElementById('captureQuizFeedback');
+      if (gameState.showAnswers) {
+          // 관리자 모드가 켜져있으면 정답을 계산하여 표시합니다.
+          const answer = gameState.currentAnswer;
+          const mixed = improperToMixed(answer.numerator, answer.denominator);
+          
+          let answerString = "";
+          if (mixed.whole > 0) answerString += `${mixed.whole} `;
+          if (mixed.numerator > 0) answerString += `${mixed.numerator}/${mixed.denominator}`;
+          if (answerString === "") answerString = "0"; // 0일 경우
+
+          feedbackEl.textContent = `[ADMIN] 정답: ${answerString} (가분수: ${answer.numerator}/${answer.denominator})`;
+          feedbackEl.className = 'feedback admin-info';
+          feedbackEl.style.display = 'block';
+      } else {
+          // 관리자 모드가 꺼져있으면 피드백을 숨깁니다 (기존 로직).
+          feedbackEl.style.display = 'none';
+      }
+      //document.getElementById('captureQuizFeedback').style.display = 'none';
     }
 
       function submitCaptureAnswer() {
@@ -2722,6 +2919,24 @@
       updateAdminStatus();
     }
 
+    function toggleShowAnswers() {
+        gameState.showAnswers = !gameState.showAnswers;
+        // 새로운 ID인 'answerCheatStatus'를 사용하여 상태 표시 요소를 찾습니다.
+        const statusElement = document.getElementById('answerCheatStatus'); 
+        const button = statusElement.parentElement;
+        
+        if (gameState.showAnswers) {
+          statusElement.textContent = '정답 미리보기: ON';
+          button.className = 'btn btn-cheat-active';
+        } else {
+          statusElement.textContent = '정답 미리보기: OFF';
+          button.className = 'btn btn-cheat-inactive';
+        }
+        
+        // 무한 코인 기능과 동일하게 관리자 상태를 업데이트합니다.
+        updateAdminStatus(); 
+    }
+
     function addCoins(amount) {
       gameState.coins += amount;
       updateUI();
@@ -3021,3 +3236,5 @@
   </script>
 </body>
 </html>
+
+

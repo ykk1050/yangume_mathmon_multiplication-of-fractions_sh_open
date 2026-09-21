@@ -576,7 +576,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
             color: #22543d;
             font-weight: bold;
@@ -586,14 +586,20 @@
             font-size: 0.95rem;
         }
 
+        #quizBallSummary {
+            min-width: 0;
+        }
+
         .quiz-ball-change {
             padding: 6px 14px;
             font-size: 0.85rem;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .capture-layout {
             display: grid;
-            grid-template-columns: minmax(300px, 400px) 1fr;
+            grid-template-columns: minmax(240px, 330px) 1fr;
             gap: 20px;
             align-items: start;
         }
@@ -1321,6 +1327,20 @@
             .quiz-section { padding: 14px; margin: 12px 0; }
             .quiz-ball-bar { font-size: 0.85rem; padding: 8px 10px; margin-bottom: 10px; flex-wrap: nowrap; }
             .quiz-ball-change { padding: 5px 10px; font-size: 0.78rem; white-space: nowrap; }
+        }
+
+        /* 가로로 눕힌 휴대폰처럼 화면이 낮으면 몬스터가 문제를 덮지 않도록 줄인다. */
+        @media (max-height: 560px) {
+            .capture-stage { min-height: 110px; }
+            .capture-stage .monster-image { min-height: 90px; font-size: 2.6rem; }
+            .capture-stage .monster-image img { max-height: 90px; }
+            .capture-stage-column .monster-display { padding: 10px; }
+            .monster-info { font-size: 1rem; }
+        }
+
+        @media (max-height: 560px) and (min-width: 680px) {
+            .capture-layout { grid-template-columns: minmax(200px, 300px) 1fr; }
+            .capture-stage-column { background: none; padding-top: 0; }
         }
     </style>
 </head>

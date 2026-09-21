@@ -517,6 +517,28 @@
             margin-bottom: 8px;
         }
 
+        .ball-emoji img {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .ball-inline {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+            vertical-align: -5px;
+        }
+
+        .capture-ball-inner img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            display: block;
+        }
+
         .ball-name {
             font-weight: bold;
             font-size: 0.9rem;
@@ -1546,9 +1568,9 @@
                 <tr>
                   <th>등급</th>
                   <th>포획볼</th>
-                  <th>슈퍼볼</th>
-                  <th>하이퍼볼</th>
-                  <th>마스터볼</th>
+                  <th>메가볼</th>
+                  <th>슈퍼메가볼</th>
+                  <th>울트라볼</th>
                 </tr>
               </thead>
               <tbody>
@@ -1885,10 +1907,10 @@
     };
 
     const shopItems = [
-      { id: 'monster_ball', name: '⚪ 포획볼', description: '기본적인 포획볼.', price: 50, type: 'ball', power: 7 },
-      { id: 'super_ball', name: '🔵 슈퍼볼', description: '포획볼보다 포획률이 높다.', price: 100, type: 'ball', power: 10 },
-      { id: 'hyper_ball', name: '🟣 하이퍼볼', description: '슈퍼볼보다 포획률이 높다.', price: 250, type: 'ball', power: 14 },
-      { id: 'master_ball', name: '🟡 마스터볼', description: '포획 확률이 가장 높다.', price: 500, type: 'ball', power: 25 },
+      { id: 'monster_ball', name: '포획볼', image: 'images/captureball_1.webp', description: '기본적인 포획볼.', price: 50, type: 'ball', power: 7 },
+      { id: 'super_ball', name: '메가볼', image: 'images/captureball_2.webp', description: '포획볼보다 포획률이 높다.', price: 100, type: 'ball', power: 10 },
+      { id: 'hyper_ball', name: '슈퍼메가볼', image: 'images/captureball_3.webp', description: '메가볼보다 포획률이 높다.', price: 250, type: 'ball', power: 14 },
+      { id: 'master_ball', name: '울트라볼', image: 'images/captureball_4.webp', description: '포획 확률이 가장 높다.', price: 500, type: 'ball', power: 25 },
       { id: 'rare_finder', name: '🔍 레어 탐지기', description: '일반 환상 동물의 등장 확률을 낮추고(60%→50%), 레어(29%→29%), 에픽(10%→16%), 전설(1%→5%) 등급의 희귀 환상 동물 등장 확률을 높여줍니다.', price: 700, type: 'skill' },
       { id: 'capture_training', name: '💪 포획 자세 연습', description: '포획률을 영구적으로 2% 높여줍니다. (최대 10회까지 구매 가능)', price: 100, type: 'training' }
     ];
@@ -2749,7 +2771,7 @@
         }
         
         itemDiv.innerHTML = `
-          <h3>${item.name}</h3>
+          <h3>${item.type === 'ball' ? `<img class="ball-inline" src="${item.image}" alt=""> ` : ''}${item.name}</h3>
           <p>${item.description}</p>
           ${item.type === 'ball' ? `<p><strong>보유: ${ballCount}개</strong></p>` : ''}
           <div class="price">💰 ${item.price} 코인${item.type === 'ball' ? '' : ''}</div>
@@ -2901,11 +2923,9 @@
         const ballDiv = document.createElement('div');
         ballDiv.className = `ball-option ${isSelected ? 'selected' : ''} ${!canSelect ? 'disabled' : ''}`;
         if (canSelect) ballDiv.onclick = () => selectCaptureBall(ball.id);
-        const emoji = ball.name.split(' ')[0];
-        const ballName = ball.name.split(' ').slice(1).join(' ');
         ballDiv.innerHTML = `
-          <div class="ball-emoji">${emoji}</div>
-          <div class="ball-name">${ballName}</div>
+          <div class="ball-emoji"><img src="${ball.image}" alt="${ball.name}"></div>
+          <div class="ball-name">${ball.name}</div>
           <div class="ball-count">${count}개 ${count === 0 ? '(없음)' : ''}</div>
         `;
         ballGrid.appendChild(ballDiv);
@@ -2920,7 +2940,7 @@
         const selectedBallItem = shopItems.find(item => item.id === gameState.selectedBall);
         const count = gameState.ballInventory[gameState.selectedBall] || 0;
         selectedBallInfo.innerHTML = `
-          <p><strong>선택된 볼:</strong> ${selectedBallItem.name}</p>
+          <p><strong>선택된 볼:</strong> <img class="ball-inline" src="${selectedBallItem.image}" alt=""> ${selectedBallItem.name}</p>
           <p><strong>포획력:</strong> +${selectedBallItem.power}</p>
           <p><strong>남은 개수:</strong> ${count}개</p>
         `;
@@ -2979,7 +2999,7 @@
       const count = gameState.ballInventory[gameState.selectedBall] || 0;
       const rate = gameState.currentMonster ? Math.round(calculateCaptureRate(gameState.currentMonster.rarity)) : 0;
       document.getElementById('quizBallSummary').innerHTML =
-        `${ballItem.name} · 남은 ${count}개 · 예상 포획 ${rate}%`;
+        `<img class="ball-inline" src="${ballItem.image}" alt=""> ${ballItem.name} · 남은 ${count}개 · 예상 포획 ${rate}%`;
     }
 
     function calculateCaptureRate(monsterRarity) {
@@ -3196,7 +3216,7 @@
         const stale = () => this.runId !== run;
 
         const selected = shopItems.find(item => item.id === gameState.selectedBall);
-        inner.textContent = selected ? selected.name.split(' ')[0] : '⚪';
+        inner.innerHTML = selected ? `<img src="${selected.image}" alt="">` : '';
         ball.style.setProperty('--ball-rise', `-${Math.round(stage.clientHeight / 2)}px`);
 
         ball.classList.add('is-thrown');
@@ -3248,7 +3268,7 @@
         const run = this.runId;
 
         const selected = shopItems.find(item => item.id === gameState.selectedBall);
-        inner.textContent = selected ? selected.name.split(' ')[0] : '⚪';
+        inner.innerHTML = selected ? `<img src="${selected.image}" alt="">` : '';
         ball.style.setProperty('--ball-rise', `-${Math.round(stage.clientHeight * 0.8)}px`);
 
         ball.classList.add('is-thrown');

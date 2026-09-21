@@ -571,6 +571,26 @@
             margin: 20px 0;
         }
 
+        .quiz-ball-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
+            color: #22543d;
+            font-weight: bold;
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 14px;
+            font-size: 0.95rem;
+        }
+
+        .quiz-ball-change {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+        }
+
         .capture-layout {
             display: grid;
             grid-template-columns: minmax(300px, 400px) 1fr;
@@ -1299,6 +1319,8 @@
             .capture-stage .monster-image img { max-height: 120px; }
             .ball-selection { padding: 14px; margin-bottom: 12px; }
             .quiz-section { padding: 14px; margin: 12px 0; }
+            .quiz-ball-bar { font-size: 0.85rem; padding: 8px 10px; margin-bottom: 10px; flex-wrap: nowrap; }
+            .quiz-ball-change { padding: 5px 10px; font-size: 0.78rem; white-space: nowrap; }
         }
     </style>
 </head>
@@ -1390,7 +1412,7 @@
             </div>
               </div>
               <div class="capture-control-column">
-            <div class="ball-selection">
+            <div class="ball-selection" id="captureBallPanel">
               <h3>포획볼 선택</h3>
               <div id="captureBallGrid" class="ball-grid"></div>
               <div id="captureSelectedBallInfo" class="selected-ball-info">
@@ -1402,6 +1424,10 @@
               </div>
             </div>
             <div class="quiz-section" id="quizSection" style="display: none;">
+              <div class="quiz-ball-bar">
+                <span id="quizBallSummary">⚪ 포획볼</span>
+                <button class="btn btn-primary quiz-ball-change" onclick="showBallSelection()">볼 변경</button>
+              </div>
               <div class="problem" id="captureQuizProblem">15 ÷ 3 = ?</div>
               <div class="fraction-input-container">
                 <div class="fraction-inputs">
@@ -2629,7 +2655,7 @@
       document.getElementById('monsterInfo').textContent = `${randomMonster.name} (${getRarityText(rarity)})`;
       
       generateCaptureQuiz(); // <-- 1. 문제를 여기서 미리 생성합니다.
-      document.getElementById('quizSection').style.display = 'block'; // <-- 2. 퀴즈 섹션을 바로 표시합니다.
+      showBallSelection(); // 볼을 고르면 그 자리에 문제가 나온다.
 
       setTimeout(() => updateCaptureBallSelection(), 100);
     }
@@ -2678,17 +2704,19 @@
           document.getElementById('captureRateText').textContent = `${Math.round(captureRate)}%`;
           document.getElementById('captureRateInfo').style.display = 'block';
 
-          // 👇👇👇 [핵심 수정: 이 두 줄을 추가해야 합니다] 👇👇👇
-          document.getElementById('quizSection').style.display = 'block'; // 퀴즈 영역을 다시 보이게 함
           generateCaptureQuiz(); // 새 문제를 생성함
+          if (captureBallConfirmed) {
+            document.getElementById('quizSection').style.display = 'block';
+            updateQuizBallBar();
+          }
         }
-        
+
 
       } else {
         gameState.selectedBall = null;
         selectedBallInfo.innerHTML = '<p>포획볼을 선택하세요</p>';
         document.getElementById('captureRateInfo').style.display = 'none';
-        document.getElementById('quizSection').style.display = 'none';
+        showBallSelection();
       }
     }
 
@@ -2697,8 +2725,35 @@
       if (count > 0) {
         gameState.selectedBall = ballId;
         updateCaptureBallSelection();
+        showCaptureQuiz();
         saveData();
       }
+    }
+
+    // 볼 선택 화면과 문제 화면은 같은 자리를 번갈아 쓴다.
+    let captureBallConfirmed = false;
+
+    function showBallSelection() {
+      captureBallConfirmed = false;
+      document.getElementById('captureBallPanel').style.display = 'block';
+      document.getElementById('quizSection').style.display = 'none';
+    }
+
+    function showCaptureQuiz() {
+      if (!gameState.selectedBall) return;
+      captureBallConfirmed = true;
+      document.getElementById('captureBallPanel').style.display = 'none';
+      document.getElementById('quizSection').style.display = 'block';
+      updateQuizBallBar();
+    }
+
+    function updateQuizBallBar() {
+      const ballItem = shopItems.find(item => item.id === gameState.selectedBall);
+      if (!ballItem) return;
+      const count = gameState.ballInventory[gameState.selectedBall] || 0;
+      const rate = gameState.currentMonster ? Math.round(calculateCaptureRate(gameState.currentMonster.rarity)) : 0;
+      document.getElementById('quizBallSummary').innerHTML =
+        `${ballItem.name} · 남은 ${count}개 · 예상 포획 ${rate}%`;
     }
 
     function calculateCaptureRate(monsterRarity) {

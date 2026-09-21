@@ -1443,7 +1443,7 @@
             </div>
             <button class="btn btn-primary" onclick="checkAnswer()" id="submitBtn" disabled>확인</button>
           </div>
-          <p class="instruction-text">※ 답은 기약분수 형태로 입력해주세요, 가끔 정답이 맞는데 틀렸다고 하는 경우가 있습니다. 그 경우 새로 접속해주세요.</p>
+          <p class="instruction-text">※ 답은 기약분수 형태로 입력해주세요. (1보다 큰 답은 대분수로)</p>
           <div id="feedback" class="feedback" style="display: none;"></div>
           <button class="btn btn-success" id="startBtn" onclick="generateProblem()">시작</button>
         </div>
@@ -1504,7 +1504,7 @@
                   </div>
                 </div>
                 <button class="btn btn-primary" id="captureSubmitBtn" onclick="submitCaptureAnswer()">포획 시도</button>              </div>
-              <p class="instruction-text">※ 답은 기약분수 형태로 입력해주세요, 가끔 정답이 맞는데 틀렸다고 하는 경우가 있습니다. 그 경우 새로 접속해주세요.</p>
+              <p class="instruction-text">※ 답은 기약분수 형태로 입력해주세요. (1보다 큰 답은 대분수로)</p>
               <div id="captureQuizFeedback" class="feedback" style="display: none;"></div>
             </div>
             <button class="btn btn-danger" onclick="resetCapture()">포기하고 돌아가기</button>
@@ -1753,6 +1753,10 @@
       unlockedTitles: ['초보자'],
       currentProblem: null,
       currentAnswer: null,
+      // 포획 문제는 코인 직장 문제와 따로 보관한다. 하나를 같이 쓰면 다른 탭에서
+      // 문제가 만들어질 때 화면에 남아 있던 문제의 정답이 덮여 오답 처리된다.
+      captureProblem: null,
+      captureAnswer: null,
       currentMonster: null,
       isAdminLoggedIn: false,
       infiniteCoinsEnabled: false,
@@ -2992,8 +2996,8 @@
     function generateCaptureQuiz() {
       document.getElementById('captureSubmitBtn').disabled = false; // <-- 이 줄을 추가합니다.
       const problem = generateFractionProblem();
-      gameState.currentProblem = problem;
-      gameState.currentAnswer = problem.answer;
+      gameState.captureProblem = problem;
+      gameState.captureAnswer = problem.answer;
       document.getElementById('captureQuizProblem').innerHTML = problem.problemHtml;
       document.getElementById('captureWholeInput').value = '';
       document.getElementById('captureNumeratorInput').value = '';
@@ -3002,7 +3006,7 @@
       const feedbackEl = document.getElementById('captureQuizFeedback');
       if (gameState.showAnswers) {
           // 관리자 모드가 켜져있으면 정답을 계산하여 표시합니다.
-          const answer = gameState.currentAnswer;
+          const answer = gameState.captureAnswer;
           const mixed = improperToMixed(answer.numerator, answer.denominator);
           
           let answerString = "";
@@ -3077,7 +3081,7 @@
       }
 
       // 🔴 4. 대분수 강제 입력 체크 (정답이 가분수인 경우)
-      if (gameState.currentAnswer.numerator >= gameState.currentAnswer.denominator) {
+      if (gameState.captureAnswer.numerator >= gameState.captureAnswer.denominator) {
           if (wholeInput === 0) {
               feedback.textContent = `❌ 답이 1보다 크거나 같으면 반드시 대분수 형태로 입력해야 합니다.`;
               feedback.className = 'feedback incorrect';
@@ -3093,7 +3097,7 @@
 
       // 이제 정답을 비교합니다.
       const userReduced = reduceFraction(userImproper.numerator, userImproper.denominator);
-      const isCorrect = userReduced.numerator === gameState.currentAnswer.numerator && userReduced.denominator === gameState.currentAnswer.denominator;
+      const isCorrect = userReduced.numerator === gameState.captureAnswer.numerator && userReduced.denominator === gameState.captureAnswer.denominator;
 
       if (isCorrect) {
           const captureRate = calculateCaptureRate(gameState.currentMonster.rarity);
@@ -3715,6 +3719,8 @@
       gameState.unlockedTitles = ['초보자'];
       gameState.currentProblem = null;
       gameState.currentAnswer = null;
+      gameState.captureProblem = null;
+      gameState.captureAnswer = null;
       gameState.currentMonster = null;
       gameState.captureTrainingLevel = 0;
       

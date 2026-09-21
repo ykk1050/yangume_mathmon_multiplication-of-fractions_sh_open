@@ -571,6 +571,177 @@
             margin: 20px 0;
         }
 
+        .capture-layout {
+            display: grid;
+            grid-template-columns: minmax(300px, 400px) 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .capture-stage-column {
+            position: sticky;
+            top: 12px;
+        }
+
+        .capture-stage {
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .capture-stage .monster-image {
+            margin: 0;
+            min-height: 160px;
+            font-size: 5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .capture-stage .monster-image img {
+            max-height: 160px;
+        }
+
+        .capture-ball {
+            position: absolute;
+            left: 50%;
+            bottom: 6px;
+            font-size: 2.4rem;
+            line-height: 1;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-50%);
+        }
+
+        .capture-ball-inner {
+            display: inline-block;
+        }
+
+        .capture-ball.is-thrown {
+            opacity: 1;
+            animation: ballThrow 0.55s cubic-bezier(0.25, 0.9, 0.45, 1) forwards;
+        }
+
+        .capture-ball.is-held {
+            opacity: 1;
+            transform: translate(-50%, var(--ball-rise, -70px));
+        }
+
+        .capture-ball-inner.is-shaking {
+            animation: ballShake 0.5s ease-in-out;
+        }
+
+        .capture-ball-inner.is-bursting {
+            animation: ballBurst 0.4s ease-out forwards;
+        }
+
+        .capture-ball-inner.is-locked {
+            animation: ballLock 0.6s ease-out;
+        }
+
+        .monster-image.is-absorbed {
+            animation: monsterAbsorb 0.35s ease-in forwards;
+        }
+
+        .monster-image.is-returning {
+            animation: monsterReturn 0.4s ease-out;
+        }
+
+        .capture-banner {
+            position: absolute;
+            left: 50%;
+            top: 14px;
+            transform: translateX(-50%) scale(0.6);
+            padding: 6px 18px;
+            border-radius: 999px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .capture-banner.is-success {
+            background: linear-gradient(135deg, #f6e05e, #ecc94b);
+            color: #744210;
+            animation: bannerPop 0.9s ease-out forwards;
+        }
+
+        .capture-banner.is-fail {
+            background: linear-gradient(135deg, #fed7d7, #fc8181);
+            color: #742a2a;
+            animation: bannerPop 0.9s ease-out forwards;
+        }
+
+        .capture-stage.is-flashing::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.95), transparent 65%);
+            animation: stageFlash 0.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes ballThrow {
+            0% { transform: translate(-50%, 0) scale(0.5) rotate(0deg); }
+            60% { transform: translate(-50%, calc(var(--ball-rise, -70px) - 40px)) scale(1.1) rotate(540deg); }
+            100% { transform: translate(-50%, var(--ball-rise, -70px)) scale(1) rotate(720deg); }
+        }
+
+        @keyframes ballShake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-22deg) translateX(-5px); }
+            75% { transform: rotate(22deg) translateX(5px); }
+        }
+
+        @keyframes ballBurst {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.8); opacity: 0.8; }
+            100% { transform: scale(2.4); opacity: 0; }
+        }
+
+        @keyframes ballLock {
+            0% { transform: scale(1); filter: brightness(1); }
+            40% { transform: scale(1.35); filter: brightness(1.8); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        @keyframes monsterAbsorb {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.08); opacity: 0; }
+        }
+
+        @keyframes monsterReturn {
+            0% { transform: scale(0.1); opacity: 0; }
+            60% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes bannerPop {
+            0% { transform: translateX(-50%) scale(0.6); opacity: 0; }
+            25% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+            80% { transform: translateX(-50%) scale(1); opacity: 1; }
+            100% { transform: translateX(-50%) scale(1); opacity: 0; }
+        }
+
+        @keyframes stageFlash {
+            0% { opacity: 0.9; }
+            100% { opacity: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .capture-ball.is-thrown,
+            .capture-ball-inner.is-shaking,
+            .capture-ball-inner.is-bursting,
+            .capture-ball-inner.is-locked,
+            .monster-image.is-absorbed,
+            .monster-image.is-returning,
+            .capture-banner.is-success,
+            .capture-banner.is-fail { animation-duration: 0.01s; }
+        }
+
         .collection-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -1113,6 +1284,22 @@
             .answer-input { font-size: 1.2rem; width: 100px; }
             .practice-stats { grid-template-columns: repeat(2, 1fr); }
         }
+
+        @media (max-width: 899px) {
+            .capture-layout { grid-template-columns: 1fr; gap: 12px; }
+            .capture-stage-column {
+                top: 0;
+                z-index: 5;
+                background: rgba(255, 255, 255, 0.92);
+                padding-top: 6px;
+            }
+            .capture-stage-column .monster-display { margin: 0 0 8px; padding: 14px; }
+            .capture-stage { min-height: 150px; }
+            .capture-stage .monster-image { min-height: 120px; font-size: 3.5rem; }
+            .capture-stage .monster-image img { max-height: 120px; }
+            .ball-selection { padding: 14px; margin-bottom: 12px; }
+            .quiz-section { padding: 14px; margin: 12px 0; }
+        }
     </style>
 </head>
 <body>
@@ -1191,10 +1378,18 @@
             <button class="btn btn-primary" onclick="startExploration()">탐색 준비물을 구입하여 탐색 떠나기 💰 15</button>
           </div>
           <div id="capturePhase" style="display: none;">
+            <div class="capture-layout">
+              <div class="capture-stage-column">
             <div class="monster-display">
-              <div class="monster-image" id="monsterEmoji">🐉</div>
+              <div class="capture-stage" id="captureStage">
+                <div class="monster-image" id="monsterEmoji">🐉</div>
+                <div class="capture-ball" id="captureBall"><span class="capture-ball-inner" id="captureBallInner">⚪</span></div>
+                <div class="capture-banner" id="captureBanner"></div>
+              </div>
               <div class="monster-info" id="monsterInfo">드래곤 (레어)</div>
             </div>
+              </div>
+              <div class="capture-control-column">
             <div class="ball-selection">
               <h3>포획볼 선택</h3>
               <div id="captureBallGrid" class="ball-grid"></div>
@@ -1222,6 +1417,8 @@
               <div id="captureQuizFeedback" class="feedback" style="display: none;"></div>
             </div>
             <button class="btn btn-danger" onclick="resetCapture()">포기하고 돌아가기</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2399,7 +2596,8 @@
       }
       
       const monsterEmojiElement = document.getElementById('monsterEmoji');
-      
+      captureAnim.cancel();
+
       // 디버깅: 이미지 URL 확인
       if (randomMonster.imageUrl) {
         console.log('🖼️ 이미지가 있는 몬스터:', randomMonster.name);
@@ -2410,7 +2608,6 @@
         imgElement.src = randomMonster.imageUrl;
         imgElement.alt = randomMonster.name;
         imgElement.style.maxWidth = '100%';
-        imgElement.style.maxHeight = '200px';
         imgElement.style.objectFit = 'contain';
         
         imgElement.onerror = function() {
@@ -2628,7 +2825,7 @@
           feedback.className = 'feedback correct';
           feedback.style.display = 'block';
           
-          setTimeout(() => {
+          captureAnim.play(captureRoll <= captureRate).then(() => {
               if (captureRoll <= captureRate) {
                   captureSuccess();
               } else {
@@ -2651,12 +2848,12 @@
                       }
                   }, 1500);
               }
-          }, 1500);
+          });
       } else {
           feedback.textContent = `문제가 틀렸습니다. 볼이 엉뚱한 곳으로 날아가버렸습니다.`;
           feedback.className = 'feedback incorrect';
           feedback.style.display = 'block';
-          setTimeout(() => {
+          captureAnim.playMiss().then(() => {
               const escapeChance = Math.random() * 100;
               if (escapeChance <= 40) {
                   showNotification(`💨 ${gameState.currentMonster.name}이(가) 기회를 틈타 도망쳤습니다!`);
@@ -2669,10 +2866,122 @@
                   document.getElementById("captureWholeInput").focus();
                   document.getElementById('captureSubmitBtn').disabled = false;
               }
-          }, 1500);
+          });
       }
       saveData();
   }
+
+    const captureAnim = {
+      runId: 0,
+      sleep: ms => new Promise(resolve => setTimeout(resolve, ms)),
+
+      // Giving up mid-animation must not let the pending sequence hide the
+      // next monster, so each run checks it is still the current one.
+      cancel() {
+        this.runId++;
+        this.clear();
+      },
+
+      clear() {
+        const ball = document.getElementById('captureBall');
+        const inner = document.getElementById('captureBallInner');
+        const monster = document.getElementById('monsterEmoji');
+        const banner = document.getElementById('captureBanner');
+        const stage = document.getElementById('captureStage');
+        ball.className = 'capture-ball';
+        inner.className = 'capture-ball-inner';
+        monster.className = 'monster-image';
+        banner.className = 'capture-banner';
+        banner.textContent = '';
+        stage.classList.remove('is-flashing');
+      },
+
+      // Restarting a CSS animation needs the class removed, a reflow, then re-added.
+      replay(el, className) {
+        el.classList.remove(className);
+        void el.offsetWidth;
+        el.classList.add(className);
+      },
+
+      async play(isSuccess) {
+        const stage = document.getElementById('captureStage');
+        const ball = document.getElementById('captureBall');
+        const inner = document.getElementById('captureBallInner');
+        const monster = document.getElementById('monsterEmoji');
+        const banner = document.getElementById('captureBanner');
+
+        this.cancel();
+        const run = this.runId;
+        const stale = () => this.runId !== run;
+
+        const selected = shopItems.find(item => item.id === gameState.selectedBall);
+        inner.textContent = selected ? selected.name.split(' ')[0] : '⚪';
+        ball.style.setProperty('--ball-rise', `-${Math.round(stage.clientHeight / 2)}px`);
+
+        ball.classList.add('is-thrown');
+        await this.sleep(550);
+        if (stale()) return;
+        ball.classList.remove('is-thrown');
+        ball.classList.add('is-held');
+
+        monster.classList.add('is-absorbed');
+        await this.sleep(350);
+        if (stale()) return;
+
+        const shakes = isSuccess ? 3 : 1 + Math.floor(Math.random() * 2);
+        for (let i = 0; i < shakes; i++) {
+          this.replay(inner, 'is-shaking');
+          await this.sleep(700);
+          if (stale()) return;
+        }
+        inner.classList.remove('is-shaking');
+
+        if (isSuccess) {
+          stage.classList.add('is-flashing');
+          this.replay(inner, 'is-locked');
+          banner.textContent = '🎉 포획 성공!';
+          banner.classList.add('is-success');
+          await this.sleep(900);
+        } else {
+          inner.classList.add('is-bursting');
+          await this.sleep(300);
+          if (stale()) return;
+          monster.classList.remove('is-absorbed');
+          this.replay(monster, 'is-returning');
+          banner.textContent = '💥 튀어나왔다!';
+          banner.classList.add('is-fail');
+          await this.sleep(700);
+        }
+        if (stale()) return;
+
+        this.clear();
+      },
+
+      async playMiss() {
+        const stage = document.getElementById('captureStage');
+        const ball = document.getElementById('captureBall');
+        const inner = document.getElementById('captureBallInner');
+        const banner = document.getElementById('captureBanner');
+
+        this.cancel();
+        const run = this.runId;
+
+        const selected = shopItems.find(item => item.id === gameState.selectedBall);
+        inner.textContent = selected ? selected.name.split(' ')[0] : '⚪';
+        ball.style.setProperty('--ball-rise', `-${Math.round(stage.clientHeight * 0.8)}px`);
+
+        ball.classList.add('is-thrown');
+        await this.sleep(550);
+        if (this.runId !== run) return;
+        inner.classList.add('is-bursting');
+        banner.textContent = '💨 빗나갔다!';
+        banner.classList.add('is-fail');
+        await this.sleep(900);
+        if (this.runId !== run) return;
+
+        this.clear();
+      }
+    };
 
     function captureSuccess() {
       // 이미 포획한 몬스터인지 체크
@@ -2723,6 +3032,7 @@
     }
 
     function resetCapture() {
+      captureAnim.cancel();
       document.getElementById('captureSubmitBtn').disabled = false; // <-- 이 줄을 추가합니다.
       document.getElementById('explorationPhase').style.display = 'block';
       document.getElementById('capturePhase').style.display = 'none';

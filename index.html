@@ -571,6 +571,45 @@
             margin: 20px 0;
         }
 
+        .bgm-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .bgm-toggle {
+            border: 2px solid #cbd5e0;
+            background: #f7fafc;
+            color: #2d3748;
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .bgm-toggle.is-muted {
+            background: #e2e8f0;
+            color: #a0aec0;
+        }
+
+        .bgm-volume {
+            width: 120px;
+            accent-color: #667eea;
+            cursor: pointer;
+        }
+
+        .bgm-value {
+            font-size: 0.8rem;
+            color: #4a5568;
+            min-width: 38px;
+            text-align: left;
+        }
+
         .quiz-ball-bar {
             display: flex;
             align-items: center;
@@ -1361,6 +1400,12 @@
         <div class="stat-item"><span>👾</span> <span id="monsterCount">0</span></div>
         <div class="stat-item"><span>⭐</span> <span id="rarestMonster">없음</span></div>
       </div>
+      <div class="bgm-bar">
+        <button class="bgm-toggle" id="bgmToggle" onclick="toggleBgm()" title="배경음악 켜기/끄기">🔊 음악</button>
+        <input type="range" id="bgmVolume" class="bgm-volume" min="0" max="100" value="40"
+               oninput="setBgmVolume(this.value)" title="음량 조절" aria-label="배경음악 음량">
+        <span class="bgm-value" id="bgmVolumeText">40%</span>
+      </div>
     </div>
 
     <div class="tabs">
@@ -1974,6 +2019,150 @@
     }
 
     // Tab Switching
+    const BGM_TRACKS = {
+      practice: 'audio/coin-job.mp3',
+      shop: 'audio/shop.mp3',
+      minigame: 'audio/capture.mp3',
+      minigameEpic: 'audio/capture-epic.mp3',
+      minigameLegendary: 'audio/capture-legendary.mp3',
+      collection: 'audio/collection.mp3'
+    };
+
+    const bgm = {
+      player: null,
+      current: null,
+      pending: null,
+      enabled: true,
+      volume: 0.4,
+
+      init() {
+        try {
+          const saved = JSON.parse(localStorage.getItem('mathmonBgm'));
+          if (saved) {
+            this.enabled = saved.enabled !== false;
+            if (typeof saved.volume === 'number') this.volume = saved.volume;
+          }
+        } catch (e) {
+          // 설정을 못 읽으면 기본값으로 시작한다.
+        }
+
+        this.player = new Audio();
+        this.player.loop = true;
+        this.player.volume = this.volume;
+        this.syncControls();
+
+        // 브라우저는 사용자가 한 번 조작하기 전에는 소리를 막으므로,
+        // 첫 클릭/키 입력 때 대기 중이던 곡을 시작한다.
+        const unlock = () => {
+          if (this.pending) this.play(this.pending, true);
+        };
+        document.addEventListener('click', unlock);
+        document.addEventListener('keydown', unlock);
+      },
+
+      save() {
+        try {
+          localStorage.setItem('mathmonBgm', JSON.stringify({ enabled: this.enabled, volume: this.volume }));
+        } catch (e) {
+          // 저장이 막혀 있어도 이번 세션 재생에는 지장이 없다.
+        }
+      },
+
+      play(key, retry) {
+        const src = BGM_TRACKS[key];
+        if (!src) return this.stop();
+        if (!retry && this.current === key && !this.player.paused) return;
+
+        if (!this.enabled) {
+          this.current = key;
+          this.pending = null;
+          return;
+        }
+
+        if (this.current !== key || this.player.paused) {
+          if (this.current !== key) {
+            this.player.src = src;
+            this.current = key;
+          }
+          this.player.volume = this.volume;
+          this.player.play().then(() => {
+            this.pending = null;
+          }).catch(() => {
+            this.pending = key; // 아직 사용자 조작 전 — 첫 입력 때 다시 시도한다.
+          });
+        }
+      },
+
+      stop() {
+        this.player.pause();
+        this.current = null;
+        this.pending = null;
+      },
+
+      setEnabled(on) {
+        this.enabled = on;
+        if (on) {
+          this.current = null;
+          this.refresh();
+        } else {
+          this.player.pause();
+        }
+        this.syncControls();
+        this.save();
+      },
+
+      setVolume(percent) {
+        this.volume = Math.min(100, Math.max(0, percent)) / 100;
+        this.player.volume = this.volume;
+        this.syncControls();
+        this.save();
+      },
+
+      syncControls() {
+        const toggle = document.getElementById('bgmToggle');
+        const slider = document.getElementById('bgmVolume');
+        const text = document.getElementById('bgmVolumeText');
+        if (!toggle || !slider || !text) return;
+        toggle.textContent = this.enabled ? '🔊 음악' : '🔇 음악';
+        toggle.classList.toggle('is-muted', !this.enabled);
+        slider.value = Math.round(this.volume * 100);
+        text.textContent = Math.round(this.volume * 100) + '%';
+      },
+
+      // gameState.currentTab은 저장된 값이라 첫 화면과 어긋날 수 있어 실제 화면을 본다.
+      activeTab() {
+        return ['practice', 'shop', 'minigame', 'collection', 'admin']
+          .find(name => {
+            const content = document.getElementById(name + 'Content');
+            return content && content.style.display !== 'none';
+          });
+      },
+
+      // 포획 탭은 등장한 몬스터 등급에 따라 곡이 달라진다.
+      forTab(tabName) {
+        if (tabName !== 'minigame') return tabName;
+        const capturing = document.getElementById('capturePhase');
+        const rarity = capturing && capturing.style.display !== 'none' && gameState.currentMonster
+          ? gameState.currentMonster.rarity
+          : null;
+        if (rarity === 'legendary') return 'minigameLegendary';
+        if (rarity === 'epic') return 'minigameEpic';
+        return 'minigame';
+      },
+
+      refresh() {
+        this.play(this.forTab(this.activeTab()));
+      }
+    };
+
+    function toggleBgm() {
+      bgm.setEnabled(!bgm.enabled);
+    }
+
+    function setBgmVolume(percent) {
+      bgm.setVolume(Number(percent));
+    }
+
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1996,6 +2185,8 @@
       if (tabName === 'collection') updateCollection();
       if (tabName === 'shop') updateShop();
       if (tabName === 'admin') updateAdminStatus();
+
+      bgm.refresh();
     }
 
     // Fraction Math Functions
@@ -2676,6 +2867,7 @@
       
       generateCaptureQuiz(); // <-- 1. 문제를 여기서 미리 생성합니다.
       showBallSelection(); // 볼을 고르면 그 자리에 문제가 나온다.
+      bgm.refresh(); // 에픽·전설 몬스터는 전용 곡으로 바뀐다.
 
       setTimeout(() => updateCaptureBallSelection(), 100);
     }
@@ -3108,6 +3300,7 @@
 
     function resetCapture() {
       captureAnim.cancel();
+      bgm.play('minigame'); // 몬스터가 사라졌으니 기본 곡으로 돌아간다.
       document.getElementById('captureSubmitBtn').disabled = false; // <-- 이 줄을 추가합니다.
       document.getElementById('explorationPhase').style.display = 'block';
       document.getElementById('capturePhase').style.display = 'none';
@@ -3648,6 +3841,8 @@
     // Initialize
     loadData();
     updateAllUI();
+    bgm.init();
+    bgm.refresh();
   </script>
 </body>
 </html>

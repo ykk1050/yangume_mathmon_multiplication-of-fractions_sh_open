@@ -214,6 +214,11 @@
             transform: translateY(-2px);
         }
 
+        .tab.locked {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
         .tab.active {
             background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
@@ -1431,8 +1436,8 @@
     </div>
 
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('practice')">코인 직장</button>
-      <button class="tab" onclick="switchTab('shop')">상점 및 훈련</button>
+      <button class="tab active" id="tabPractice" onclick="switchTab('practice')">코인 직장</button>
+      <button class="tab" id="tabShop" onclick="switchTab('shop')">상점 및 훈련</button>
       <button class="tab" onclick="switchTab('minigame')">수학몬 포획하러 가기</button>
       <button class="tab" onclick="switchTab('collection')">도감</button>
       <button class="tab admin-tab" onclick="showAdminLogin()">🔧 관리 콘솔</button>
@@ -2199,7 +2204,26 @@
       bgm.setVolume(Number(percent));
     }
 
+    // 몬스터를 마주한 동안에는 코인 직장·상점으로 빠져나갈 수 없다.
+    function isCapturing() {
+      const phase = document.getElementById('capturePhase');
+      return !!phase && phase.style.display !== 'none';
+    }
+
+    function updateTabLock() {
+      const locked = isCapturing();
+      ['tabPractice', 'tabShop'].forEach(id => {
+        const tab = document.getElementById(id);
+        if (tab) tab.classList.toggle('locked', locked);
+      });
+    }
+
     function switchTab(tabName) {
+      if ((tabName === 'practice' || tabName === 'shop') && isCapturing()) {
+        showNotification('포획을 마치거나 포기한 뒤에 이동할 수 있습니다!');
+        return;
+      }
+
       document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById(tabName + 'Content').style.display = 'block';
@@ -2903,6 +2927,7 @@
       
       generateCaptureQuiz(); // <-- 1. 문제를 여기서 미리 생성합니다.
       showBallSelection(); // 볼을 고르면 그 자리에 문제가 나온다.
+      updateTabLock();
       bgm.refresh(); // 에픽·전설 몬스터는 전용 곡으로 바뀐다.
 
       setTimeout(() => updateCaptureBallSelection(), 100);
@@ -3334,6 +3359,7 @@
 
     function resetCapture() {
       captureAnim.cancel();
+      setTimeout(updateTabLock, 0); // 화면을 되돌린 뒤 잠금을 푼다
       bgm.play('minigame'); // 몬스터가 사라졌으니 기본 곡으로 돌아간다.
       document.getElementById('captureSubmitBtn').disabled = false; // <-- 이 줄을 추가합니다.
       document.getElementById('explorationPhase').style.display = 'block';

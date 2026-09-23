@@ -742,6 +742,10 @@
 
         .battle-stage {
             position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            align-items: end;
             background: linear-gradient(160deg, #2d3748, #1a202c);
             border-radius: 14px;
             padding: 14px;
@@ -749,21 +753,28 @@
             overflow: hidden;
         }
 
-        .battle-row {
+        .battle-side {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 4px 0;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
         }
+
+        .battle-side.is-left { align-items: flex-start; }
+        .battle-side.is-right { align-items: flex-end; }
 
         .battle-name {
             font-weight: bold;
             font-size: 0.9rem;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
             white-space: nowrap;
         }
 
         .battle-hp {
-            flex: 1;
+            width: 150px;
+            max-width: 100%;
             height: 12px;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 999px;
@@ -784,11 +795,13 @@
         .battle-figure {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-end;
+            width: 100%;
+            min-height: 150px;
         }
 
-        .battle-figure.is-boss img { max-height: 190px; }
-        .battle-figure.is-partner img { max-height: 110px; }
+        .battle-figure.is-boss img { max-height: 180px; }
+        .battle-figure.is-partner img { max-height: 140px; }
         .battle-figure img { max-width: 100%; object-fit: contain; }
 
         .battle-figure.is-hit {
@@ -797,13 +810,15 @@
 
         .battle-effect {
             position: absolute;
-            left: 50%;
-            top: 38%;
+            left: 75%;
+            top: 55%;
             transform: translate(-50%, -50%);
-            font-size: 3.4rem;
+            font-size: 3.2rem;
             opacity: 0;
             pointer-events: none;
         }
+
+        .battle-effect.at-partner { left: 25%; }
 
         .battle-effect.is-slash { animation: effectSlash 0.6s ease-out; }
         .battle-effect.is-blast { animation: effectBlast 0.6s ease-out; }
@@ -1648,6 +1663,13 @@
             .ball-selection { padding: 14px; margin-bottom: 12px; }
             .quiz-section { padding: 14px; margin: 12px 0; }
             .quiz-ball-bar { font-size: 0.85rem; padding: 8px 10px; margin-bottom: 10px; flex-wrap: nowrap; }
+            .battle-stage { gap: 6px; padding: 10px; }
+            .battle-name { font-size: 0.75rem; }
+            .battle-hp { width: 110px; height: 10px; }
+            .battle-figure { min-height: 110px; }
+            .battle-figure.is-boss img { max-height: 130px; }
+            .battle-figure.is-partner img { max-height: 100px; }
+            .battle-effect { font-size: 2.4rem; }
             .quiz-ball-change { padding: 5px 10px; font-size: 0.78rem; white-space: nowrap; }
         }
 
@@ -1829,17 +1851,17 @@
 
         <div id="bossBattle" style="display: none;">
           <div class="battle-stage" id="battleStage">
-            <div class="battle-row">
-              <div class="battle-name" id="battleBossName"></div>
-              <div class="battle-hp"><div class="battle-hp-fill is-boss" id="battleBossHp"></div></div>
-            </div>
-            <div class="battle-figure is-boss" id="battleBossFigure"></div>
-            <div class="battle-effect" id="battleEffect"></div>
-            <div class="battle-figure is-partner" id="battlePartnerFigure"></div>
-            <div class="battle-row">
+            <div class="battle-side is-left">
               <div class="battle-name" id="battlePartnerName"></div>
               <div class="battle-hp"><div class="battle-hp-fill" id="battlePartnerHp"></div></div>
+              <div class="battle-figure is-partner" id="battlePartnerFigure"></div>
             </div>
+            <div class="battle-side is-right">
+              <div class="battle-name" id="battleBossName"></div>
+              <div class="battle-hp"><div class="battle-hp-fill is-boss" id="battleBossHp"></div></div>
+              <div class="battle-figure is-boss" id="battleBossFigure"></div>
+            </div>
+            <div class="battle-effect" id="battleEffect"></div>
           </div>
 
           <div class="battle-log" id="battleLog"></div>
@@ -2402,7 +2424,7 @@
       minigameEpic: 'audio/capture-epic.mp3',
       minigameLegendary: 'audio/capture-legendary.mp3',
       collection: 'audio/collection.mp3',
-      boss: 'audio/capture-legendary.mp3'
+      boss: 'audio/boss.mp3'
     };
 
     const bgm = {
@@ -4126,10 +4148,10 @@
       log.scrollTop = log.scrollHeight;
     }
 
-    function playEffect(kind, emoji) {
+    function playEffect(kind, emoji, target) {
       const el = document.getElementById('battleEffect');
       el.textContent = emoji;
-      el.className = 'battle-effect';
+      el.className = `battle-effect${target === 'partner' ? ' at-partner' : ''}`;
       void el.offsetWidth;
       el.classList.add(`is-${kind}`);
     }
@@ -4145,7 +4167,7 @@
       if (!battle) return;
       const [min, max] = battle.boss.attack;
       const damage = Math.floor(Math.random() * (max - min + 1)) + min;
-      playEffect('blast', '🌀');
+      playEffect('blast', '🌀', 'partner');
       hitFigure('battlePartnerFigure');
       battle.hp = Math.max(0, battle.hp - damage);
       updateBattleBars();

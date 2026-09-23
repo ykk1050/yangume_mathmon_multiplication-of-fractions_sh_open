@@ -827,6 +827,43 @@
 
         .battle-effect.at-partner { left: 25%; }
 
+        .battle-effect.is-traveling {
+            animation: stormTravel 1s cubic-bezier(0.35, 0.05, 0.4, 1) forwards;
+        }
+
+        .effect-sprite {
+            display: block;
+            width: 150px;
+            filter: drop-shadow(0 0 14px rgba(150, 200, 255, 0.85));
+            animation: stormSpin 0.28s linear infinite;
+        }
+
+        .battle-stage.is-quaking {
+            animation: stageQuake 0.45s ease-in-out;
+        }
+
+        @keyframes stormTravel {
+            0% { opacity: 0; left: 22%; transform: translate(-50%, -50%) scale(0.45); }
+            18% { opacity: 1; }
+            65% { left: 74%; transform: translate(-50%, -50%) scale(1.15); }
+            80% { opacity: 1; left: 76%; transform: translate(-50%, -50%) scale(1.35); }
+            100% { opacity: 0; left: 78%; transform: translate(-50%, -50%) scale(1.6); }
+        }
+
+        @keyframes stormSpin {
+            0% { transform: rotate(-7deg) scaleX(1); }
+            50% { transform: rotate(7deg) scaleX(0.88); }
+            100% { transform: rotate(-7deg) scaleX(1); }
+        }
+
+        @keyframes stageQuake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-7px, 3px); }
+            40% { transform: translate(6px, -3px); }
+            60% { transform: translate(-4px, 2px); }
+            80% { transform: translate(3px, -1px); }
+        }
+
         .battle-effect.is-slash { animation: effectSlash 0.6s ease-out; }
         .battle-effect.is-blast { animation: effectBlast 0.6s ease-out; }
         .battle-effect.is-beam { animation: effectBeam 0.6s ease-out; }
@@ -1103,6 +1140,8 @@
         }
 
         @media (prefers-reduced-motion: reduce) {
+            .effect-sprite { animation: none; }
+            .battle-stage.is-quaking { animation: none; }
             .capture-ball.is-thrown,
             .capture-ball-inner.is-shaking,
             .capture-ball-inner.is-bursting,
@@ -1678,6 +1717,7 @@
             .battle-figure.is-boss img { max-height: 130px; }
             .battle-figure.is-partner img { max-height: 100px; }
             .battle-effect { font-size: 2.4rem; }
+            .effect-sprite { width: 96px; }
             .quiz-ball-change { padding: 5px 10px; font-size: 0.78rem; white-space: nowrap; }
         }
 
@@ -3971,7 +4011,7 @@
       { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', price: 350, power: 27, accuracy: 70, description: '위력은 크지만 빗나가기 쉽다.' },
       { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', price: 260, power: 20, accuracy: 88, description: '묵직하고 정확한 한 방.' },
       { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', price: 420, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
-      { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', price: 600, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
+      { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', sprite: 'images/effect_storm.webp', price: 600, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
       { id: 'infinity_ray', name: '무한 광선', emoji: '♾️', effect: 'beam', price: 900, power: 40, accuracy: 72, description: '끝없이 이어지는 최대 위력의 기술.' }
     ];
 
@@ -4179,6 +4219,24 @@
       el.classList.add(`is-${kind}`);
     }
 
+    // 그림으로 된 기술은 내 수학몬 쪽에서 보스 쪽으로 날아가며 휘몰아친다.
+    const SPRITE_TRAVEL_MS = 700;
+
+    function playSpriteEffect(sprite) {
+      const el = document.getElementById('battleEffect');
+      el.className = 'battle-effect';
+      el.innerHTML = `<img class="effect-sprite" src="${sprite}" alt="">`;
+      void el.offsetWidth;
+      el.classList.add('is-traveling');
+    }
+
+    function shakeStage() {
+      const stage = document.getElementById('battleStage');
+      stage.classList.remove('is-quaking');
+      void stage.offsetWidth;
+      stage.classList.add('is-quaking');
+    }
+
     function hitFigure(id) {
       const el = document.getElementById(id);
       el.classList.remove('is-hit');
@@ -4273,25 +4331,37 @@
       document.getElementById('battleQuiz').style.display = 'none';
       const hit = Math.random() * 100 <= Math.min(100, Math.max(5, accuracy));
 
+      const travel = skill.sprite ? SPRITE_TRAVEL_MS : 0;
+      if (skill.sprite) playSpriteEffect(skill.sprite);
+
       if (hit) {
         const damage = Math.max(1, Math.round(skill.power * multiplier * (0.9 + Math.random() * 0.2)));
-        playEffect(skill.effect, skill.emoji);
-        hitFigure('battleBossFigure');
-        battle.bossHp = Math.max(0, battle.bossHp - damage);
-        updateBattleBars();
-        battleLog(`${skill.emoji} ${skill.name}이(가) 명중! ${damage}의 피해를 주었다.`);
-      } else {
-        playEffect('miss', '💨');
-        battleLog(`💨 ${skill.name}이(가) 빗나갔다!`);
-      }
+        const land = () => {
+          if (!skill.sprite) playEffect(skill.effect, skill.emoji);
+          hitFigure('battleBossFigure');
+          if (skill.sprite) shakeStage();
+          battle.bossHp = Math.max(0, battle.bossHp - damage);
+          updateBattleBars();
+          battleLog(`${skill.emoji} ${skill.name}이(가) 명중! ${damage}의 피해를 주었다.`);
 
-      battle.pendingSkill = null;
-
-      if (battle.bossHp <= 0) {
-        scheduleBattle(() => finishBattle(true), 900);
+          if (battle.bossHp <= 0) {
+            scheduleBattle(() => finishBattle(true), 900);
+          } else {
+            scheduleBattle(bossTurn, 1100);
+          }
+        };
+        battle.pendingSkill = null;
+        if (travel) scheduleBattle(land, travel); else land();
         return;
       }
-      scheduleBattle(bossTurn, 1100);
+
+      const miss = () => {
+        if (!skill.sprite) playEffect('miss', '💨');
+        battleLog(`💨 ${skill.name}이(가) 빗나갔다!`);
+        scheduleBattle(bossTurn, 1100);
+      };
+      battle.pendingSkill = null;
+      if (travel) scheduleBattle(miss, travel); else miss();
     }
 
     function finishBattle(won) {

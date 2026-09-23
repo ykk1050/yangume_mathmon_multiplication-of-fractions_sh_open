@@ -637,6 +637,254 @@
             text-align: left;
         }
 
+        .boss-beta {
+            font-size: 0.75rem;
+            background: #fed7d7;
+            color: #822727;
+            padding: 3px 10px;
+            border-radius: 999px;
+            vertical-align: middle;
+        }
+
+        .boss-panel {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .boss-hint {
+            color: #718096;
+            font-size: 0.9rem;
+            margin: 4px 0 12px;
+        }
+
+        .boss-partner-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+        }
+
+        .boss-partner {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            background: #f7fafc;
+            font-size: 0.8rem;
+        }
+
+        .boss-partner.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #ebf8ff, #bee3f8);
+        }
+
+        .boss-partner img {
+            width: 100%;
+            height: 62px;
+            object-fit: contain;
+        }
+
+        .boss-skill-grid,
+        .boss-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 12px;
+        }
+
+        .boss-skill, .boss-entry {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px;
+            background: #f7fafc;
+        }
+
+        .boss-skill.learned {
+            border-color: #48bb78;
+            background: linear-gradient(135deg, #f0fff4, #c6f6d5);
+        }
+
+        .boss-skill h4, .boss-entry h4 {
+            margin: 0 0 6px;
+        }
+
+        .boss-skill p, .boss-entry p {
+            margin: 3px 0;
+            font-size: 0.85rem;
+            color: #4a5568;
+        }
+
+        .boss-entry.cleared {
+            border-color: #f6ad55;
+            background: linear-gradient(135deg, #fffaf0, #feebc8);
+        }
+
+        .boss-entry.locked {
+            opacity: 0.5;
+        }
+
+        .boss-entry img {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+        }
+
+        .battle-stage {
+            position: relative;
+            background: linear-gradient(160deg, #2d3748, #1a202c);
+            border-radius: 14px;
+            padding: 14px;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .battle-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 4px 0;
+        }
+
+        .battle-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .battle-hp {
+            flex: 1;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .battle-hp-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #48bb78, #9ae6b4);
+            transition: width 0.4s ease;
+        }
+
+        .battle-hp-fill.is-boss {
+            background: linear-gradient(90deg, #f56565, #fc8181);
+        }
+
+        .battle-figure {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .battle-figure.is-boss img { max-height: 190px; }
+        .battle-figure.is-partner img { max-height: 110px; }
+        .battle-figure img { max-width: 100%; object-fit: contain; }
+
+        .battle-figure.is-hit {
+            animation: battleHit 0.5s ease-in-out;
+        }
+
+        .battle-effect {
+            position: absolute;
+            left: 50%;
+            top: 38%;
+            transform: translate(-50%, -50%);
+            font-size: 3.4rem;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .battle-effect.is-slash { animation: effectSlash 0.6s ease-out; }
+        .battle-effect.is-blast { animation: effectBlast 0.6s ease-out; }
+        .battle-effect.is-beam { animation: effectBeam 0.6s ease-out; }
+        .battle-effect.is-storm { animation: effectStorm 0.7s ease-out; }
+        .battle-effect.is-miss { animation: effectMiss 0.7s ease-out; }
+
+        @keyframes battleHit {
+            0%, 100% { transform: translateX(0); filter: none; }
+            20% { transform: translateX(-12px); filter: brightness(2.2); }
+            40% { transform: translateX(10px); filter: brightness(1); }
+            60% { transform: translateX(-7px); filter: brightness(2); }
+            80% { transform: translateX(5px); }
+        }
+
+        @keyframes effectSlash {
+            0% { opacity: 0; transform: translate(-140%, -50%) rotate(-45deg) scale(0.6); }
+            40% { opacity: 1; }
+            100% { opacity: 0; transform: translate(40%, -50%) rotate(-45deg) scale(1.4); }
+        }
+
+        @keyframes effectBlast {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+            35% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
+        }
+
+        @keyframes effectBeam {
+            0% { opacity: 0; transform: translate(-50%, 60%) scale(0.5); }
+            40% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+            100% { opacity: 0; transform: translate(-50%, -120%) scale(1.6); }
+        }
+
+        @keyframes effectStorm {
+            0% { opacity: 0; transform: translate(-50%, -50%) rotate(0) scale(0.5); }
+            40% { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -50%) rotate(720deg) scale(2); }
+        }
+
+        @keyframes effectMiss {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            30% { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -130%) scale(1); }
+        }
+
+        .battle-log {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin: 12px 0;
+            text-align: left;
+            font-size: 0.9rem;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .battle-log p { margin: 3px 0; }
+
+        .battle-skills {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .battle-skill-btn {
+            border: 2px solid #667eea;
+            background: #ebf4ff;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .battle-skill-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .battle-quiz {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
         .quiz-ball-bar {
             display: flex;
             align-items: center;
@@ -1440,6 +1688,7 @@
       <button class="tab" id="tabShop" onclick="switchTab('shop')">상점 및 훈련</button>
       <button class="tab" onclick="switchTab('minigame')">수학몬 포획하러 가기</button>
       <button class="tab" onclick="switchTab('collection')">도감</button>
+      <button class="tab" id="tabBoss" onclick="switchTab('boss')" style="display: none;">⚔️ 보스전</button>
       <button class="tab admin-tab" onclick="showAdminLogin()">🔧 관리 콘솔</button>
     </div>
 
@@ -1545,6 +1794,68 @@
       <div id="collectionContent" class="tab-content" style="display: none;">
         <h2>몬스터 도감</h2>
         <div id="collectionGrid" class="collection-grid"></div>
+      </div>
+
+      <!-- Boss Tab (테스트) -->
+      <div id="bossContent" class="tab-content" style="display: none;">
+        <h2>⚔️ 보스전 <span class="boss-beta">테스트</span></h2>
+
+        <div id="bossSetup">
+          <div class="boss-panel">
+            <h3>1. 함께 싸울 수학몬</h3>
+            <p class="boss-hint">포획한 수학몬 중 하나를 고르세요.</p>
+            <div id="bossPartnerGrid" class="boss-partner-grid"></div>
+          </div>
+
+          <div class="boss-panel">
+            <h3>2. 기술 배우기 <span id="bossSkillCount">(0/4)</span></h3>
+            <p class="boss-hint">코인으로 기술을 가르칩니다. 최대 4개까지 지닐 수 있어요.</p>
+            <div id="bossSkillGrid" class="boss-skill-grid"></div>
+          </div>
+
+          <div class="boss-panel">
+            <h3>3. 도전</h3>
+            <div id="bossList" class="boss-list"></div>
+          </div>
+        </div>
+
+        <div id="bossBattle" style="display: none;">
+          <div class="battle-stage" id="battleStage">
+            <div class="battle-row">
+              <div class="battle-name" id="battleBossName"></div>
+              <div class="battle-hp"><div class="battle-hp-fill is-boss" id="battleBossHp"></div></div>
+            </div>
+            <div class="battle-figure is-boss" id="battleBossFigure"></div>
+            <div class="battle-effect" id="battleEffect"></div>
+            <div class="battle-figure is-partner" id="battlePartnerFigure"></div>
+            <div class="battle-row">
+              <div class="battle-name" id="battlePartnerName"></div>
+              <div class="battle-hp"><div class="battle-hp-fill" id="battlePartnerHp"></div></div>
+            </div>
+          </div>
+
+          <div class="battle-log" id="battleLog"></div>
+
+          <div id="battleSkills" class="battle-skills"></div>
+
+          <div id="battleQuiz" class="battle-quiz" style="display: none;">
+            <div class="problem" id="battleProblem"></div>
+            <div class="fraction-input-container">
+              <div class="fraction-inputs">
+                <input type="number" class="answer-input fraction-input" id="battleWholeInput" placeholder="자연수" min="0">
+                <div class="fraction-display">
+                  <input type="number" class="answer-input fraction-input" id="battleNumeratorInput" placeholder="분자" min="0">
+                  <div class="fraction-line"></div>
+                  <input type="number" class="answer-input fraction-input" id="battleDenominatorInput" placeholder="분모" min="1">
+                </div>
+              </div>
+              <button class="btn btn-primary" id="battleSubmitBtn" onclick="submitBattleAnswer()">공격!</button>
+            </div>
+            <p class="instruction-text">※ 빠르고 정확하게 풀수록 공격이 강해집니다. (기약분수, 1 이상은 대분수)</p>
+          </div>
+
+          <button class="btn btn-danger" onclick="retreatFromBoss()">도망치기</button>
+        </div>
       </div>
 
       <!-- Admin Console Tab -->
@@ -1654,6 +1965,9 @@
               <button class="btn btn-cheat-inactive" onclick="toggleShowAnswers()">
                 <span id="answerCheatStatus">정답 미리보기: OFF</span>
               </button>
+              <button class="btn btn-cheat-inactive" onclick="toggleBossTest()">
+                <span id="bossTestStatus">보스전(테스트): OFF</span>
+              </button>
             </div>
           </div>
 
@@ -1786,6 +2100,8 @@
       captureAnswer: null,
       currentMonster: null,
       isAdminLoggedIn: false,
+      bossTestEnabled: false,
+      boss: { partner: null, skills: [], cleared: [] },
       infiniteCoinsEnabled: false,
       showAnswers: false,
       captureTrainingLevel: 0
@@ -2076,7 +2392,8 @@
       minigame: 'audio/capture.mp3',
       minigameEpic: 'audio/capture-epic.mp3',
       minigameLegendary: 'audio/capture-legendary.mp3',
-      collection: 'audio/collection.mp3'
+      collection: 'audio/collection.mp3',
+      boss: 'audio/capture-legendary.mp3'
     };
 
     const bgm = {
@@ -2182,7 +2499,7 @@
 
       // gameState.currentTab은 저장된 값이라 첫 화면과 어긋날 수 있어 실제 화면을 본다.
       activeTab() {
-        return ['practice', 'shop', 'minigame', 'collection', 'admin']
+        return ['practice', 'shop', 'minigame', 'collection', 'boss', 'admin']
           .find(name => {
             const content = document.getElementById(name + 'Content');
             return content && content.style.display !== 'none';
@@ -2245,6 +2562,7 @@
             (tabName === 'shop' && tab.textContent.includes('상점')) ||
             (tabName === 'minigame' && tab.textContent.includes('포획')) ||
             (tabName === 'collection' && tab.textContent.includes('도감')) ||
+            (tabName === 'boss' && tab.textContent.includes('보스전')) ||
             (tabName === 'admin' && tab.textContent.includes('🔧'))) {
           tab.classList.add('active');
         }
@@ -2255,6 +2573,7 @@
       if (tabName === 'collection') updateCollection();
       if (tabName === 'shop') updateShop();
       if (tabName === 'admin') updateAdminStatus();
+      if (tabName === 'boss') renderBossTab();
 
       bgm.refresh();
     }
@@ -3582,6 +3901,373 @@
       }
     }
 
+    // ===================== 보스전 (테스트) =====================
+
+    const BOSSES = [
+      {
+        id: 'resonance', name: '공명의 현자', title: '심해의 파동 지배자',
+        image: 'images/boss_1.webp', hp: 220, attack: [9, 15], reward: 400,
+        description: '빛조차 닿지 않는 심해에서 소리의 파동을 수학으로 해석해 세상을 진동시키는 지배자. 보석 하프에서 흘러나온 푸리에 급수의 선율이 상대의 구조를 계산해 무너뜨린다.'
+      },
+      {
+        id: 'entropy', name: '엔트로피의 지배자', title: '카오스와 붕괴의 여왕',
+        image: 'images/boss_2.webp', hp: 300, attack: [12, 19], reward: 700,
+        description: '완벽했던 수학적 질서가 무질서로 치닫는 끝에서 태어난 종말의 존재. 손 위의 은하가 모든 수식을 삼켜 무(NULL)로 되돌리고, 지나간 자리에는 혼돈의 궤적만 남는다.'
+      },
+      {
+        id: 'geometry', name: '진리의 감시자', title: '신성한 기하학의 여신',
+        image: 'images/boss_3.webp', hp: 380, attack: [15, 23], reward: 1100,
+        description: '우주의 탄생과 함께 시작된 모든 논리와 질서의 수호자. 손 위에 떠 있는 정다면체로 물질계의 설계도를 다루고, 혼천의 지팡이로 천체의 운행을 통제한다.'
+      },
+      {
+        id: 'error', name: '수학적 오류의 군주', title: 'Lord of Errors & Infinity',
+        image: 'images/boss_4.webp', hp: 460, attack: [18, 27], reward: 1800,
+        description: '0으로 나누기, 정의되지 않음, 오류처럼 수학이 결코 허락하지 않는 모순을 현실로 만드는 재앙. 무한대와 공집합의 지팡이가 올바른 수식을 순식간에 오염시킨다.'
+      }
+    ];
+
+    const BATTLE_SKILLS = [
+      { id: 'reduce_slash', name: '약분 베기', emoji: '✂️', effect: 'slash', price: 200, power: 18, accuracy: 85, description: '군더더기를 걷어내는 기본기. 안정적으로 맞는다.' },
+      { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', price: 350, power: 27, accuracy: 70, description: '위력은 크지만 빗나가기 쉽다.' },
+      { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', price: 260, power: 20, accuracy: 88, description: '묵직하고 정확한 한 방.' },
+      { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', price: 420, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
+      { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', price: 600, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
+      { id: 'infinity_ray', name: '무한 광선', emoji: '♾️', effect: 'beam', price: 900, power: 40, accuracy: 72, description: '끝없이 이어지는 최대 위력의 기술.' }
+    ];
+
+    const PARTNER_HP = { common: 90, rare: 110, epic: 130, legendary: 150 };
+
+    let battle = null;
+
+    function toggleBossTest() {
+      gameState.bossTestEnabled = !gameState.bossTestEnabled;
+      const status = document.getElementById('bossTestStatus');
+      status.textContent = `보스전(테스트): ${gameState.bossTestEnabled ? 'ON' : 'OFF'}`;
+      status.parentElement.className = gameState.bossTestEnabled ? 'btn btn-cheat-active' : 'btn btn-cheat-inactive';
+      updateBossTabVisibility();
+      if (!gameState.bossTestEnabled && document.getElementById('bossContent').style.display !== 'none') {
+        switchTab('practice');
+      }
+      saveData();
+    }
+
+    function updateBossTabVisibility() {
+      const tab = document.getElementById('tabBoss');
+      if (tab) tab.style.display = gameState.bossTestEnabled ? '' : 'none';
+
+      // 새로고침 뒤에도 콘솔 버튼이 실제 상태를 보여주도록 맞춘다.
+      const status = document.getElementById('bossTestStatus');
+      if (status) {
+        status.textContent = `보스전(테스트): ${gameState.bossTestEnabled ? 'ON' : 'OFF'}`;
+        status.parentElement.className = gameState.bossTestEnabled ? 'btn btn-cheat-active' : 'btn btn-cheat-inactive';
+      }
+    }
+
+    function bossState() {
+      if (!gameState.boss) gameState.boss = { partner: null, skills: [], cleared: [] };
+      if (!Array.isArray(gameState.boss.skills)) gameState.boss.skills = [];
+      if (!Array.isArray(gameState.boss.cleared)) gameState.boss.cleared = [];
+      return gameState.boss;
+    }
+
+    function findMonster(name) {
+      return Object.values(monsters).flat().find(m => m.name === name);
+    }
+
+    function renderBossTab() {
+      const boss = bossState();
+      document.getElementById('bossSetup').style.display = battle ? 'none' : 'block';
+      document.getElementById('bossBattle').style.display = battle ? 'block' : 'none';
+      if (battle) return;
+
+      // 파트너
+      const grid = document.getElementById('bossPartnerGrid');
+      grid.innerHTML = '';
+      if (gameState.collection.length === 0) {
+        grid.innerHTML = '<p class="boss-hint">아직 포획한 수학몬이 없습니다. 먼저 수학몬을 포획해 주세요.</p>';
+      }
+      gameState.collection.forEach(mon => {
+        const card = document.createElement('div');
+        card.className = `boss-partner ${boss.partner === mon.name ? 'selected' : ''}`;
+        card.onclick = () => selectBossPartner(mon.name);
+        const art = mon.imageUrl || (findMonster(mon.name) || {}).imageUrl;
+        card.innerHTML = `${art ? `<img src="${art}" alt="${mon.name}">` : `<div style="font-size:2rem;">${mon.emoji}</div>`}
+          <div><strong>${mon.name}</strong></div>
+          <div>${getRarityText(mon.rarity)} · 체력 ${PARTNER_HP[mon.rarity]}</div>`;
+        grid.appendChild(card);
+      });
+
+      // 기술
+      document.getElementById('bossSkillCount').textContent = `(${boss.skills.length}/4)`;
+      const skillGrid = document.getElementById('bossSkillGrid');
+      skillGrid.innerHTML = '';
+      BATTLE_SKILLS.forEach(skill => {
+        const learned = boss.skills.includes(skill.id);
+        const div = document.createElement('div');
+        div.className = `boss-skill ${learned ? 'learned' : ''}`;
+        div.innerHTML = `
+          <h4>${skill.emoji} ${skill.name}</h4>
+          <p>${skill.description}</p>
+          <p>위력 ${skill.power} · 명중 ${skill.accuracy}%</p>
+          <p>💰 ${skill.price} 코인</p>
+          <button class="btn ${learned ? 'btn-danger' : 'btn-primary'}" onclick="${learned ? `forgetSkill('${skill.id}')` : `learnSkill('${skill.id}')`}">
+            ${learned ? '잊게 하기' : '배우기'}
+          </button>`;
+        skillGrid.appendChild(div);
+      });
+
+      // 보스 목록
+      const list = document.getElementById('bossList');
+      list.innerHTML = '';
+      BOSSES.forEach((b, index) => {
+        const cleared = boss.cleared.includes(b.id);
+        const unlocked = index === 0 || boss.cleared.includes(BOSSES[index - 1].id);
+        const div = document.createElement('div');
+        div.className = `boss-entry ${cleared ? 'cleared' : ''} ${unlocked ? '' : 'locked'}`;
+        div.innerHTML = `
+          <img src="${b.image}" alt="${b.name}">
+          <h4>${b.name}${cleared ? ' ✅' : ''}</h4>
+          <p><strong>${b.title}</strong></p>
+          <p>체력 ${b.hp} · 보상 💰 ${b.reward}</p>
+          <p>${b.description}</p>
+          ${unlocked
+            ? `<button class="btn btn-primary" onclick="startBossBattle('${b.id}')">도전하기</button>`
+            : '<p><strong>이전 보스를 먼저 쓰러뜨려야 합니다.</strong></p>'}`;
+        list.appendChild(div);
+      });
+    }
+
+    function selectBossPartner(name) {
+      bossState().partner = name;
+      saveData();
+      renderBossTab();
+    }
+
+    function learnSkill(skillId) {
+      const boss = bossState();
+      const skill = BATTLE_SKILLS.find(s => s.id === skillId);
+      if (boss.skills.length >= 4) return showNotification('기술은 최대 4개까지 배울 수 있습니다!');
+      if (!gameState.infiniteCoinsEnabled && gameState.coins < skill.price) {
+        return showNotification('코인이 부족합니다!');
+      }
+      if (!gameState.infiniteCoinsEnabled) gameState.coins -= skill.price;
+      boss.skills.push(skillId);
+      updateUI();
+      saveData();
+      renderBossTab();
+      showNotification(`${skill.emoji} ${skill.name}을(를) 배웠습니다!`);
+    }
+
+    function forgetSkill(skillId) {
+      const boss = bossState();
+      boss.skills = boss.skills.filter(id => id !== skillId);
+      saveData();
+      renderBossTab();
+    }
+
+    function startBossBattle(bossId) {
+      const state = bossState();
+      if (!state.partner) return showNotification('함께 싸울 수학몬을 먼저 고르세요!');
+      if (state.skills.length === 0) return showNotification('기술을 최소 한 개는 배워야 합니다!');
+
+      const partnerData = gameState.collection.find(m => m.name === state.partner);
+      if (!partnerData) return showNotification('선택한 수학몬을 찾을 수 없습니다.');
+
+      const boss = BOSSES.find(b => b.id === bossId);
+      const maxHp = PARTNER_HP[partnerData.rarity] || 100;
+      battle = {
+        boss,
+        bossHp: boss.hp,
+        partner: partnerData,
+        hp: maxHp,
+        maxHp,
+        pendingSkill: null,
+        quizStart: 0,
+        answer: null,
+        busy: true
+      };
+
+      renderBossTab();
+      document.getElementById('battleBossName').textContent = `${boss.name} (${boss.title})`;
+      document.getElementById('battleBossFigure').innerHTML = `<img src="${boss.image}" alt="${boss.name}">`;
+      const art = partnerData.imageUrl || (findMonster(partnerData.name) || {}).imageUrl;
+      document.getElementById('battlePartnerFigure').innerHTML = art
+        ? `<img src="${art}" alt="${partnerData.name}">`
+        : `<div style="font-size:3rem;">${partnerData.emoji}</div>`;
+      document.getElementById('battlePartnerName').textContent = partnerData.name;
+      document.getElementById('battleLog').innerHTML = '';
+      updateBattleBars();
+      battleLog(`⚔️ ${boss.name}이(가) 나타났다!`);
+      renderBattleSkills();
+      setTimeout(bossTurn, 900);
+    }
+
+    function updateBattleBars() {
+      document.getElementById('battleBossHp').style.width =
+        `${Math.max(0, battle.bossHp / battle.boss.hp * 100)}%`;
+      document.getElementById('battlePartnerHp').style.width =
+        `${Math.max(0, battle.hp / battle.maxHp * 100)}%`;
+    }
+
+    function battleLog(text) {
+      const log = document.getElementById('battleLog');
+      const line = document.createElement('p');
+      line.textContent = text;
+      log.appendChild(line);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function playEffect(kind, emoji) {
+      const el = document.getElementById('battleEffect');
+      el.textContent = emoji;
+      el.className = 'battle-effect';
+      void el.offsetWidth;
+      el.classList.add(`is-${kind}`);
+    }
+
+    function hitFigure(id) {
+      const el = document.getElementById(id);
+      el.classList.remove('is-hit');
+      void el.offsetWidth;
+      el.classList.add('is-hit');
+    }
+
+    function bossTurn() {
+      if (!battle) return;
+      const [min, max] = battle.boss.attack;
+      const damage = Math.floor(Math.random() * (max - min + 1)) + min;
+      playEffect('blast', '🌀');
+      hitFigure('battlePartnerFigure');
+      battle.hp = Math.max(0, battle.hp - damage);
+      updateBattleBars();
+      battleLog(`🌀 ${battle.boss.name}의 공격! ${battle.partner.name}이(가) ${damage}의 피해를 입었다.`);
+
+      if (battle.hp <= 0) {
+        setTimeout(() => finishBattle(false), 800);
+        return;
+      }
+      setTimeout(startPlayerTurn, 900);
+    }
+
+    function renderBattleSkills() {
+      const wrap = document.getElementById('battleSkills');
+      wrap.innerHTML = '';
+      bossState().skills.forEach(id => {
+        const skill = BATTLE_SKILLS.find(s => s.id === id);
+        const btn = document.createElement('button');
+        btn.className = 'battle-skill-btn';
+        btn.disabled = battle.busy;
+        btn.innerHTML = `${skill.emoji} ${skill.name}<br><span style="font-weight:normal;font-size:0.8rem;">위력 ${skill.power} · 명중 ${skill.accuracy}%</span>`;
+        btn.onclick = () => chooseSkill(id);
+        wrap.appendChild(btn);
+      });
+    }
+
+    function startPlayerTurn() {
+      if (!battle) return;
+      battle.busy = false;
+      renderBattleSkills();
+      battleLog(`👉 ${battle.partner.name}의 차례! 기술을 고르세요.`);
+    }
+
+    function chooseSkill(skillId) {
+      if (!battle || battle.busy) return;
+      battle.busy = true;
+      battle.pendingSkill = skillId;
+      renderBattleSkills();
+
+      const problem = generateFractionProblem();
+      battle.answer = problem.answer;
+      battle.quizStart = Date.now();
+      document.getElementById('battleProblem').innerHTML = problem.problemHtml;
+      ['battleWholeInput', 'battleNumeratorInput', 'battleDenominatorInput'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('battleQuiz').style.display = 'block';
+      document.getElementById('battleSubmitBtn').disabled = false;
+      document.getElementById('battleWholeInput').focus();
+    }
+
+    function submitBattleAnswer() {
+      if (!battle || !battle.pendingSkill) return;
+      const numerator = document.getElementById('battleNumeratorInput').value;
+      const denominator = document.getElementById('battleDenominatorInput').value;
+      if (numerator === '' || denominator === '') return showNotification('분자와 분모를 모두 입력하세요!');
+      if (Number(denominator) === 0) return showNotification('분모는 0이 될 수 없습니다!');
+
+      document.getElementById('battleSubmitBtn').disabled = true;
+      const whole = parseInt(document.getElementById('battleWholeInput').value) || 0;
+      const improper = mixedToImproper(whole, parseInt(numerator) || 0, parseInt(denominator));
+      const user = reduceFraction(improper.numerator, improper.denominator);
+      const correct = user.numerator === battle.answer.numerator && user.denominator === battle.answer.denominator;
+      const seconds = (Date.now() - battle.quizStart) / 1000;
+
+      const skill = BATTLE_SKILLS.find(s => s.id === battle.pendingSkill);
+      let accuracy = skill.accuracy;
+      let multiplier = 1;
+      if (correct) {
+        accuracy += 20;
+        if (seconds <= 10) { multiplier = 1.5; battleLog(`⚡ 정답! ${seconds.toFixed(1)}초 — 눈부신 속도로 위력이 크게 올랐다!`); }
+        else if (seconds <= 20) { multiplier = 1.25; battleLog(`✅ 정답! ${seconds.toFixed(1)}초 — 위력이 올랐다.`); }
+        else { battleLog(`✅ 정답! ${seconds.toFixed(1)}초 — 침착하게 맞혔다.`); }
+      } else {
+        accuracy -= 30;
+        multiplier = 0.5;
+        battleLog(`❌ 오답… 기술이 흔들린다. (정답: ${battle.answer.numerator}/${battle.answer.denominator})`);
+      }
+
+      document.getElementById('battleQuiz').style.display = 'none';
+      const hit = Math.random() * 100 <= Math.min(100, Math.max(5, accuracy));
+
+      if (hit) {
+        const damage = Math.max(1, Math.round(skill.power * multiplier * (0.9 + Math.random() * 0.2)));
+        playEffect(skill.effect, skill.emoji);
+        hitFigure('battleBossFigure');
+        battle.bossHp = Math.max(0, battle.bossHp - damage);
+        updateBattleBars();
+        battleLog(`${skill.emoji} ${skill.name}이(가) 명중! ${damage}의 피해를 주었다.`);
+      } else {
+        playEffect('miss', '💨');
+        battleLog(`💨 ${skill.name}이(가) 빗나갔다!`);
+      }
+
+      battle.pendingSkill = null;
+
+      if (battle.bossHp <= 0) {
+        setTimeout(() => finishBattle(true), 900);
+        return;
+      }
+      setTimeout(bossTurn, 1100);
+    }
+
+    function finishBattle(won) {
+      if (!battle) return;
+      const boss = battle.boss;
+      if (won) {
+        const state = bossState();
+        const first = !state.cleared.includes(boss.id);
+        if (first) state.cleared.push(boss.id);
+        const reward = first ? boss.reward : Math.round(boss.reward / 4);
+        if (!gameState.infiniteCoinsEnabled) gameState.coins += reward;
+        updateUI();
+        saveData();
+        battleLog(`🎉 ${boss.name}을(를) 쓰러뜨렸다! 💰 ${reward} 코인 획득!`);
+        showNotification(`🎉 ${boss.name} 격파! 💰 ${reward} 코인!`);
+      } else {
+        battleLog(`💀 ${battle.partner.name}이(가) 쓰러졌다…`);
+        showNotification('보스전에서 패배했습니다.');
+      }
+      battle = null;
+      setTimeout(renderBossTab, 1600);
+    }
+
+    function retreatFromBoss() {
+      battle = null;
+      document.getElementById('battleQuiz').style.display = 'none';
+      renderBossTab();
+      showNotification('보스전에서 물러났습니다.');
+    }
+
     function toggleInfiniteCoins() {
       gameState.infiniteCoinsEnabled = !gameState.infiniteCoinsEnabled;
       const statusElement = document.getElementById('coinCheatStatus');
@@ -3919,6 +4605,7 @@
     updateAllUI();
     bgm.init();
     bgm.refresh();
+    updateBossTabVisibility();
   </script>
 </body>
 </html>

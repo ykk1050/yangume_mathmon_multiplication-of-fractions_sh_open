@@ -815,6 +815,55 @@
             animation: battleHit 0.5s ease-in-out;
         }
 
+        .battle-figure.is-charging {
+            animation: meleeCharge 0.85s cubic-bezier(0.3, 0.1, 0.3, 1);
+            z-index: 2;
+        }
+
+        @keyframes meleeCharge {
+            0% { transform: translateX(0) scale(1); }
+            32% { transform: translateX(var(--dash, 120px)) scale(1.08); }
+            42% { transform: translateX(calc(var(--dash, 120px) - 16px)) scale(1.02); }
+            58% { transform: translateX(var(--dash, 120px)) scale(1.05); }
+            100% { transform: translateX(0) scale(1); }
+        }
+
+        .battle-effect.is-impact {
+            opacity: 1;
+            left: 72%;
+            top: 52%;
+        }
+
+        .impact-ring {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 34px;
+            height: 34px;
+            border: 5px solid rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 18px rgba(255, 240, 180, 0.9);
+            animation: impactRing 0.45s ease-out forwards;
+        }
+
+        .impact-mark {
+            display: block;
+            font-size: 3rem;
+            animation: impactPop 0.45s ease-out forwards;
+        }
+
+        @keyframes impactRing {
+            0% { width: 34px; height: 34px; opacity: 1; border-width: 5px; }
+            100% { width: 190px; height: 190px; opacity: 0; border-width: 1px; }
+        }
+
+        @keyframes impactPop {
+            0% { transform: scale(0.4); opacity: 0; }
+            30% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
         .battle-effect {
             position: absolute;
             left: 75%;
@@ -1185,6 +1234,7 @@
         @media (prefers-reduced-motion: reduce) {
             .effect-sprite { animation: none; }
             .effect-beam { animation-duration: 0.2s; }
+            .battle-figure.is-charging { animation-duration: 0.3s; }
             .battle-stage.is-quaking { animation: none; }
             .capture-ball.is-thrown,
             .capture-ball-inner.is-shaking,
@@ -4054,7 +4104,7 @@
     const BATTLE_SKILLS = [
       { id: 'reduce_slash', name: '약분 베기', emoji: '✂️', effect: 'slash', price: 200, power: 18, accuracy: 85, description: '군더더기를 걷어내는 기본기. 안정적으로 맞는다.' },
       { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', price: 350, power: 27, accuracy: 70, description: '위력은 크지만 빗나가기 쉽다.' },
-      { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', price: 260, power: 20, accuracy: 88, description: '묵직하고 정확한 한 방.' },
+      { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', motion: 'melee', price: 260, power: 20, accuracy: 88, description: '보스 코앞까지 달려들어 내리찍는다.' },
       { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', sprite: 'images/effect_beam.webp', spriteMode: 'beam', price: 420, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
       { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', sprite: 'images/effect_storm.webp', spriteMode: 'travel', price: 600, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
       { id: 'infinity_ray', name: '무한 광선', emoji: '♾️', effect: 'beam', price: 900, power: 40, accuracy: 72, description: '끝없이 이어지는 최대 위력의 기술.' }
@@ -4279,6 +4329,31 @@
       el.classList.add(preset.className);
     }
 
+    const MELEE_IMPACT_MS = 320;
+
+    // 내 수학몬이 보스 코앞까지 달려갔다가 내리찍고 제자리로 돌아온다.
+    function chargePartner() {
+      const partner = document.getElementById('battlePartnerFigure');
+      const boss = document.getElementById('battleBossFigure');
+      // 칸이 아니라 실제로 보이는 그림끼리의 간격으로 재야 보스와 겹치지 않는다.
+      const from = (partner.querySelector('img') || partner).getBoundingClientRect();
+      const to = (boss.querySelector('img') || boss).getBoundingClientRect();
+      const gap = 24;
+      const dash = Math.max(40, to.left - from.right - gap);
+      partner.style.setProperty('--dash', `${Math.round(dash)}px`);
+      partner.classList.remove('is-charging');
+      void partner.offsetWidth;
+      partner.classList.add('is-charging');
+    }
+
+    function playImpactBurst() {
+      const el = document.getElementById('battleEffect');
+      el.className = 'battle-effect';
+      el.innerHTML = '<span class="impact-ring"></span><span class="impact-mark">💥</span>';
+      void el.offsetWidth;
+      el.classList.add('is-impact');
+    }
+
     function shakeStage() {
       const stage = document.getElementById('battleStage');
       stage.classList.remove('is-quaking');
@@ -4387,16 +4462,21 @@
       document.getElementById('battleQuiz').style.display = 'none';
       const hit = Math.random() * 100 <= Math.min(100, Math.max(5, accuracy));
 
-      const travel = skill.sprite ? (SPRITE_MODES[skill.spriteMode] || SPRITE_MODES.travel).impact : 0;
-      if (skill.sprite) playSpriteEffect(skill.sprite, skill.spriteMode);
+      const melee = skill.motion === 'melee';
+      const travel = melee
+        ? MELEE_IMPACT_MS
+        : (skill.sprite ? (SPRITE_MODES[skill.spriteMode] || SPRITE_MODES.travel).impact : 0);
+      if (melee) chargePartner();
+      else if (skill.sprite) playSpriteEffect(skill.sprite, skill.spriteMode);
 
       if (hit) {
         const damage = Math.max(1, Math.round(skill.power * multiplier * (0.9 + Math.random() * 0.2)));
         const land = () => {
-          if (!skill.sprite) playEffect(skill.effect, skill.emoji);
+          if (melee) playImpactBurst();
+          else if (!skill.sprite) playEffect(skill.effect, skill.emoji);
           hitFigure('battleBossFigure');
           if (skill.spriteMode === 'beam') flashStage();
-          else if (skill.sprite) shakeStage();
+          else if (skill.sprite || melee) shakeStage();
           battle.bossHp = Math.max(0, battle.bossHp - damage);
           updateBattleBars();
           battleLog(`${skill.emoji} ${skill.name}이(가) 명중! ${damage}의 피해를 주었다.`);
@@ -4413,7 +4493,7 @@
       }
 
       const miss = () => {
-        if (!skill.sprite) playEffect('miss', '💨');
+        if (!skill.sprite && !melee) playEffect('miss', '💨');
         battleLog(`💨 ${skill.name}이(가) 빗나갔다!`);
         scheduleBattle(bossTurn, 1100);
       };

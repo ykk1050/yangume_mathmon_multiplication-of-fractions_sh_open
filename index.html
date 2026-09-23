@@ -772,13 +772,18 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            /* 배경 그림 위에서도 읽히도록 글자 뒤에만 어두운 막을 깐다. */
+            background: rgba(10, 14, 22, 0.62);
+            padding: 3px 10px;
+            border-radius: 999px;
         }
 
         .battle-hp {
             width: 150px;
             max-width: 100%;
             height: 12px;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(10, 14, 22, 0.62);
+            border: 1px solid rgba(255, 255, 255, 0.25);
             border-radius: 999px;
             overflow: hidden;
         }
@@ -4136,9 +4141,7 @@
       renderBossTab();
       const stage = document.getElementById('battleStage');
       // 배경 위에 어두운 막을 한 겹 깔아야 이름과 체력바가 읽힌다.
-      stage.style.backgroundImage = boss.background
-        ? `linear-gradient(rgba(12, 18, 30, 0.55), rgba(12, 18, 30, 0.7)), url('${boss.background}')`
-        : '';
+      stage.style.backgroundImage = boss.background ? `url('${boss.background}')` : '';
       document.getElementById('battleBossName').textContent = `${boss.name} (${boss.title})`;
       document.getElementById('battleBossFigure').innerHTML = `<img src="${boss.image}" alt="${boss.name}">`;
       const art = partnerData.imageUrl || (findMonster(partnerData.name) || {}).imageUrl;

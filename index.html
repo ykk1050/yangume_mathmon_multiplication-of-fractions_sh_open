@@ -831,6 +831,49 @@
             animation: stormTravel 1s cubic-bezier(0.35, 0.05, 0.4, 1) forwards;
         }
 
+        .battle-effect.is-beaming {
+            left: 27%;
+            top: 52%;
+            width: 50%;
+            transform: translate(0, -50%);
+            /* 바탕 요소는 기본이 투명이라 광선을 쓸 때는 직접 켜 준다. */
+            opacity: 1;
+        }
+
+        .effect-beam {
+            display: block;
+            width: 100%;
+            transform-origin: left center;
+            filter: brightness(1.45) saturate(1.3)
+                    drop-shadow(0 0 4px rgba(255, 255, 255, 0.95))
+                    drop-shadow(0 0 18px rgba(120, 180, 255, 0.95));
+            animation: beamShoot 0.7s ease-out forwards;
+        }
+
+        /* 광선이 도달하는 순간 화면이 하얗게 번쩍인다. */
+        .battle-stage.is-flashed::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 74% 52%, rgba(255, 255, 255, 0.85), rgba(160, 200, 255, 0.25) 45%, transparent 70%);
+            animation: beamFlash 0.4s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes beamFlash {
+            0% { opacity: 0.9; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes beamShoot {
+            0% { opacity: 0; transform: scaleX(0.05) scaleY(0.5); filter: brightness(2.4); }
+            18% { opacity: 1; transform: scaleX(1) scaleY(1.1); }
+            35% { transform: scaleX(1) scaleY(0.9); filter: brightness(1.7); }
+            55% { opacity: 0.85; transform: scaleX(1) scaleY(1.05); }
+            75% { opacity: 1; filter: brightness(1.3); }
+            100% { opacity: 0; transform: scaleX(1) scaleY(0.85); }
+        }
+
         .effect-sprite {
             display: block;
             width: 150px;
@@ -1141,6 +1184,7 @@
 
         @media (prefers-reduced-motion: reduce) {
             .effect-sprite { animation: none; }
+            .effect-beam { animation-duration: 0.2s; }
             .battle-stage.is-quaking { animation: none; }
             .capture-ball.is-thrown,
             .capture-ball-inner.is-shaking,
@@ -1718,6 +1762,7 @@
             .battle-figure.is-partner img { max-height: 100px; }
             .battle-effect { font-size: 2.4rem; }
             .effect-sprite { width: 96px; }
+            .battle-effect.is-beaming { left: 26%; width: 52%; }
             .quiz-ball-change { padding: 5px 10px; font-size: 0.78rem; white-space: nowrap; }
         }
 
@@ -4010,8 +4055,8 @@
       { id: 'reduce_slash', name: '약분 베기', emoji: '✂️', effect: 'slash', price: 200, power: 18, accuracy: 85, description: '군더더기를 걷어내는 기본기. 안정적으로 맞는다.' },
       { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', price: 350, power: 27, accuracy: 70, description: '위력은 크지만 빗나가기 쉽다.' },
       { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', price: 260, power: 20, accuracy: 88, description: '묵직하고 정확한 한 방.' },
-      { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', price: 420, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
-      { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', sprite: 'images/effect_storm.webp', price: 600, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
+      { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', sprite: 'images/effect_beam.webp', spriteMode: 'beam', price: 420, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
+      { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', sprite: 'images/effect_storm.webp', spriteMode: 'travel', price: 600, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
       { id: 'infinity_ray', name: '무한 광선', emoji: '♾️', effect: 'beam', price: 900, power: 40, accuracy: 72, description: '끝없이 이어지는 최대 위력의 기술.' }
     ];
 
@@ -4219,15 +4264,19 @@
       el.classList.add(`is-${kind}`);
     }
 
-    // 그림으로 된 기술은 내 수학몬 쪽에서 보스 쪽으로 날아가며 휘몰아친다.
-    const SPRITE_TRAVEL_MS = 700;
+    // 그림으로 된 기술. 날아가는 것(travel)과 뻗어 나가는 것(beam)이 다르게 움직인다.
+    const SPRITE_MODES = {
+      travel: { className: 'is-traveling', spriteClass: 'effect-sprite', impact: 700 },
+      beam: { className: 'is-beaming', spriteClass: 'effect-beam', impact: 330 }
+    };
 
-    function playSpriteEffect(sprite) {
+    function playSpriteEffect(sprite, mode) {
+      const preset = SPRITE_MODES[mode] || SPRITE_MODES.travel;
       const el = document.getElementById('battleEffect');
       el.className = 'battle-effect';
-      el.innerHTML = `<img class="effect-sprite" src="${sprite}" alt="">`;
+      el.innerHTML = `<img class="${preset.spriteClass}" src="${sprite}" alt="">`;
       void el.offsetWidth;
-      el.classList.add('is-traveling');
+      el.classList.add(preset.className);
     }
 
     function shakeStage() {
@@ -4235,6 +4284,13 @@
       stage.classList.remove('is-quaking');
       void stage.offsetWidth;
       stage.classList.add('is-quaking');
+    }
+
+    function flashStage() {
+      const stage = document.getElementById('battleStage');
+      stage.classList.remove('is-flashed');
+      void stage.offsetWidth;
+      stage.classList.add('is-flashed');
     }
 
     function hitFigure(id) {
@@ -4331,15 +4387,16 @@
       document.getElementById('battleQuiz').style.display = 'none';
       const hit = Math.random() * 100 <= Math.min(100, Math.max(5, accuracy));
 
-      const travel = skill.sprite ? SPRITE_TRAVEL_MS : 0;
-      if (skill.sprite) playSpriteEffect(skill.sprite);
+      const travel = skill.sprite ? (SPRITE_MODES[skill.spriteMode] || SPRITE_MODES.travel).impact : 0;
+      if (skill.sprite) playSpriteEffect(skill.sprite, skill.spriteMode);
 
       if (hit) {
         const damage = Math.max(1, Math.round(skill.power * multiplier * (0.9 + Math.random() * 0.2)));
         const land = () => {
           if (!skill.sprite) playEffect(skill.effect, skill.emoji);
           hitFigure('battleBossFigure');
-          if (skill.sprite) shakeStage();
+          if (skill.spriteMode === 'beam') flashStage();
+          else if (skill.sprite) shakeStage();
           battle.bossHp = Math.max(0, battle.bossHp - damage);
           updateBattleBars();
           battleLog(`${skill.emoji} ${skill.name}이(가) 명중! ${damage}의 피해를 주었다.`);

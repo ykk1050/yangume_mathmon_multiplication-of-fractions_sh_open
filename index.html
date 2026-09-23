@@ -865,6 +865,7 @@
         }
 
         .battle-log {
+            margin-top: 14px;
             background: rgba(255, 255, 255, 0.9);
             border: 2px solid #e2e8f0;
             border-radius: 10px;
@@ -1864,8 +1865,6 @@
             <div class="battle-effect" id="battleEffect"></div>
           </div>
 
-          <div class="battle-log" id="battleLog"></div>
-
           <div id="battleSkills" class="battle-skills"></div>
 
           <div id="battleQuiz" class="battle-quiz" style="display: none;">
@@ -1885,6 +1884,8 @@
           </div>
 
           <button class="btn btn-danger" onclick="retreatFromBoss()">도망치기</button>
+
+          <div class="battle-log" id="battleLog"></div>
         </div>
       </div>
 
@@ -3969,6 +3970,16 @@
     const PARTNER_HP = { common: 90, rare: 110, epic: 130, legendary: 150 };
 
     let battle = null;
+    let battleRunId = 0;
+
+    // 전투가 끝난 뒤에도 남아 있던 예약이 다음 전투를 움직이지 않도록,
+    // 예약을 걸 때의 전투와 같은 전투일 때만 실행한다.
+    function scheduleBattle(action, delay) {
+      const run = battle.id;
+      setTimeout(() => {
+        if (battle && battle.id === run) action();
+      }, delay);
+    }
 
     function toggleBossTest() {
       gameState.bossTestEnabled = !gameState.bossTestEnabled;
@@ -4107,6 +4118,7 @@
       const boss = BOSSES.find(b => b.id === bossId);
       const maxHp = PARTNER_HP[partnerData.rarity] || 100;
       battle = {
+        id: ++battleRunId,
         boss,
         bossHp: boss.hp,
         partner: partnerData,
@@ -4130,7 +4142,7 @@
       updateBattleBars();
       battleLog(`⚔️ ${boss.name}이(가) 나타났다!`);
       renderBattleSkills();
-      setTimeout(bossTurn, 900);
+      scheduleBattle(bossTurn, 900);
     }
 
     function updateBattleBars() {
@@ -4174,10 +4186,10 @@
       battleLog(`🌀 ${battle.boss.name}의 공격! ${battle.partner.name}이(가) ${damage}의 피해를 입었다.`);
 
       if (battle.hp <= 0) {
-        setTimeout(() => finishBattle(false), 800);
+        scheduleBattle(() => finishBattle(false), 800);
         return;
       }
-      setTimeout(startPlayerTurn, 900);
+      scheduleBattle(startPlayerTurn, 900);
     }
 
     function renderBattleSkills() {
@@ -4265,10 +4277,10 @@
       battle.pendingSkill = null;
 
       if (battle.bossHp <= 0) {
-        setTimeout(() => finishBattle(true), 900);
+        scheduleBattle(() => finishBattle(true), 900);
         return;
       }
-      setTimeout(bossTurn, 1100);
+      scheduleBattle(bossTurn, 1100);
     }
 
     function finishBattle(won) {

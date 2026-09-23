@@ -854,6 +854,21 @@
             100% { opacity: 0; transform: translate(-26%, -50%) scale(1.14); }
         }
 
+        .slash-flurry {
+            position: absolute;
+            background-image: url('images/effect_slash.webp');
+            background-repeat: no-repeat;
+            pointer-events: none;
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.95))
+                    drop-shadow(0 0 14px rgba(180, 225, 255, 0.85));
+            animation: slashPlay 0.42s steps(8) forwards;
+        }
+
+        @keyframes slashPlay {
+            from { background-position: 0 0; }
+            to { background-position: calc(var(--sheet-width) * -1) 0; }
+        }
+
         .blast-burst {
             position: absolute;
             background-image: url('images/effect_explosion.webp');
@@ -4143,7 +4158,7 @@
     ];
 
     const BATTLE_SKILLS = [
-      { id: 'reduce_slash', name: '약분 베기', emoji: '✂️', effect: 'slash', price: 200, power: 18, accuracy: 85, description: '군더더기를 걷어내는 기본기. 안정적으로 맞는다.' },
+      { id: 'reduce_slash', name: '약분 베기', emoji: '✂️', effect: 'slash', motion: 'slash', price: 200, power: 18, accuracy: 85, description: '군더더기를 단칼에 걷어낸다. 안정적으로 맞는다.' },
       { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', motion: 'volley', price: 350, power: 27, accuracy: 70, description: '보스 머리 위에서 연달아 터진다. 위력은 크지만 빗나가기 쉽다.' },
       { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', motion: 'melee', price: 260, power: 20, accuracy: 88, description: '보스 코앞까지 달려들어 내리찍는다.' },
       { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', sprite: 'images/effect_beam.webp', spriteMode: 'beam', price: 420, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
@@ -4376,8 +4391,34 @@
     const BLAST_GAP_MS = 130;
     const BLAST_IMPACT_MS = (BLAST_COUNT - 1) * BLAST_GAP_MS + 240;
 
+    const SLASH_FRAMES = 8;
+    const SLASH_MS = 420;
+    const SLASH_IMPACT_MS = 260;
+
+    // 보스 위에서 여러 갈래의 칼자국이 순식간에 그어진다.
+    function playSlashFlurry() {
+      const stage = document.getElementById('battleStage');
+      const bossFigure = document.getElementById('battleBossFigure');
+      const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
+      const base = stage.getBoundingClientRect();
+
+      const width = Math.min(380, Math.max(240, target.width * 1.6));
+      const height = width * 144 / 256;
+      const slash = document.createElement('div');
+      slash.className = 'slash-flurry';
+      slash.style.width = `${width}px`;
+      slash.style.height = `${height}px`;
+      slash.style.backgroundSize = `${width * SLASH_FRAMES}px ${height}px`;
+      slash.style.setProperty('--sheet-width', `${width * SLASH_FRAMES}px`);
+      slash.style.left = `${target.left - base.left + target.width / 2 - width / 2}px`;
+      slash.style.top = `${target.top - base.top + target.height / 2 - height / 2}px`;
+      slash.addEventListener('animationend', () => slash.remove());
+      setTimeout(() => slash.remove(), 1200);
+      stage.appendChild(slash);
+    }
+
     function clearBursts() {
-      document.querySelectorAll('.blast-burst, .boss-wave').forEach(el => el.remove());
+      document.querySelectorAll('.blast-burst, .boss-wave, .slash-flurry').forEach(el => el.remove());
     }
 
     // 보스 머리 위쪽에 작은 폭발이 시간차를 두고 연달아 터진다.
@@ -4567,21 +4608,24 @@
 
       const melee = skill.motion === 'melee';
       const volley = skill.motion === 'volley';
+      const slash = skill.motion === 'slash';
       const travel = melee ? MELEE_IMPACT_MS
         : volley ? BLAST_IMPACT_MS
+        : slash ? SLASH_IMPACT_MS
         : (skill.sprite ? (SPRITE_MODES[skill.spriteMode] || SPRITE_MODES.travel).impact : 0);
       if (melee) chargePartner();
       else if (volley) playBlastVolley();
+      else if (slash) playSlashFlurry();
       else if (skill.sprite) playSpriteEffect(skill.sprite, skill.spriteMode);
 
       if (hit) {
         const damage = Math.max(1, Math.round(skill.power * multiplier * (0.9 + Math.random() * 0.2)));
         const land = () => {
           if (melee) playImpactBurst();
-          else if (!skill.sprite && !volley) playEffect(skill.effect, skill.emoji);
+          else if (!skill.sprite && !volley && !slash) playEffect(skill.effect, skill.emoji);
           hitFigure('battleBossFigure');
           if (skill.spriteMode === 'beam') flashStage();
-          else if (skill.sprite || melee || volley) shakeStage();
+          else if (skill.sprite || melee || volley || slash) shakeStage();
           battle.bossHp = Math.max(0, battle.bossHp - damage);
           updateBattleBars();
           battleLog(`${skill.emoji} ${skill.name}이(가) 명중! ${damage}의 피해를 주었다.`);
@@ -4598,7 +4642,7 @@
       }
 
       const miss = () => {
-        if (!skill.sprite && !melee && !volley) playEffect('miss', '💨');
+        if (!skill.sprite && !melee && !volley && !slash) playEffect('miss', '💨');
         battleLog(`💨 ${skill.name}이(가) 빗나갔다!`);
         scheduleBattle(bossTurn, 1100);
       };

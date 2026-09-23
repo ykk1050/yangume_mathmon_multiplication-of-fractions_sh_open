@@ -828,6 +828,20 @@
             100% { transform: translateX(0) scale(1); }
         }
 
+        .blast-burst {
+            position: absolute;
+            background-image: url('images/effect_explosion.webp');
+            background-repeat: no-repeat;
+            pointer-events: none;
+            animation: blastPlay 0.55s steps(16) forwards;
+        }
+
+        @keyframes blastPlay {
+            /* 퍼센트로 옮기면 칸이 아니라 여백 기준이 되어 장면이 넘어가지 않는다. */
+            from { background-position: 0 0; }
+            to { background-position: calc(var(--sheet-width) * -1) 0; }
+        }
+
         .battle-effect.is-impact {
             opacity: 1;
             left: 72%;
@@ -4103,7 +4117,7 @@
 
     const BATTLE_SKILLS = [
       { id: 'reduce_slash', name: '약분 베기', emoji: '✂️', effect: 'slash', price: 200, power: 18, accuracy: 85, description: '군더더기를 걷어내는 기본기. 안정적으로 맞는다.' },
-      { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', price: 350, power: 27, accuracy: 70, description: '위력은 크지만 빗나가기 쉽다.' },
+      { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', motion: 'volley', price: 350, power: 27, accuracy: 70, description: '보스 머리 위에서 연달아 터진다. 위력은 크지만 빗나가기 쉽다.' },
       { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', motion: 'melee', price: 260, power: 20, accuracy: 88, description: '보스 코앞까지 달려들어 내리찍는다.' },
       { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', sprite: 'images/effect_beam.webp', spriteMode: 'beam', price: 420, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
       { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', sprite: 'images/effect_storm.webp', spriteMode: 'travel', price: 600, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
@@ -4274,6 +4288,7 @@
       };
 
       renderBossTab();
+      clearBursts();
       const stage = document.getElementById('battleStage');
       // 배경 위에 어두운 막을 한 겹 깔아야 이름과 체력바가 읽힌다.
       stage.style.backgroundImage = boss.background ? `url('${boss.background}')` : '';
@@ -4330,6 +4345,42 @@
     }
 
     const MELEE_IMPACT_MS = 320;
+    const BLAST_COUNT = 4;
+    const BLAST_GAP_MS = 130;
+    const BLAST_IMPACT_MS = (BLAST_COUNT - 1) * BLAST_GAP_MS + 240;
+
+    function clearBursts() {
+      document.querySelectorAll('.blast-burst').forEach(el => el.remove());
+    }
+
+    // 보스 머리 위쪽에 작은 폭발이 시간차를 두고 연달아 터진다.
+    function playBlastVolley() {
+      const stage = document.getElementById('battleStage');
+      const bossFigure = document.getElementById('battleBossFigure');
+      const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
+      const base = stage.getBoundingClientRect();
+
+      for (let i = 0; i < BLAST_COUNT; i++) {
+        const delay = i * BLAST_GAP_MS;
+        const size = 70 + Math.random() * 34;
+        const x = target.left - base.left + target.width * (0.15 + Math.random() * 0.7);
+        const y = target.top - base.top + target.height * (0.05 + Math.random() * 0.3);
+        setTimeout(() => {
+          const burst = document.createElement('div');
+          burst.className = 'blast-burst';
+          burst.style.width = `${size}px`;
+          burst.style.height = `${size}px`;
+          burst.style.backgroundSize = `${size * 16}px ${size}px`;
+          burst.style.setProperty('--sheet-width', `${size * 16}px`);
+          burst.style.left = `${x - size / 2}px`;
+          burst.style.top = `${y - size / 2}px`;
+          burst.addEventListener('animationend', () => burst.remove());
+          // 탭이 뒤로 가 있으면 애니메이션이 멈춰 끝나지 않으므로 시간으로도 치운다.
+          setTimeout(() => burst.remove(), 1500);
+          stage.appendChild(burst);
+        }, delay);
+      }
+    }
 
     // 내 수학몬이 보스 코앞까지 달려갔다가 내리찍고 제자리로 돌아온다.
     function chargePartner() {
@@ -4463,20 +4514,22 @@
       const hit = Math.random() * 100 <= Math.min(100, Math.max(5, accuracy));
 
       const melee = skill.motion === 'melee';
-      const travel = melee
-        ? MELEE_IMPACT_MS
+      const volley = skill.motion === 'volley';
+      const travel = melee ? MELEE_IMPACT_MS
+        : volley ? BLAST_IMPACT_MS
         : (skill.sprite ? (SPRITE_MODES[skill.spriteMode] || SPRITE_MODES.travel).impact : 0);
       if (melee) chargePartner();
+      else if (volley) playBlastVolley();
       else if (skill.sprite) playSpriteEffect(skill.sprite, skill.spriteMode);
 
       if (hit) {
         const damage = Math.max(1, Math.round(skill.power * multiplier * (0.9 + Math.random() * 0.2)));
         const land = () => {
           if (melee) playImpactBurst();
-          else if (!skill.sprite) playEffect(skill.effect, skill.emoji);
+          else if (!skill.sprite && !volley) playEffect(skill.effect, skill.emoji);
           hitFigure('battleBossFigure');
           if (skill.spriteMode === 'beam') flashStage();
-          else if (skill.sprite || melee) shakeStage();
+          else if (skill.sprite || melee || volley) shakeStage();
           battle.bossHp = Math.max(0, battle.bossHp - damage);
           updateBattleBars();
           battleLog(`${skill.emoji} ${skill.name}이(가) 명중! ${damage}의 피해를 주었다.`);
@@ -4493,7 +4546,7 @@
       }
 
       const miss = () => {
-        if (!skill.sprite && !melee) playEffect('miss', '💨');
+        if (!skill.sprite && !melee && !volley) playEffect('miss', '💨');
         battleLog(`💨 ${skill.name}이(가) 빗나갔다!`);
         scheduleBattle(bossTurn, 1100);
       };
@@ -4524,6 +4577,7 @@
 
     function retreatFromBoss() {
       battle = null;
+      clearBursts();
       document.getElementById('battleQuiz').style.display = 'none';
       renderBossTab();
       showNotification('보스전에서 물러났습니다.');

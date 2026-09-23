@@ -747,6 +747,8 @@
             gap: 12px;
             align-items: end;
             background: linear-gradient(160deg, #2d3748, #1a202c);
+            background-size: cover;
+            background-position: center;
             border-radius: 14px;
             padding: 14px;
             color: #fff;
@@ -3938,7 +3940,8 @@
     const BOSSES = [
       {
         id: 'resonance', name: '공명의 현자', title: '심해의 파동 지배자',
-        image: 'images/boss_1.webp', hp: 220, attack: [9, 15], reward: 400,
+        image: 'images/boss_1.webp', background: 'images/boss_1_bg.webp',
+        hp: 220, attack: [9, 15], reward: 400,
         description: '빛조차 닿지 않는 심해에서 소리의 파동을 수학으로 해석해 세상을 진동시키는 지배자. 보석 하프에서 흘러나온 푸리에 급수의 선율이 상대의 구조를 계산해 무너뜨린다.'
       },
       {
@@ -4131,6 +4134,11 @@
       };
 
       renderBossTab();
+      const stage = document.getElementById('battleStage');
+      // 배경 위에 어두운 막을 한 겹 깔아야 이름과 체력바가 읽힌다.
+      stage.style.backgroundImage = boss.background
+        ? `linear-gradient(rgba(12, 18, 30, 0.55), rgba(12, 18, 30, 0.7)), url('${boss.background}')`
+        : '';
       document.getElementById('battleBossName').textContent = `${boss.name} (${boss.title})`;
       document.getElementById('battleBossFigure').innerHTML = `<img src="${boss.image}" alt="${boss.name}">`;
       const art = partnerData.imageUrl || (findMonster(partnerData.name) || {}).imageUrl;

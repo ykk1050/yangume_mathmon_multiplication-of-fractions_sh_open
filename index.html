@@ -1952,6 +1952,16 @@
           gameState.collection = uniqueMonsters;
           gameState.totalCaught = uniqueMonsters.length;
 
+          // 포획한 몬스터가 '만난 목록'에도 남아 있으면 만남 수가 부풀려진다.
+          const caughtKeys = new Set(gameState.collection.map(m => `${m.name}-${m.rarity}`));
+          const seenKeys = new Set();
+          gameState.encounteredMonsters = (gameState.encounteredMonsters || []).filter(m => {
+            const key = `${m.name}-${m.rarity}`;
+            if (caughtKeys.has(key) || seenKeys.has(key)) return false;
+            seenKeys.add(key);
+            return true;
+          });
+
           // 예전 저장본은 이미지를 통째로 담고 있어 저장 공간을 크게 차지한다.
           // 이제 이미지는 파일로 있으므로 경로만 남긴다.
           const imageByName = {};
@@ -3335,6 +3345,8 @@
       // 신규 포획: 도감에 추가하고 통계 업데이트
       gameState.collection.push(gameState.currentMonster);
       gameState.totalCaught++;
+      gameState.encounteredMonsters = gameState.encounteredMonsters.filter(m =>
+        !(m.name === gameState.currentMonster.name && m.rarity === gameState.currentMonster.rarity));
       
       const rarityOrder = ['common', 'rare', 'epic', 'legendary'];
       const currentRarityIndex = rarityOrder.indexOf(gameState.currentMonster.rarity);
@@ -3458,7 +3470,9 @@
       statsDiv.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 20px; background: linear-gradient(135deg, #f7fafc, #edf2f7); border-radius: 12px; margin-top: 20px; border: 2px solid #e2e8f0;';
       const totalMonsters = allMonsters.length;
       const caughtCount = gameState.collection.length;
-      const encounteredCount = gameState.encounteredMonsters.length;
+      const caughtKeys = new Set(gameState.collection.map(m => `${m.name}-${m.rarity}`));
+      const encounteredCount = gameState.encounteredMonsters
+        .filter(m => !caughtKeys.has(`${m.name}-${m.rarity}`)).length;
       const completionRate = Math.round((caughtCount / totalMonsters) * 100);
       statsDiv.innerHTML = `
         <h3 style="margin: 0 0 10px 0; color: #2d3748;">📊 도감 통계</h3>

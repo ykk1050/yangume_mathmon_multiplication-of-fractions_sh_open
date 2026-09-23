@@ -833,25 +833,74 @@
             left: 6%;
             right: 6%;
             top: 50%;
+            opacity: 0;
             transform: translateY(-50%);
             pointer-events: none;
-            animation: bossWaveSweep 1s ease-out forwards;
+            animation: bossWaveSweep 1.05s ease-out forwards;
+        }
+
+        .boss-wave.layer-1 {
+            top: 38%;
+            scale: 0.78;
+            animation-name: bossWaveSweepHigh;
+        }
+
+        .boss-wave.layer-2 {
+            top: 63%;
+            scale: 0.62;
+            animation-name: bossWaveSweepLow;
+        }
+
+        .boss-wave.layer-1 img { opacity: 0.75; }
+        .boss-wave.layer-2 img { opacity: 0.55; }
+
+        .boss-ring {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            margin: -15px 0 0 -15px;
+            border: 3px solid rgba(180, 235, 255, 0.9);
+            border-radius: 50%;
+            box-shadow: 0 0 16px rgba(120, 200, 255, 0.85);
+            pointer-events: none;
+            animation: bossRingSpread 0.85s ease-out forwards;
+        }
+
+        @keyframes bossRingSpread {
+            0% { width: 30px; height: 30px; margin: -15px 0 0 -15px; opacity: 0.95; border-width: 3px; }
+            100% { width: 320px; height: 320px; margin: -160px 0 0 -160px; opacity: 0; border-width: 1px; }
         }
 
         .boss-wave img {
             display: block;
             width: 100%;
-            /* 원본은 검은 오선지라 어두운 무대에서 묻힌다. 흰 음파처럼 보이게 만든다. */
-            filter: brightness(0) invert(1)
-                    drop-shadow(0 0 8px rgba(170, 230, 255, 0.95))
-                    drop-shadow(0 0 20px rgba(80, 160, 255, 0.8));
+            /* 검은 오선지는 어두운 무대에서 묻힌다. 명암만 뒤집고 색조는 되돌려
+               선은 밝게, 음표의 색감은 살린다. */
+            filter: invert(1) hue-rotate(180deg) saturate(1.35) contrast(1.1)
+                    drop-shadow(0 0 8px rgba(170, 230, 255, 0.9))
+                    drop-shadow(0 0 22px rgba(90, 170, 255, 0.7));
         }
 
         @keyframes bossWaveSweep {
-            0% { opacity: 0; transform: translate(26%, -50%) scale(0.85); }
+            0% { opacity: 0; transform: translate(26%, -50%) scale(0.85) rotate(1.5deg); }
+            18% { opacity: 1; }
+            45% { transform: translate(6%, -54%) scale(1) rotate(-1deg); }
+            70% { opacity: 1; transform: translate(-8%, -46%) scale(1.08) rotate(1deg); }
+            100% { opacity: 0; transform: translate(-28%, -50%) scale(1.16) rotate(-0.5deg); }
+        }
+
+        @keyframes bossWaveSweepHigh {
+            0% { opacity: 0; transform: translate(30%, -50%) rotate(-3deg); }
             20% { opacity: 1; }
-            65% { opacity: 1; transform: translate(-6%, -50%) scale(1.06); }
-            100% { opacity: 0; transform: translate(-26%, -50%) scale(1.14); }
+            60% { transform: translate(-2%, -58%) rotate(2deg); }
+            100% { opacity: 0; transform: translate(-32%, -46%) rotate(-2deg); }
+        }
+
+        @keyframes bossWaveSweepLow {
+            0% { opacity: 0; transform: translate(34%, -50%) rotate(2deg); }
+            22% { opacity: 1; }
+            60% { transform: translate(0%, -42%) rotate(-2deg); }
+            100% { opacity: 0; transform: translate(-30%, -54%) rotate(2deg); }
         }
 
         .slash-flurry {
@@ -859,8 +908,9 @@
             background-image: url('images/effect_slash.webp');
             background-repeat: no-repeat;
             pointer-events: none;
-            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.95))
-                    drop-shadow(0 0 14px rgba(180, 225, 255, 0.85));
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 1))
+                    drop-shadow(0 0 18px rgba(200, 235, 255, 0.95))
+                    drop-shadow(0 0 30px rgba(120, 190, 255, 0.7));
             animation: slashPlay 0.42s steps(8) forwards;
         }
 
@@ -4418,7 +4468,7 @@
     }
 
     function clearBursts() {
-      document.querySelectorAll('.blast-burst, .boss-wave, .slash-flurry').forEach(el => el.remove());
+      document.querySelectorAll('.blast-burst, .boss-wave, .boss-ring, .slash-flurry').forEach(el => el.remove());
     }
 
     // 보스 머리 위쪽에 작은 폭발이 시간차를 두고 연달아 터진다.
@@ -4496,18 +4546,37 @@
 
     const BOSS_WAVE_MS = 560;
 
-    // 보스의 고유 공격 그림이 보스 쪽에서 내 수학몬 쪽으로 크게 훑고 지나간다.
+    // 보스의 선율이 겹겹이 메아리치며 내 수학몬 쪽으로 밀려온다.
     function playBossWave(sprite) {
       const stage = document.getElementById('battleStage');
-      const old = stage.querySelector('.boss-wave');
-      if (old) old.remove();
+      stage.querySelectorAll('.boss-wave, .boss-ring').forEach(el => el.remove());
 
-      const wave = document.createElement('div');
-      wave.className = 'boss-wave';
-      wave.innerHTML = `<img src="${sprite}" alt="">`;
-      wave.addEventListener('animationend', () => wave.remove());
-      setTimeout(() => wave.remove(), 1600);
-      stage.appendChild(wave);
+      // 세 겹이 시간차를 두고 지나가 하나의 그림이 미끄러지는 느낌을 없앤다.
+      [0, 130, 260].forEach((delay, index) => {
+        const wave = document.createElement('div');
+        wave.className = `boss-wave layer-${index}`;
+        wave.style.animationDelay = `${delay}ms`;
+        wave.innerHTML = `<img src="${sprite}" alt="">`;
+        wave.addEventListener('animationend', () => wave.remove());
+        setTimeout(() => wave.remove(), 1800 + delay);
+        stage.appendChild(wave);
+      });
+
+      // 보스 쪽에서 음파 고리가 퍼져 나간다.
+      const bossFigure = document.getElementById('battleBossFigure');
+      const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
+      const base = stage.getBoundingClientRect();
+      [0, 160, 320].forEach(delay => {
+        setTimeout(() => {
+          const ring = document.createElement('div');
+          ring.className = 'boss-ring';
+          ring.style.left = `${target.left - base.left + target.width * 0.45}px`;
+          ring.style.top = `${target.top - base.top + target.height * 0.45}px`;
+          ring.addEventListener('animationend', () => ring.remove());
+          setTimeout(() => ring.remove(), 1200);
+          stage.appendChild(ring);
+        }, delay);
+      });
     }
 
     function bossTurn() {

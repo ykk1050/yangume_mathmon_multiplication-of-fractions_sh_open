@@ -4434,7 +4434,7 @@
       };
 
       renderBossTab();
-      clearBursts();
+      resetBattleVisuals();
       const stage = document.getElementById('battleStage');
       // 배경 위에 어두운 막을 한 겹 깔아야 이름과 체력바가 읽힌다.
       stage.style.backgroundImage = boss.background ? `url('${boss.background}')` : '';
@@ -4564,6 +4564,32 @@
 
     function clearBursts() {
       document.querySelectorAll('.blast-burst, .boss-wave, .boss-ring, .slash-flurry, .meteor-strike').forEach(el => el.remove());
+    }
+
+    // 앞선 전투의 공격 동작이 남아 다음 전투 시작과 겹쳐 보이던 문제를 막는다.
+    // 돌진·연출·흔들림은 요소에 클래스로 붙어 있어 전투가 끝나도 저절로 사라지지 않는다.
+    function resetBattleVisuals() {
+      clearBursts();
+
+      const effect = document.getElementById('battleEffect');
+      if (effect) {
+        effect.getAnimations().forEach(animation => animation.cancel());
+        effect.className = 'battle-effect';
+        effect.innerHTML = '';
+      }
+
+      ['battlePartnerFigure', 'battleBossFigure'].forEach(id => {
+        const figure = document.getElementById(id);
+        if (!figure) return;
+        figure.classList.remove('is-hit', 'is-charging');
+        figure.getAnimations().forEach(animation => animation.cancel());
+      });
+
+      const stage = document.getElementById('battleStage');
+      if (stage) {
+        stage.classList.remove('is-quaking', 'is-flashed');
+        stage.getAnimations().forEach(animation => animation.cancel());
+      }
     }
 
     // 보스 머리 위쪽에 작은 폭발이 시간차를 두고 연달아 터진다.
@@ -4840,12 +4866,15 @@
         showNotification('보스전에서 패배했습니다.');
       }
       battle = null;
-      setTimeout(renderBossTab, 1600);
+      setTimeout(() => {
+        resetBattleVisuals();
+        renderBossTab();
+      }, 1600);
     }
 
     function retreatFromBoss() {
       battle = null;
-      clearBursts();
+      resetBattleVisuals();
       document.getElementById('battleQuiz').style.display = 'none';
       renderBossTab();
       showNotification('보스전에서 물러났습니다.');

@@ -1157,8 +1157,8 @@
         @keyframes stormTravelMiss {
             0% { opacity: 0; left: 22%; transform: translate(-50%, -50%) scale(0.45); }
             18% { opacity: 1; }
-            70% { left: 86%; transform: translate(-50%, -75%) scale(1.1); }
-            100% { opacity: 0; left: 104%; transform: translate(-50%, -95%) scale(1.15); }
+            65% { left: 52%; transform: translate(-50%, -105%) scale(1.05); }
+            100% { opacity: 0; left: 58%; transform: translate(-50%, -175%) scale(1.1); }
         }
 
         .battle-effect.is-beaming {
@@ -4739,9 +4739,9 @@
       const bossFigure = document.getElementById('battleBossFigure');
       const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
       const base = stage.getBoundingClientRect();
-      const away = missPoint(target, base, base);
+      const away = missPoint(target, base);
       const x = missed ? away.x : target.left - base.left + target.width * 0.5;
-      const y = missed ? Math.max(40, away.y) : target.top - base.top + target.height * 0.45;
+      const y = missed ? target.top - base.top + target.height * 0.72 : target.top - base.top + target.height * 0.45;
 
       const size = Math.min(320, Math.max(220, target.width * 1.9));
       const meteor = document.createElement('div');
@@ -4785,7 +4785,7 @@
       const bossFigure = document.getElementById('battleBossFigure');
       const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
       const base = stage.getBoundingClientRect();
-      const away = missPoint(target, base, base);
+      const away = missPoint(target, base);
 
       const width = Math.min(380, Math.max(240, target.width * 1.6));
       const height = width * 144 / 256;
@@ -4803,9 +4803,10 @@
     }
 
     // 빗나간 기술은 보스와 확실히 떨어진 허공으로 향한다.
-    function missPoint(target, base, stage) {
-      const x = Math.min(stage.width - 40, target.left - base.left + target.width * 1.25);
-      const y = Math.max(30, target.top - base.top - target.height * 0.22);
+    function missPoint(target, base) {
+      // 보스가 뒤로 몸을 빼므로 빗나간 기술은 보스 앞쪽 허공을 지나간다.
+      const x = Math.max(70, target.left - base.left - target.width * 0.18);
+      const y = Math.max(28, target.top - base.top - target.height * 0.1);
       return { x, y };
     }
 
@@ -4845,7 +4846,7 @@
       const bossFigure = document.getElementById('battleBossFigure');
       const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
       const base = stage.getBoundingClientRect();
-      const away = missPoint(target, base, base);
+      const away = missPoint(target, base);
 
       for (let i = 0; i < BLAST_COUNT; i++) {
         const delay = i * BLAST_GAP_MS;

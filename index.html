@@ -1328,6 +1328,55 @@
             margin-bottom: 12px;
         }
 
+        /* 보스전은 세로 공간이 빠듯하므로 문제(왼쪽)와 답 입력(오른쪽)을 나란히 둔다. */
+        .battle-quiz-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            align-items: center;
+        }
+
+        .battle-quiz-problem {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+        }
+
+        .battle-quiz-problem .problem {
+            margin: 0;
+            font-size: 1.7rem;
+            gap: 12px;
+        }
+
+        .battle-quiz-answer {
+            min-width: 0;
+            border-left: 2px solid #e2e8f0;
+            padding-left: 18px;
+        }
+
+        .battle-quiz-answer .fraction-input-container {
+            margin: 0;
+            gap: 12px;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .battle-quiz-answer #battleSubmitBtn {
+            margin: 0;
+            padding: 10px 18px;
+        }
+
+        .battle-quiz-answer .fraction-inputs {
+            gap: 14px;
+        }
+
+        .battle-quiz-answer .instruction-text {
+            margin: 10px 0 0;
+            font-size: 0.8rem;
+        }
+
         .quiz-ball-bar {
             display: flex;
             align-items: center;
@@ -2065,6 +2114,17 @@
             filter: brightness(1.1);
         }
 
+        /* 좌우로 나눌 만큼 넓지 않으면 원래대로 위아래로 쌓는다. */
+        @media (max-width: 640px) {
+            .battle-quiz-grid { grid-template-columns: 1fr; gap: 12px; }
+            .battle-quiz-answer {
+                border-left: none;
+                border-top: 2px solid #e2e8f0;
+                padding-left: 0;
+                padding-top: 12px;
+            }
+        }
+
         @media (max-width: 768px) {
             .app-title { font-size: 2rem; }
             .problem { font-size: 1.5rem; }
@@ -2097,6 +2157,11 @@
             .effect-sprite { width: 112px; }
             .battle-effect.is-beaming { left: 26%; width: 52%; }
             .quiz-ball-change { padding: 5px 10px; font-size: 0.78rem; white-space: nowrap; }
+            .battle-quiz-problem .problem { font-size: 1.35rem; gap: 8px; }
+            .battle-quiz-answer { padding-left: 12px; }
+            .battle-quiz-answer .fraction-inputs { gap: 10px; }
+            .battle-quiz-answer .fraction-input { width: 66px; font-size: 1rem; }
+            .battle-quiz-answer .fraction-line { width: 66px; }
         }
 
         /* 가로로 눕힌 휴대폰처럼 화면이 낮으면 몬스터가 문제를 덮지 않도록 줄인다. */
@@ -2294,19 +2359,25 @@
           <div id="battleSkills" class="battle-skills"></div>
 
           <div id="battleQuiz" class="battle-quiz" style="display: none;">
-            <div class="problem" id="battleProblem"></div>
-            <div class="fraction-input-container">
-              <div class="fraction-inputs">
-                <input type="number" class="answer-input fraction-input" id="battleWholeInput" placeholder="자연수" min="0">
-                <div class="fraction-display">
-                  <input type="number" class="answer-input fraction-input" id="battleNumeratorInput" placeholder="분자" min="0">
-                  <div class="fraction-line"></div>
-                  <input type="number" class="answer-input fraction-input" id="battleDenominatorInput" placeholder="분모" min="1">
-                </div>
+            <div class="battle-quiz-grid">
+              <div class="battle-quiz-problem">
+                <div class="problem" id="battleProblem"></div>
               </div>
-              <button class="btn btn-primary" id="battleSubmitBtn" onclick="submitBattleAnswer()">공격!</button>
+              <div class="battle-quiz-answer">
+                <div class="fraction-input-container">
+                  <div class="fraction-inputs">
+                    <input type="number" class="answer-input fraction-input" id="battleWholeInput" placeholder="자연수" min="0">
+                    <div class="fraction-display">
+                      <input type="number" class="answer-input fraction-input" id="battleNumeratorInput" placeholder="분자" min="0">
+                      <div class="fraction-line"></div>
+                      <input type="number" class="answer-input fraction-input" id="battleDenominatorInput" placeholder="분모" min="1">
+                    </div>
+                  </div>
+                  <button class="btn btn-primary" id="battleSubmitBtn" onclick="submitBattleAnswer()">공격!</button>
+                </div>
+                <p class="instruction-text">※ 빠르고 정확하게 풀수록 공격이 강해집니다. (기약분수, 1 이상은 대분수)</p>
+              </div>
             </div>
-            <p class="instruction-text">※ 빠르고 정확하게 풀수록 공격이 강해집니다. (기약분수, 1 이상은 대분수)</p>
           </div>
 
           <button class="btn btn-danger" onclick="retreatFromBoss()">도망치기</button>

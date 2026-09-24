@@ -704,7 +704,21 @@
             margin-bottom: 14px;
         }
 
-        .boss-hp-training h4 { margin: 0 0 8px; }
+        .boss-hp-training h4 { margin: 0 0 10px; }
+
+        .training-rows {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 10px;
+        }
+
+        .training-row {
+            background: rgba(255, 255, 255, 0.75);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .training-detail { color: #4a5568; font-size: 0.82rem; }
         .boss-hp-training p { margin: 4px 0; font-size: 0.9rem; color: #2d3748; }
         .boss-hp-training .boss-hint { margin-top: 8px; }
 
@@ -2427,7 +2441,7 @@
       currentMonster: null,
       isAdminLoggedIn: false,
       bossTestEnabled: false,
-      boss: { partner: null, skills: [], cleared: [], hpLevels: {} },
+      boss: { partner: null, skills: [], cleared: [], hpLevels: {}, atkLevels: {} },
       infiniteCoinsEnabled: false,
       showAnswers: false,
       captureTrainingLevel: 0
@@ -4234,46 +4248,50 @@
         id: 'resonance', name: '공명의 현자', title: '심해의 파동 지배자',
         image: 'images/boss_1.webp', background: 'images/boss_1_bg.webp',
         attackSprite: 'images/boss_1_attack.webp',
-        hp: 220, attack: [9, 15], reward: 400,
+        hp: 300, attack: [13, 19], reward: 500,
         description: '빛조차 닿지 않는 심해에서 소리의 파동을 수학으로 해석해 세상을 진동시키는 지배자. 보석 하프에서 흘러나온 푸리에 급수의 선율이 상대의 구조를 계산해 무너뜨린다.'
       },
       {
         id: 'entropy', name: '엔트로피의 지배자', title: '카오스와 붕괴의 여왕',
         image: 'images/boss_2.webp', background: 'images/boss_2_bg.webp',
-        hp: 300, attack: [12, 19], reward: 700,
+        hp: 520, attack: [19, 27], reward: 1200,
         description: '완벽했던 수학적 질서가 무질서로 치닫는 끝에서 태어난 종말의 존재. 손 위의 은하가 모든 수식을 삼켜 무(NULL)로 되돌리고, 지나간 자리에는 혼돈의 궤적만 남는다.'
       },
       {
         id: 'geometry', name: '진리의 감시자', title: '신성한 기하학의 여신',
         image: 'images/boss_3.webp', background: 'images/boss_3_bg.webp',
-        hp: 380, attack: [15, 23], reward: 1100,
+        hp: 900, attack: [27, 37], reward: 2500,
         description: '우주의 탄생과 함께 시작된 모든 논리와 질서의 수호자. 손 위에 떠 있는 정다면체로 물질계의 설계도를 다루고, 혼천의 지팡이로 천체의 운행을 통제한다.'
       },
       {
         id: 'error', name: '수학적 오류의 군주', title: 'Lord of Errors & Infinity',
         image: 'images/boss_4.webp', background: 'images/boss_4_bg.webp',
-        hp: 460, attack: [18, 27], reward: 1800,
+        hp: 1100, attack: [33, 45], reward: 5000,
         description: '0으로 나누기, 정의되지 않음, 오류처럼 수학이 결코 허락하지 않는 모순을 현실로 만드는 재앙. 무한대와 공집합의 지팡이가 올바른 수식을 순식간에 오염시킨다.'
       }
     ];
 
     const BATTLE_SKILLS = [
-      { id: 'reduce_slash', name: '약분 베기', emoji: '✂️', effect: 'slash', motion: 'slash', price: 200, power: 18, accuracy: 85, description: '군더더기를 단칼에 걷어낸다. 안정적으로 맞는다.' },
-      { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', motion: 'volley', price: 350, power: 27, accuracy: 70, description: '보스 머리 위에서 연달아 터진다. 위력은 크지만 빗나가기 쉽다.' },
-      { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', motion: 'melee', price: 260, power: 20, accuracy: 88, description: '보스 코앞까지 달려들어 내리찍는다.' },
-      { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', sprite: 'images/effect_beam.webp', spriteMode: 'beam', price: 420, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
-      { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', sprite: 'images/effect_storm.webp', spriteMode: 'travel', price: 600, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
-      { id: 'meteor_strike', name: '대분수 운석', emoji: '☄️', effect: 'blast', motion: 'meteor', price: 900, power: 40, accuracy: 72, description: '거대한 대분수 덩어리를 하늘에서 떨어뜨린다. 최대 위력.' }
+      { id: 'reduce_slash', name: '약분 베기', emoji: '✂️', effect: 'slash', motion: 'slash', price: 150, power: 18, accuracy: 85, description: '군더더기를 단칼에 걷어낸다. 안정적으로 맞는다.' },
+      { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', motion: 'volley', price: 600, power: 27, accuracy: 70, description: '보스 머리 위에서 연달아 터진다. 위력은 크지만 빗나가기 쉽다.' },
+      { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', motion: 'melee', price: 250, power: 20, accuracy: 88, description: '보스 코앞까지 달려들어 내리찍는다.' },
+      { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', sprite: 'images/effect_beam.webp', spriteMode: 'beam', price: 450, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
+      { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', sprite: 'images/effect_storm.webp', spriteMode: 'travel', price: 900, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
+      { id: 'meteor_strike', name: '대분수 운석', emoji: '☄️', effect: 'blast', motion: 'meteor', price: 1400, power: 40, accuracy: 72, description: '거대한 대분수 덩어리를 하늘에서 떨어뜨린다. 최대 위력.' }
     ];
 
     const PARTNER_HP = { common: 90, rare: 110, epic: 130, legendary: 150 };
 
-    // 체력 훈련: 한 번에 +10, 최대 10번. 올릴수록 비싸진다.
-    const HP_TRAINING = { step: 10, maxLevel: 10, baseCost: 150, costStep: 100 };
+    // 육성이 이 모드의 중심이다. 체력과 공격을 따로 단련한다.
+    const HP_TRAINING = { step: 20, maxLevel: 20, baseCost: 120, costStep: 50 };
+    const ATK_TRAINING = { step: 2, maxLevel: 15, baseCost: 200, costStep: 80 };
 
     function hpLevelOf(name) {
-      const levels = bossState().hpLevels;
-      return levels[name] || 0;
+      return bossState().hpLevels[name] || 0;
+    }
+
+    function atkLevelOf(name) {
+      return bossState().atkLevels[name] || 0;
     }
 
     function partnerMaxHp(monster) {
@@ -4281,8 +4299,16 @@
       return base + hpLevelOf(monster.name) * HP_TRAINING.step;
     }
 
+    function partnerAtkBonus(monster) {
+      return atkLevelOf(monster.name) * ATK_TRAINING.step;
+    }
+
     function hpTrainingCost(level) {
       return HP_TRAINING.baseCost + level * HP_TRAINING.costStep;
+    }
+
+    function atkTrainingCost(level) {
+      return ATK_TRAINING.baseCost + level * ATK_TRAINING.costStep;
     }
 
     let battle = null;
@@ -4322,12 +4348,13 @@
     }
 
     function bossState() {
-      if (!gameState.boss) gameState.boss = { partner: null, skills: [], cleared: [], hpLevels: {} };
+      if (!gameState.boss) gameState.boss = { partner: null, skills: [], cleared: [], hpLevels: {}, atkLevels: {} };
       if (!Array.isArray(gameState.boss.skills)) gameState.boss.skills = [];
       // 사라진 기술이 저장돼 있으면 전투에서 오류가 나므로 걸러낸다.
       gameState.boss.skills = gameState.boss.skills.filter(id => BATTLE_SKILLS.some(skill => skill.id === id));
       if (!Array.isArray(gameState.boss.cleared)) gameState.boss.cleared = [];
       if (!gameState.boss.hpLevels || typeof gameState.boss.hpLevels !== 'object') gameState.boss.hpLevels = {};
+      if (!gameState.boss.atkLevels || typeof gameState.boss.atkLevels !== 'object') gameState.boss.atkLevels = {};
       return gameState.boss;
     }
 
@@ -4364,23 +4391,36 @@
       if (!partner) {
         training.innerHTML = '<p class="boss-hint">수학몬을 먼저 고르면 체력을 단련할 수 있습니다.</p>';
       } else {
-        const level = hpLevelOf(partner.name);
-        const maxed = level >= HP_TRAINING.maxLevel;
-        const cost = hpTrainingCost(level);
+        const hpLevel = hpLevelOf(partner.name);
+        const atkLevel = atkLevelOf(partner.name);
+        const hpMaxed = hpLevel >= HP_TRAINING.maxLevel;
+        const atkMaxed = atkLevel >= ATK_TRAINING.maxLevel;
         training.innerHTML = `
-          <h4>💪 체력 단련 — ${partner.name}</h4>
-          <p>현재 체력 <strong>${partnerMaxHp(partner)}</strong> (기본 ${PARTNER_HP[partner.rarity] || 100}${level ? ` + 훈련 ${level * HP_TRAINING.step}` : ''})</p>
-          <p>훈련 단계 ${level}/${HP_TRAINING.maxLevel} · 한 번에 체력 +${HP_TRAINING.step}</p>
-          ${maxed
-            ? '<button class="btn btn-success" disabled>최대 단계 도달</button>'
-            : `<p>💰 ${cost} 코인</p><button class="btn btn-primary" onclick="trainPartnerHp()">체력 단련하기</button>`}
-          <p class="boss-hint">훈련한 체력은 수학몬마다 따로 쌓입니다.</p>`;
+          <h4>🏋️ ${partner.name} 단련</h4>
+          <div class="training-rows">
+            <div class="training-row">
+              <p><strong>💪 체력</strong> ${partnerMaxHp(partner)} <span class="training-detail">(기본 ${PARTNER_HP[partner.rarity] || 100}${hpLevel ? ` + 훈련 ${hpLevel * HP_TRAINING.step}` : ''})</span></p>
+              <p class="training-detail">단계 ${hpLevel}/${HP_TRAINING.maxLevel} · 한 번에 +${HP_TRAINING.step}</p>
+              ${hpMaxed
+                ? '<button class="btn btn-success" disabled>최대 단계</button>'
+                : `<button class="btn btn-primary" onclick="trainPartnerHp()">체력 단련 💰 ${hpTrainingCost(hpLevel)}</button>`}
+            </div>
+            <div class="training-row">
+              <p><strong>⚔️ 공격</strong> 모든 기술 위력 +${partnerAtkBonus(partner)}</p>
+              <p class="training-detail">단계 ${atkLevel}/${ATK_TRAINING.maxLevel} · 한 번에 +${ATK_TRAINING.step}</p>
+              ${atkMaxed
+                ? '<button class="btn btn-success" disabled>최대 단계</button>'
+                : `<button class="btn btn-primary" onclick="trainPartnerAtk()">공격 단련 💰 ${atkTrainingCost(atkLevel)}</button>`}
+            </div>
+          </div>
+          <p class="boss-hint">단련한 능력은 수학몬마다 따로 쌓입니다. 다음 보스는 더 강하니 미리 키워두세요.</p>`;
       }
 
       // 기술
       document.getElementById('bossSkillCount').textContent = `(기술 ${boss.skills.length}/4)`;
       const skillGrid = document.getElementById('bossSkillGrid');
       skillGrid.innerHTML = '';
+      const atkBonus = partner ? partnerAtkBonus(partner) : 0;
       BATTLE_SKILLS.forEach(skill => {
         const learned = boss.skills.includes(skill.id);
         const div = document.createElement('div');
@@ -4388,7 +4428,7 @@
         div.innerHTML = `
           <h4>${skill.emoji} ${skill.name}</h4>
           <p>${skill.description}</p>
-          <p>위력 ${skill.power} · 명중 ${skill.accuracy}%</p>
+          <p>위력 ${skill.power + atkBonus}${atkBonus ? ` (기본 ${skill.power} + 단련 ${atkBonus})` : ''} · 명중 ${skill.accuracy}%</p>
           <p>💰 ${skill.price} 코인</p>
           <button class="btn ${learned ? 'btn-danger' : 'btn-primary'}" onclick="${learned ? `forgetSkill('${skill.id}')` : `learnSkill('${skill.id}')`}">
             ${learned ? '잊게 하기' : '배우기'}
@@ -4444,6 +4484,27 @@
       showNotification(`💪 ${partner.name}의 체력이 ${HP_TRAINING.step} 올랐습니다!`);
     }
 
+    function trainPartnerAtk() {
+      const boss = bossState();
+      const partner = gameState.collection.find(m => m.name === boss.partner);
+      if (!partner) return showNotification('함께 싸울 수학몬을 먼저 고르세요!');
+
+      const level = atkLevelOf(partner.name);
+      if (level >= ATK_TRAINING.maxLevel) return showNotification('이미 최대 단계입니다!');
+
+      const cost = atkTrainingCost(level);
+      if (!gameState.infiniteCoinsEnabled && gameState.coins < cost) {
+        return showNotification('코인이 부족합니다!');
+      }
+      if (!gameState.infiniteCoinsEnabled) gameState.coins -= cost;
+
+      boss.atkLevels[partner.name] = level + 1;
+      updateUI();
+      saveData();
+      renderBossTab();
+      showNotification(`⚔️ ${partner.name}의 공격이 ${ATK_TRAINING.step} 올랐습니다!`);
+    }
+
     function learnSkill(skillId) {
       const boss = bossState();
       const skill = BATTLE_SKILLS.find(s => s.id === skillId);
@@ -4479,6 +4540,7 @@
       battle = {
         id: ++battleRunId,
         boss,
+        atkBonus: partnerAtkBonus(partnerData),
         bossHp: boss.hp,
         partner: partnerData,
         hp: maxHp,
@@ -4796,7 +4858,8 @@
         const btn = document.createElement('button');
         btn.className = 'battle-skill-btn';
         btn.disabled = battle.busy;
-        btn.innerHTML = `${skill.emoji} ${skill.name}<br><span style="font-weight:normal;font-size:0.8rem;">위력 ${skill.power} · 명중 ${skill.accuracy}%</span>`;
+        const power = skill.power + battle.atkBonus;
+        btn.innerHTML = `${skill.emoji} ${skill.name}<br><span style="font-weight:normal;font-size:0.8rem;">위력 ${power}${battle.atkBonus ? ` (+${battle.atkBonus})` : ''} · 명중 ${skill.accuracy}%</span>`;
         btn.onclick = () => chooseSkill(id);
         wrap.appendChild(btn);
       });
@@ -4874,7 +4937,7 @@
       else if (skill.sprite) playSpriteEffect(skill.sprite, skill.spriteMode);
 
       if (hit) {
-        const damage = Math.max(1, Math.round(skill.power * multiplier * (0.9 + Math.random() * 0.2)));
+        const damage = Math.max(1, Math.round((skill.power + battle.atkBonus) * multiplier * (0.9 + Math.random() * 0.2)));
         const land = () => {
           if (melee) playImpactBurst();
           else if (meteor) { playMeteorBlast(); flashStage(); }

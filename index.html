@@ -901,6 +901,31 @@
             animation: bossWaveSweep 1.05s ease-out forwards;
         }
 
+        /* 은하가 한가운데서 부풀었다 무너지는 연출 */
+        .boss-wave.is-burst {
+            left: 50%;
+            right: auto;
+            width: 62%;
+            height: auto;
+            transform: translate(-50%, -50%);
+            animation-name: bossBurstSwell;
+            animation-duration: 1.1s;
+        }
+
+        .boss-wave.is-burst .boss-wave-frames {
+            height: auto;
+            width: 100%;
+            filter: drop-shadow(0 0 14px rgba(190, 140, 255, 0.85))
+                    drop-shadow(0 0 30px rgba(120, 90, 220, 0.6));
+        }
+
+        @keyframes bossBurstSwell {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.45); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(0.85); }
+            70% { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); }
+        }
+
         .boss-wave.layer-1 {
             top: 58%;
             scale: 0.7;
@@ -4279,13 +4304,14 @@
       {
         id: 'resonance', name: '공명의 현자', title: '심해의 파동 지배자',
         image: 'images/boss_1.webp', background: 'images/boss_1_bg.webp',
-        attackSprite: 'images/boss_1_attack.webp',
+        attackSprite: 'images/boss_1_attack.webp', attackAspect: '320 / 255', attackStyle: 'wave',
         hp: 300, attack: [13, 19], reward: 500,
         description: '빛조차 닿지 않는 심해에서 소리의 파동을 수학으로 해석해 세상을 진동시키는 지배자. 보석 하프에서 흘러나온 푸리에 급수의 선율이 상대의 구조를 계산해 무너뜨린다.'
       },
       {
         id: 'entropy', name: '엔트로피의 지배자', title: '카오스와 붕괴의 여왕',
         image: 'images/boss_2.webp', background: 'images/boss_2_bg.webp',
+        attackSprite: 'images/boss_2_attack.webp', attackAspect: '320 / 185', attackStyle: 'burst',
         hp: 520, attack: [19, 27], reward: 1200,
         description: '완벽했던 수학적 질서가 무질서로 치닫는 끝에서 태어난 종말의 존재. 손 위의 은하가 모든 수식을 삼켜 무(NULL)로 되돌리고, 지나간 자리에는 혼돈의 궤적만 남는다.'
       },
@@ -4848,14 +4874,19 @@
       const stage = document.getElementById('battleStage');
       stage.querySelectorAll('.boss-wave, .boss-ring').forEach(el => el.remove());
 
-      // 선율 위로 숫자와 기호가 하나씩 떠오르는 장면을 순서대로 넘긴다.
-      [0, 200].forEach((delay, index) => {
+      const boss = battle ? battle.boss : {};
+      const aspect = boss.attackAspect || '320 / 255';
+      // 훑고 지나가는 연출은 겹을 나누고, 터뜨리는 연출은 한가운데서 한 번에 부푼다.
+      const layers = boss.attackStyle === 'burst' ? [0] : [0, 200];
+
+      layers.forEach((delay, index) => {
         const wave = document.createElement('div');
-        wave.className = `boss-wave layer-${index}`;
+        wave.className = `boss-wave layer-${index}${boss.attackStyle === 'burst' ? ' is-burst' : ''}`;
         wave.style.animationDelay = `${delay}ms`;
         const frames = document.createElement('div');
         frames.className = 'boss-wave-frames';
         frames.style.backgroundImage = `url('${sprite}')`;
+        frames.style.aspectRatio = aspect;
         frames.style.animationDelay = `${delay}ms`;
         wave.appendChild(frames);
         wave.addEventListener('animationend', () => wave.remove());

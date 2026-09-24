@@ -846,10 +846,10 @@
         }
 
         @keyframes bossDodge {
-            0% { transform: translateX(0) rotate(0deg); }
-            25% { transform: translateX(28px) rotate(7deg) scale(0.96); }
-            55% { transform: translateX(32px) rotate(6deg) scale(0.96); }
-            100% { transform: translateX(0) rotate(0deg) scale(1); }
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            25% { transform: translate(46px, 6px) rotate(9deg) scale(0.93); opacity: 0.75; }
+            60% { transform: translate(52px, 4px) rotate(8deg) scale(0.93); opacity: 0.85; }
+            100% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
         }
 
         .dodge-label {
@@ -1100,6 +1100,19 @@
 
         .battle-effect.is-traveling {
             animation: stormTravel 1s cubic-bezier(0.35, 0.05, 0.4, 1) forwards;
+        }
+
+        /* 빗나가면 보스를 스치지 않고 머리 위로 크게 지나친다. */
+        .battle-effect.is-traveling.is-missed {
+            top: 16%;
+            animation-name: stormTravelMiss;
+        }
+
+        @keyframes stormTravelMiss {
+            0% { opacity: 0; left: 22%; transform: translate(-50%, -50%) scale(0.45); }
+            18% { opacity: 1; }
+            70% { left: 86%; transform: translate(-50%, -75%) scale(1.1); }
+            100% { opacity: 0; left: 104%; transform: translate(-50%, -95%) scale(1.15); }
         }
 
         .battle-effect.is-beaming {
@@ -4680,8 +4693,9 @@
       const bossFigure = document.getElementById('battleBossFigure');
       const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
       const base = stage.getBoundingClientRect();
-      const x = target.left - base.left + target.width * (missed ? 1.05 : 0.5);
-      const y = target.top - base.top + target.height * (missed ? 0.15 : 0.45);
+      const away = missPoint(target, base, base);
+      const x = missed ? away.x : target.left - base.left + target.width * 0.5;
+      const y = missed ? Math.max(40, away.y) : target.top - base.top + target.height * 0.45;
 
       const size = Math.min(320, Math.max(220, target.width * 1.9));
       const meteor = document.createElement('div');
@@ -4725,7 +4739,7 @@
       const bossFigure = document.getElementById('battleBossFigure');
       const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
       const base = stage.getBoundingClientRect();
-      const offY = missed ? -target.height * 0.42 : 0;
+      const away = missPoint(target, base, base);
 
       const width = Math.min(380, Math.max(240, target.width * 1.6));
       const height = width * 144 / 256;
@@ -4735,11 +4749,18 @@
       slash.style.height = `${height}px`;
       slash.style.backgroundSize = `${width * SLASH_FRAMES}px ${height}px`;
       slash.style.setProperty('--sheet-width', `${width * SLASH_FRAMES}px`);
-      slash.style.left = `${target.left - base.left + target.width / 2 - width / 2}px`;
-      slash.style.top = `${Math.max(4, target.top - base.top + offY + target.height / 2 - height / 2)}px`;
+      slash.style.left = `${(missed ? away.x : target.left - base.left + target.width / 2) - width / 2}px`;
+      slash.style.top = `${Math.max(4, (missed ? away.y : target.top - base.top + target.height / 2) - height / 2)}px`;
       slash.addEventListener('animationend', () => slash.remove());
       setTimeout(() => slash.remove(), 1200);
       stage.appendChild(slash);
+    }
+
+    // 빗나간 기술은 보스와 확실히 떨어진 허공으로 향한다.
+    function missPoint(target, base, stage) {
+      const x = Math.min(stage.width - 40, target.left - base.left + target.width * 1.25);
+      const y = Math.max(30, target.top - base.top - target.height * 0.22);
+      return { x, y };
     }
 
     function clearBursts() {
@@ -4778,13 +4799,17 @@
       const bossFigure = document.getElementById('battleBossFigure');
       const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
       const base = stage.getBoundingClientRect();
-      const offY = missed ? -target.height * 0.34 : 0;   // 허공으로 빗나가되 화면 밖으로 넘어가지 않게
+      const away = missPoint(target, base, base);
 
       for (let i = 0; i < BLAST_COUNT; i++) {
         const delay = i * BLAST_GAP_MS;
         const size = 70 + Math.random() * 34;
-        const x = target.left - base.left + target.width * (0.15 + Math.random() * 0.7);
-        const y = Math.max(size / 2 + 4, target.top - base.top + offY + target.height * (0.05 + Math.random() * 0.3));
+        const x = missed
+          ? away.x + (Math.random() - 0.5) * 90
+          : target.left - base.left + target.width * (0.15 + Math.random() * 0.7);
+        const y = missed
+          ? Math.max(size / 2 + 4, away.y + (Math.random() - 0.5) * 60)
+          : Math.max(size / 2 + 4, target.top - base.top + target.height * (0.05 + Math.random() * 0.3));
         setTimeout(() => {
           const burst = document.createElement('div');
           burst.className = 'blast-burst';
@@ -5050,6 +5075,8 @@
 
       const miss = () => {
         if (!skill.sprite && !melee && !volley && !slash && !meteor) playEffect('miss', '💨');
+        const bossFigure = document.getElementById('battleBossFigure');
+        bossFigure.classList.remove('is-hit');   // 맞은 것처럼 번쩍이지 않게
         dodgeBoss();
         battleLog(`💨 ${battle.boss.name}이(가) 몸을 피했다! ${skill.name}이(가) 빗나갔다!`);
         scheduleBattle(bossTurn, 1100);

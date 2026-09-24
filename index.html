@@ -841,6 +841,38 @@
             animation: battleHit 0.5s ease-in-out;
         }
 
+        .battle-figure.is-dodging {
+            animation: bossDodge 0.55s ease-out;
+        }
+
+        @keyframes bossDodge {
+            0% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(28px) rotate(7deg) scale(0.96); }
+            55% { transform: translateX(32px) rotate(6deg) scale(0.96); }
+            100% { transform: translateX(0) rotate(0deg) scale(1); }
+        }
+
+        .dodge-label {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: #fff;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.9), 0 0 14px rgba(90, 170, 255, 0.9);
+            pointer-events: none;
+            animation: dodgePop 0.9s ease-out forwards;
+        }
+
+        @keyframes dodgePop {
+            0% { opacity: 0; transform: translate(-50%, -30%) scale(0.7); }
+            25% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); }
+            100% { opacity: 0; transform: translate(-50%, -120%) scale(1); }
+        }
+
+        /* 빗나간 기술은 보스 위 허공을 지나간다. */
+        .battle-effect.is-missed { top: 22%; }
+        .battle-effect.is-beaming.is-missed { top: 26%; transform: translate(0, -50%) rotate(-10deg); }
+
         .battle-figure.is-charging {
             animation: meleeCharge 0.85s cubic-bezier(0.3, 0.1, 0.3, 1);
             z-index: 2;
@@ -4599,13 +4631,14 @@
       beam: { className: 'is-beaming', spriteClass: 'effect-beam', impact: 330 }
     };
 
-    function playSpriteEffect(sprite, mode) {
+    function playSpriteEffect(sprite, mode, missed) {
       const preset = SPRITE_MODES[mode] || SPRITE_MODES.travel;
       const el = document.getElementById('battleEffect');
       el.className = 'battle-effect';
       el.innerHTML = `<img class="${preset.spriteClass}" src="${sprite}" alt="">`;
       void el.offsetWidth;
       el.classList.add(preset.className);
+      if (missed) el.classList.add('is-missed');
     }
 
     const MELEE_IMPACT_MS = 320;
@@ -4616,13 +4649,13 @@
     const METEOR_IMPACT_MS = 620;
 
     // 하늘에서 떨어진 운석이 보스 위에서 터진다.
-    function playMeteorStrike() {
+    function playMeteorStrike(missed) {
       const stage = document.getElementById('battleStage');
       const bossFigure = document.getElementById('battleBossFigure');
       const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
       const base = stage.getBoundingClientRect();
-      const x = target.left - base.left + target.width / 2;
-      const y = target.top - base.top + target.height * 0.45;
+      const x = target.left - base.left + target.width * (missed ? 1.05 : 0.5);
+      const y = target.top - base.top + target.height * (missed ? 0.15 : 0.45);
 
       const size = Math.min(320, Math.max(220, target.width * 1.9));
       const meteor = document.createElement('div');
@@ -4661,11 +4694,12 @@
     const SLASH_IMPACT_MS = 260;
 
     // 보스 위에서 여러 갈래의 칼자국이 순식간에 그어진다.
-    function playSlashFlurry() {
+    function playSlashFlurry(missed) {
       const stage = document.getElementById('battleStage');
       const bossFigure = document.getElementById('battleBossFigure');
       const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
       const base = stage.getBoundingClientRect();
+      const offY = missed ? -target.height * 0.42 : 0;
 
       const width = Math.min(380, Math.max(240, target.width * 1.6));
       const height = width * 144 / 256;
@@ -4676,14 +4710,14 @@
       slash.style.backgroundSize = `${width * SLASH_FRAMES}px ${height}px`;
       slash.style.setProperty('--sheet-width', `${width * SLASH_FRAMES}px`);
       slash.style.left = `${target.left - base.left + target.width / 2 - width / 2}px`;
-      slash.style.top = `${target.top - base.top + target.height / 2 - height / 2}px`;
+      slash.style.top = `${Math.max(4, target.top - base.top + offY + target.height / 2 - height / 2)}px`;
       slash.addEventListener('animationend', () => slash.remove());
       setTimeout(() => slash.remove(), 1200);
       stage.appendChild(slash);
     }
 
     function clearBursts() {
-      document.querySelectorAll('.blast-burst, .boss-wave, .boss-ring, .slash-flurry, .meteor-strike').forEach(el => el.remove());
+      document.querySelectorAll('.blast-burst, .boss-wave, .boss-ring, .slash-flurry, .meteor-strike, .dodge-label').forEach(el => el.remove());
     }
 
     // 앞선 전투의 공격 동작이 남아 다음 전투 시작과 겹쳐 보이던 문제를 막는다.
@@ -4713,17 +4747,18 @@
     }
 
     // 보스 머리 위쪽에 작은 폭발이 시간차를 두고 연달아 터진다.
-    function playBlastVolley() {
+    function playBlastVolley(missed) {
       const stage = document.getElementById('battleStage');
       const bossFigure = document.getElementById('battleBossFigure');
       const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
       const base = stage.getBoundingClientRect();
+      const offY = missed ? -target.height * 0.34 : 0;   // 허공으로 빗나가되 화면 밖으로 넘어가지 않게
 
       for (let i = 0; i < BLAST_COUNT; i++) {
         const delay = i * BLAST_GAP_MS;
         const size = 70 + Math.random() * 34;
         const x = target.left - base.left + target.width * (0.15 + Math.random() * 0.7);
-        const y = target.top - base.top + target.height * (0.05 + Math.random() * 0.3);
+        const y = Math.max(size / 2 + 4, target.top - base.top + offY + target.height * (0.05 + Math.random() * 0.3));
         setTimeout(() => {
           const burst = document.createElement('div');
           burst.className = 'blast-burst';
@@ -4762,6 +4797,27 @@
       el.innerHTML = '<span class="impact-ring"></span><span class="impact-mark">💥</span>';
       void el.offsetWidth;
       el.classList.add('is-impact');
+    }
+
+    // 빗나가면 보스가 뒤로 몸을 빼고 회피 표시가 뜬다.
+    function dodgeBoss() {
+      const figure = document.getElementById('battleBossFigure');
+      figure.classList.remove('is-dodging');
+      void figure.offsetWidth;
+      figure.classList.add('is-dodging');
+      figure.addEventListener('animationend', () => figure.classList.remove('is-dodging'), { once: true });
+
+      const stage = document.getElementById('battleStage');
+      const target = (figure.querySelector('img') || figure).getBoundingClientRect();
+      const base = stage.getBoundingClientRect();
+      const label = document.createElement('div');
+      label.className = 'dodge-label';
+      label.textContent = '회피!';
+      label.style.left = `${target.left - base.left + target.width / 2}px`;
+      label.style.top = `${target.top - base.top + target.height * 0.25}px`;
+      label.addEventListener('animationend', () => label.remove());
+      setTimeout(() => label.remove(), 1200);
+      stage.appendChild(label);
     }
 
     function shakeStage() {
@@ -4913,9 +4969,10 @@
         else if (seconds <= 20) { multiplier = 1.25; battleLog(`✅ 정답! ${seconds.toFixed(1)}초 — 위력이 올랐다.`); }
         else { battleLog(`✅ 정답! ${seconds.toFixed(1)}초 — 침착하게 맞혔다.`); }
       } else {
-        accuracy -= 30;
+        // 오답이면 기술이 크게 어긋난다. 명중률을 4분의 1로 떨어뜨린다.
+        accuracy = Math.round(skill.accuracy * 0.25);
         multiplier = 0.5;
-        battleLog(`❌ 오답… 기술이 흔들린다. (정답: ${battle.answer.numerator}/${battle.answer.denominator})`);
+        battleLog(`❌ 오답… 기술이 크게 어긋난다! (정답: ${battle.answer.numerator}/${battle.answer.denominator})`);
       }
 
       document.getElementById('battleQuiz').style.display = 'none';
@@ -4931,10 +4988,10 @@
         : meteor ? METEOR_IMPACT_MS
         : (skill.sprite ? (SPRITE_MODES[skill.spriteMode] || SPRITE_MODES.travel).impact : 0);
       if (melee) chargePartner();
-      else if (volley) playBlastVolley();
-      else if (slash) playSlashFlurry();
-      else if (meteor) playMeteorStrike();
-      else if (skill.sprite) playSpriteEffect(skill.sprite, skill.spriteMode);
+      else if (volley) playBlastVolley(!hit);
+      else if (slash) playSlashFlurry(!hit);
+      else if (meteor) playMeteorStrike(!hit);
+      else if (skill.sprite) playSpriteEffect(skill.sprite, skill.spriteMode, !hit);
 
       if (hit) {
         const damage = Math.max(1, Math.round((skill.power + battle.atkBonus) * multiplier * (0.9 + Math.random() * 0.2)));
@@ -4962,7 +5019,8 @@
 
       const miss = () => {
         if (!skill.sprite && !melee && !volley && !slash && !meteor) playEffect('miss', '💨');
-        battleLog(`💨 ${skill.name}이(가) 빗나갔다!`);
+        dodgeBoss();
+        battleLog(`💨 ${battle.boss.name}이(가) 몸을 피했다! ${skill.name}이(가) 빗나갔다!`);
         scheduleBattle(bossTurn, 1100);
       };
       battle.pendingSkill = null;

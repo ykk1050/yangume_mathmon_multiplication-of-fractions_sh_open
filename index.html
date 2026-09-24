@@ -914,42 +914,27 @@
 
         .meteor-strike {
             position: absolute;
-            width: 0;
-            height: 0;
             pointer-events: none;
-            animation: meteorFall 0.62s cubic-bezier(0.55, 0, 0.85, 0.6) forwards;
+            background-image: url('images/effect_meteor.webp');
+            background-repeat: no-repeat;
+            background-size: 1600% 100%;
+            filter: drop-shadow(0 0 10px rgba(255, 150, 210, 0.7));
+            /* 운석이 떨어지는 장면(16칸)을 넘기면서 동시에 화면을 가로질러 내려온다. */
+            animation: meteorFrames 0.62s steps(15) forwards,
+                       meteorFall 0.62s cubic-bezier(0.5, 0, 0.8, 0.7) forwards;
         }
 
-        .meteor-core {
-            position: absolute;
-            left: -26px;
-            top: -26px;
-            font-size: 3.2rem;
-            filter: drop-shadow(0 0 12px rgba(255, 190, 90, 0.95))
-                    drop-shadow(0 0 26px rgba(255, 120, 40, 0.8));
-        }
-
-        /* 뒤로 길게 끌리는 불꼬리 */
-        .meteor-strike::before {
-            content: '';
-            position: absolute;
-            left: 6px;
-            top: -6px;
-            width: 190px;
-            height: 10px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, rgba(255, 210, 120, 0), rgba(255, 190, 90, 0.85));
-            transform: rotate(-42deg);
-            transform-origin: left center;
-            filter: blur(2px);
+        @keyframes meteorFrames {
+            from { background-position: 0% 0; }
+            to { background-position: 100% 0; }
         }
 
         /* 무대가 높지 않아 너무 높은 데서 떨어뜨리면 대부분 화면 밖에서 지나간다. */
         @keyframes meteorFall {
-            0% { opacity: 0; transform: translate(165px, -185px) scale(0.5); }
-            12% { opacity: 1; }
-            85% { opacity: 1; transform: translate(0, 0) scale(1.2); }
-            100% { opacity: 0; transform: translate(-8px, 14px) scale(0.75); }
+            0% { opacity: 0; transform: translate(-120px, -150px) scale(0.75); }
+            15% { opacity: 1; }
+            85% { opacity: 1; transform: translate(0, 0) scale(1.05); }
+            100% { opacity: 0; transform: translate(14px, 18px) scale(1.1); }
         }
 
         .slash-flurry {
@@ -4506,11 +4491,13 @@
       const x = target.left - base.left + target.width / 2;
       const y = target.top - base.top + target.height * 0.45;
 
+      const size = Math.min(320, Math.max(220, target.width * 1.9));
       const meteor = document.createElement('div');
       meteor.className = 'meteor-strike';
-      meteor.style.left = `${x}px`;
-      meteor.style.top = `${y}px`;
-      meteor.innerHTML = '<span class="meteor-core">☄️</span>';
+      meteor.style.width = `${size}px`;
+      meteor.style.height = `${size}px`;
+      meteor.style.left = `${x - size / 2}px`;
+      meteor.style.top = `${y - size / 2}px`;
       meteor.addEventListener('animationend', () => meteor.remove());
       setTimeout(() => meteor.remove(), 1400);
       stage.appendChild(meteor);

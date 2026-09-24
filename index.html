@@ -841,6 +841,52 @@
             animation: battleHit 0.5s ease-in-out;
         }
 
+        .battle-figure.is-damaged {
+            animation: partnerDamaged 0.6s ease-in-out;
+        }
+
+        @keyframes partnerDamaged {
+            0% { transform: translateX(0); filter: none; }
+            12% { transform: translateX(-16px) rotate(-4deg); filter: brightness(2.4) saturate(0.4) drop-shadow(0 0 14px rgba(255, 90, 90, 0.95)); }
+            30% { transform: translateX(13px) rotate(3deg); filter: brightness(1.1) drop-shadow(0 0 10px rgba(255, 90, 90, 0.8)); }
+            48% { transform: translateX(-9px) rotate(-2deg); filter: brightness(2.1) saturate(0.5) drop-shadow(0 0 14px rgba(255, 90, 90, 0.9)); }
+            70% { transform: translateX(6px); filter: brightness(1.05); }
+            100% { transform: translateX(0); filter: none; }
+        }
+
+        .damage-label {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: #ff6b6b;
+            text-shadow: 0 0 6px rgba(0, 0, 0, 0.95), 0 0 14px rgba(255, 60, 60, 0.8);
+            pointer-events: none;
+            animation: damagePop 1s ease-out forwards;
+        }
+
+        @keyframes damagePop {
+            0% { opacity: 0; transform: translate(-50%, -20%) scale(0.6); }
+            20% { opacity: 1; transform: translate(-50%, -60%) scale(1.25); }
+            100% { opacity: 0; transform: translate(-50%, -140%) scale(1); }
+        }
+
+        /* 맞는 순간 화면 가장자리가 붉게 물든다. */
+        .battle-stage.is-hurt::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 25% 55%, transparent 45%, rgba(220, 40, 40, 0.5));
+            animation: hurtFlash 0.6s ease-out forwards;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        @keyframes hurtFlash {
+            0% { opacity: 0.95; }
+            100% { opacity: 0; }
+        }
+
         .battle-figure.is-dodging {
             animation: bossDodge 0.55s ease-out;
         }
@@ -4764,7 +4810,7 @@
     }
 
     function clearBursts() {
-      document.querySelectorAll('.blast-burst, .boss-wave, .boss-ring, .slash-flurry, .meteor-strike, .dodge-label').forEach(el => el.remove());
+      document.querySelectorAll('.blast-burst, .boss-wave, .boss-ring, .slash-flurry, .meteor-strike, .dodge-label, .damage-label').forEach(el => el.remove());
     }
 
     // 앞선 전투의 공격 동작이 남아 다음 전투 시작과 겹쳐 보이던 문제를 막는다.
@@ -4782,13 +4828,13 @@
       ['battlePartnerFigure', 'battleBossFigure'].forEach(id => {
         const figure = document.getElementById(id);
         if (!figure) return;
-        figure.classList.remove('is-hit', 'is-charging');
+        figure.classList.remove('is-hit', 'is-charging', 'is-damaged', 'is-dodging');
         figure.getAnimations().forEach(animation => animation.cancel());
       });
 
       const stage = document.getElementById('battleStage');
       if (stage) {
-        stage.classList.remove('is-quaking', 'is-flashed');
+        stage.classList.remove('is-quaking', 'is-flashed', 'is-hurt');
         stage.getAnimations().forEach(animation => animation.cancel());
       }
     }
@@ -4857,6 +4903,7 @@
       void figure.offsetWidth;
       figure.classList.add('is-dodging');
       figure.addEventListener('animationend', () => figure.classList.remove('is-dodging'), { once: true });
+      setTimeout(() => figure.classList.remove('is-dodging'), 1000);
 
       const stage = document.getElementById('battleStage');
       const target = (figure.querySelector('img') || figure).getBoundingClientRect();
@@ -4869,6 +4916,35 @@
       label.addEventListener('animationend', () => label.remove());
       setTimeout(() => label.remove(), 1200);
       stage.appendChild(label);
+    }
+
+    // 우리 수학몬이 맞으면 붉게 번쩍이며 크게 흔들리고, 깎인 체력이 떠오른다.
+    function hitPartner(damage) {
+      const figure = document.getElementById('battlePartnerFigure');
+      figure.classList.remove('is-damaged');
+      void figure.offsetWidth;
+      figure.classList.add('is-damaged');
+      figure.addEventListener('animationend', () => figure.classList.remove('is-damaged'), { once: true });
+      setTimeout(() => figure.classList.remove('is-damaged'), 1000);   // 화면이 멈춰 끝나지 않는 경우 대비
+
+      const stage = document.getElementById('battleStage');
+      const target = (figure.querySelector('img') || figure).getBoundingClientRect();
+      const base = stage.getBoundingClientRect();
+
+      const label = document.createElement('div');
+      label.className = 'damage-label';
+      label.textContent = `-${damage}`;
+      label.style.left = `${target.left - base.left + target.width / 2}px`;
+      label.style.top = `${target.top - base.top + target.height * 0.3}px`;
+      label.addEventListener('animationend', () => label.remove());
+      setTimeout(() => label.remove(), 1400);
+      stage.appendChild(label);
+
+      stage.classList.remove('is-hurt');
+      void stage.offsetWidth;
+      stage.classList.add('is-hurt');
+      stage.addEventListener('animationend', () => stage.classList.remove('is-hurt'), { once: true });
+      setTimeout(() => stage.classList.remove('is-hurt'), 1000);
     }
 
     function shakeStage() {
@@ -4946,7 +5022,7 @@
       else playEffect('blast', '🌀', 'partner');
 
       const land = () => {
-        hitFigure('battlePartnerFigure');
+        hitPartner(damage);
         battle.hp = Math.max(0, battle.hp - damage);
         updateBattleBars();
         battleLog(`🌀 ${battle.boss.name}의 공격! ${battle.partner.name}이(가) ${damage}의 피해를 입었다.`);

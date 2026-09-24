@@ -912,6 +912,46 @@
             100% { opacity: 0; transform: translate(-30%, -54%) rotate(2deg); }
         }
 
+        .meteor-strike {
+            position: absolute;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            animation: meteorFall 0.62s cubic-bezier(0.55, 0, 0.85, 0.6) forwards;
+        }
+
+        .meteor-core {
+            position: absolute;
+            left: -26px;
+            top: -26px;
+            font-size: 3.2rem;
+            filter: drop-shadow(0 0 12px rgba(255, 190, 90, 0.95))
+                    drop-shadow(0 0 26px rgba(255, 120, 40, 0.8));
+        }
+
+        /* 뒤로 길게 끌리는 불꼬리 */
+        .meteor-strike::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: -6px;
+            width: 190px;
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(255, 210, 120, 0), rgba(255, 190, 90, 0.85));
+            transform: rotate(-42deg);
+            transform-origin: left center;
+            filter: blur(2px);
+        }
+
+        /* 무대가 높지 않아 너무 높은 데서 떨어뜨리면 대부분 화면 밖에서 지나간다. */
+        @keyframes meteorFall {
+            0% { opacity: 0; transform: translate(165px, -185px) scale(0.5); }
+            12% { opacity: 1; }
+            85% { opacity: 1; transform: translate(0, 0) scale(1.2); }
+            100% { opacity: 0; transform: translate(-8px, 14px) scale(0.75); }
+        }
+
         .slash-flurry {
             position: absolute;
             background-image: url('images/effect_slash.webp');
@@ -4225,7 +4265,7 @@
       { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', motion: 'melee', price: 260, power: 20, accuracy: 88, description: '보스 코앞까지 달려들어 내리찍는다.' },
       { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', sprite: 'images/effect_beam.webp', spriteMode: 'beam', price: 420, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
       { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', sprite: 'images/effect_storm.webp', spriteMode: 'travel', price: 600, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
-      { id: 'infinity_ray', name: '무한 광선', emoji: '♾️', effect: 'beam', price: 900, power: 40, accuracy: 72, description: '끝없이 이어지는 최대 위력의 기술.' }
+      { id: 'meteor_strike', name: '대분수 운석', emoji: '☄️', effect: 'blast', motion: 'meteor', price: 900, power: 40, accuracy: 72, description: '거대한 대분수 덩어리를 하늘에서 떨어뜨린다. 최대 위력.' }
     ];
 
     const PARTNER_HP = { common: 90, rare: 110, epic: 130, legendary: 150 };
@@ -4269,6 +4309,8 @@
     function bossState() {
       if (!gameState.boss) gameState.boss = { partner: null, skills: [], cleared: [] };
       if (!Array.isArray(gameState.boss.skills)) gameState.boss.skills = [];
+      // 사라진 기술이 저장돼 있으면 전투에서 오류가 나므로 걸러낸다.
+      gameState.boss.skills = gameState.boss.skills.filter(id => BATTLE_SKILLS.some(skill => skill.id === id));
       if (!Array.isArray(gameState.boss.cleared)) gameState.boss.cleared = [];
       return gameState.boss;
     }
@@ -4453,6 +4495,47 @@
     const BLAST_GAP_MS = 130;
     const BLAST_IMPACT_MS = (BLAST_COUNT - 1) * BLAST_GAP_MS + 240;
 
+    const METEOR_IMPACT_MS = 620;
+
+    // 하늘에서 떨어진 운석이 보스 위에서 터진다.
+    function playMeteorStrike() {
+      const stage = document.getElementById('battleStage');
+      const bossFigure = document.getElementById('battleBossFigure');
+      const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
+      const base = stage.getBoundingClientRect();
+      const x = target.left - base.left + target.width / 2;
+      const y = target.top - base.top + target.height * 0.45;
+
+      const meteor = document.createElement('div');
+      meteor.className = 'meteor-strike';
+      meteor.style.left = `${x}px`;
+      meteor.style.top = `${y}px`;
+      meteor.innerHTML = '<span class="meteor-core">☄️</span>';
+      meteor.addEventListener('animationend', () => meteor.remove());
+      setTimeout(() => meteor.remove(), 1400);
+      stage.appendChild(meteor);
+    }
+
+    function playMeteorBlast() {
+      const stage = document.getElementById('battleStage');
+      const bossFigure = document.getElementById('battleBossFigure');
+      const target = (bossFigure.querySelector('img') || bossFigure).getBoundingClientRect();
+      const base = stage.getBoundingClientRect();
+      const size = Math.min(240, Math.max(160, target.width * 1.4));
+
+      const burst = document.createElement('div');
+      burst.className = 'blast-burst';
+      burst.style.width = `${size}px`;
+      burst.style.height = `${size}px`;
+      burst.style.backgroundSize = `${size * 16}px ${size}px`;
+      burst.style.setProperty('--sheet-width', `${size * 16}px`);
+      burst.style.left = `${target.left - base.left + target.width / 2 - size / 2}px`;
+      burst.style.top = `${target.top - base.top + target.height * 0.45 - size / 2}px`;
+      burst.addEventListener('animationend', () => burst.remove());
+      setTimeout(() => burst.remove(), 1500);
+      stage.appendChild(burst);
+    }
+
     const SLASH_FRAMES = 8;
     const SLASH_MS = 420;
     const SLASH_IMPACT_MS = 260;
@@ -4480,7 +4563,7 @@
     }
 
     function clearBursts() {
-      document.querySelectorAll('.blast-burst, .boss-wave, .boss-ring, .slash-flurry').forEach(el => el.remove());
+      document.querySelectorAll('.blast-burst, .boss-wave, .boss-ring, .slash-flurry, .meteor-strike').forEach(el => el.remove());
     }
 
     // 보스 머리 위쪽에 작은 폭발이 시간차를 두고 연달아 터진다.
@@ -4694,23 +4777,27 @@
       const melee = skill.motion === 'melee';
       const volley = skill.motion === 'volley';
       const slash = skill.motion === 'slash';
+      const meteor = skill.motion === 'meteor';
       const travel = melee ? MELEE_IMPACT_MS
         : volley ? BLAST_IMPACT_MS
         : slash ? SLASH_IMPACT_MS
+        : meteor ? METEOR_IMPACT_MS
         : (skill.sprite ? (SPRITE_MODES[skill.spriteMode] || SPRITE_MODES.travel).impact : 0);
       if (melee) chargePartner();
       else if (volley) playBlastVolley();
       else if (slash) playSlashFlurry();
+      else if (meteor) playMeteorStrike();
       else if (skill.sprite) playSpriteEffect(skill.sprite, skill.spriteMode);
 
       if (hit) {
         const damage = Math.max(1, Math.round(skill.power * multiplier * (0.9 + Math.random() * 0.2)));
         const land = () => {
           if (melee) playImpactBurst();
+          else if (meteor) { playMeteorBlast(); flashStage(); }
           else if (!skill.sprite && !volley && !slash) playEffect(skill.effect, skill.emoji);
           hitFigure('battleBossFigure');
           if (skill.spriteMode === 'beam') flashStage();
-          else if (skill.sprite || melee || volley || slash) shakeStage();
+          else if (skill.sprite || melee || volley || slash || meteor) shakeStage();
           battle.bossHp = Math.max(0, battle.bossHp - damage);
           updateBattleBars();
           battleLog(`${skill.emoji} ${skill.name}이(가) 명중! ${damage}의 피해를 주었다.`);
@@ -4727,7 +4814,7 @@
       }
 
       const miss = () => {
-        if (!skill.sprite && !melee && !volley && !slash) playEffect('miss', '💨');
+        if (!skill.sprite && !melee && !volley && !slash && !meteor) playEffect('miss', '💨');
         battleLog(`💨 ${skill.name}이(가) 빗나갔다!`);
         scheduleBattle(bossTurn, 1100);
       };

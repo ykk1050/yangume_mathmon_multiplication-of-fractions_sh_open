@@ -696,6 +696,18 @@
             object-fit: contain;
         }
 
+        .boss-hp-training {
+            border: 2px solid #bee3f8;
+            background: linear-gradient(135deg, #ebf8ff, #e6fffa);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+
+        .boss-hp-training h4 { margin: 0 0 8px; }
+        .boss-hp-training p { margin: 4px 0; font-size: 0.9rem; color: #2d3748; }
+        .boss-hp-training .boss-hint { margin-top: 8px; }
+
         .boss-skill-grid,
         .boss-list {
             display: grid;
@@ -2120,8 +2132,9 @@
           </div>
 
           <div class="boss-panel">
-            <h3>2. 기술 배우기 <span id="bossSkillCount">(0/4)</span></h3>
-            <p class="boss-hint">코인으로 기술을 가르칩니다. 최대 4개까지 지닐 수 있어요.</p>
+            <h3>2. 수학몬 훈련장 <span id="bossSkillCount">(기술 0/4)</span></h3>
+            <p class="boss-hint">코인으로 체력을 단련하고 기술을 가르칩니다. 기술은 최대 4개까지 지닐 수 있어요.</p>
+            <div id="bossHpTraining" class="boss-hp-training"></div>
             <div id="bossSkillGrid" class="boss-skill-grid"></div>
           </div>
 
@@ -2414,7 +2427,7 @@
       currentMonster: null,
       isAdminLoggedIn: false,
       bossTestEnabled: false,
-      boss: { partner: null, skills: [], cleared: [] },
+      boss: { partner: null, skills: [], cleared: [], hpLevels: {} },
       infiniteCoinsEnabled: false,
       showAnswers: false,
       captureTrainingLevel: 0
@@ -4255,6 +4268,23 @@
 
     const PARTNER_HP = { common: 90, rare: 110, epic: 130, legendary: 150 };
 
+    // 체력 훈련: 한 번에 +10, 최대 10번. 올릴수록 비싸진다.
+    const HP_TRAINING = { step: 10, maxLevel: 10, baseCost: 150, costStep: 100 };
+
+    function hpLevelOf(name) {
+      const levels = bossState().hpLevels;
+      return levels[name] || 0;
+    }
+
+    function partnerMaxHp(monster) {
+      const base = PARTNER_HP[monster.rarity] || 100;
+      return base + hpLevelOf(monster.name) * HP_TRAINING.step;
+    }
+
+    function hpTrainingCost(level) {
+      return HP_TRAINING.baseCost + level * HP_TRAINING.costStep;
+    }
+
     let battle = null;
     let battleRunId = 0;
 
@@ -4292,11 +4322,12 @@
     }
 
     function bossState() {
-      if (!gameState.boss) gameState.boss = { partner: null, skills: [], cleared: [] };
+      if (!gameState.boss) gameState.boss = { partner: null, skills: [], cleared: [], hpLevels: {} };
       if (!Array.isArray(gameState.boss.skills)) gameState.boss.skills = [];
       // 사라진 기술이 저장돼 있으면 전투에서 오류가 나므로 걸러낸다.
       gameState.boss.skills = gameState.boss.skills.filter(id => BATTLE_SKILLS.some(skill => skill.id === id));
       if (!Array.isArray(gameState.boss.cleared)) gameState.boss.cleared = [];
+      if (!gameState.boss.hpLevels || typeof gameState.boss.hpLevels !== 'object') gameState.boss.hpLevels = {};
       return gameState.boss;
     }
 
@@ -4323,12 +4354,31 @@
         const art = mon.imageUrl || (findMonster(mon.name) || {}).imageUrl;
         card.innerHTML = `${art ? `<img src="${art}" alt="${mon.name}">` : `<div style="font-size:2rem;">${mon.emoji}</div>`}
           <div><strong>${mon.name}</strong></div>
-          <div>${getRarityText(mon.rarity)} · 체력 ${PARTNER_HP[mon.rarity]}</div>`;
+          <div>${getRarityText(mon.rarity)} · 체력 ${partnerMaxHp(mon)}</div>`;
         grid.appendChild(card);
       });
 
+      // 체력 훈련
+      const training = document.getElementById('bossHpTraining');
+      const partner = gameState.collection.find(m => m.name === boss.partner);
+      if (!partner) {
+        training.innerHTML = '<p class="boss-hint">수학몬을 먼저 고르면 체력을 단련할 수 있습니다.</p>';
+      } else {
+        const level = hpLevelOf(partner.name);
+        const maxed = level >= HP_TRAINING.maxLevel;
+        const cost = hpTrainingCost(level);
+        training.innerHTML = `
+          <h4>💪 체력 단련 — ${partner.name}</h4>
+          <p>현재 체력 <strong>${partnerMaxHp(partner)}</strong> (기본 ${PARTNER_HP[partner.rarity] || 100}${level ? ` + 훈련 ${level * HP_TRAINING.step}` : ''})</p>
+          <p>훈련 단계 ${level}/${HP_TRAINING.maxLevel} · 한 번에 체력 +${HP_TRAINING.step}</p>
+          ${maxed
+            ? '<button class="btn btn-success" disabled>최대 단계 도달</button>'
+            : `<p>💰 ${cost} 코인</p><button class="btn btn-primary" onclick="trainPartnerHp()">체력 단련하기</button>`}
+          <p class="boss-hint">훈련한 체력은 수학몬마다 따로 쌓입니다.</p>`;
+      }
+
       // 기술
-      document.getElementById('bossSkillCount').textContent = `(${boss.skills.length}/4)`;
+      document.getElementById('bossSkillCount').textContent = `(기술 ${boss.skills.length}/4)`;
       const skillGrid = document.getElementById('bossSkillGrid');
       skillGrid.innerHTML = '';
       BATTLE_SKILLS.forEach(skill => {
@@ -4373,6 +4423,27 @@
       renderBossTab();
     }
 
+    function trainPartnerHp() {
+      const boss = bossState();
+      const partner = gameState.collection.find(m => m.name === boss.partner);
+      if (!partner) return showNotification('함께 싸울 수학몬을 먼저 고르세요!');
+
+      const level = hpLevelOf(partner.name);
+      if (level >= HP_TRAINING.maxLevel) return showNotification('이미 최대 단계입니다!');
+
+      const cost = hpTrainingCost(level);
+      if (!gameState.infiniteCoinsEnabled && gameState.coins < cost) {
+        return showNotification('코인이 부족합니다!');
+      }
+      if (!gameState.infiniteCoinsEnabled) gameState.coins -= cost;
+
+      boss.hpLevels[partner.name] = level + 1;
+      updateUI();
+      saveData();
+      renderBossTab();
+      showNotification(`💪 ${partner.name}의 체력이 ${HP_TRAINING.step} 올랐습니다!`);
+    }
+
     function learnSkill(skillId) {
       const boss = bossState();
       const skill = BATTLE_SKILLS.find(s => s.id === skillId);
@@ -4404,7 +4475,7 @@
       if (!partnerData) return showNotification('선택한 수학몬을 찾을 수 없습니다.');
 
       const boss = BOSSES.find(b => b.id === bossId);
-      const maxHp = PARTNER_HP[partnerData.rarity] || 100;
+      const maxHp = partnerMaxHp(partnerData);
       battle = {
         id: ++battleRunId,
         boss,

@@ -4633,12 +4633,19 @@
 
     // 보조 기술은 코인을 거듭 들여 효과를 키운다. 효과에는 상한이 있다.
     const SUPPORT_SPECS = {
-      guard: { label: '피해 경감', base: 50, step: 5, max: 95, baseCost: 250, costStep: 150 },
-      evade: { label: '회피율', base: 10, step: 4, max: 50, baseCost: 300, costStep: 180 },
-      focus: { label: '명중률', base: 3, step: 1, max: 9, baseCost: 350, costStep: 220 }
+      guard: { label: '피해 경감', suffix: '', base: 50, step: 5, max: 95, baseCost: 250, costStep: 150 },
+      evade: { label: '회피율', suffix: '', base: 10, step: 4, max: 50, baseCost: 300, costStep: 180 },
+      focus: { label: '공격 명중률', suffix: ' 증가', base: 3, step: 1, max: 9, baseCost: 350, costStep: 220 }
     };
 
     const SUPPORT_TURNS = 3;
+
+    // 예: '공격 명중률 3% 증가 · 3턴 유지'
+    function supportStatLine(skill) {
+      const spec = SUPPORT_SPECS[skill.support];
+      const turns = skill.support === 'guard' ? '다음 공격 1회' : `${SUPPORT_TURNS}턴 유지`;
+      return `${spec.label} ${supportValue(skill)}%${spec.suffix} · ${turns}`;
+    }
 
     function supportLevelOf(skillId) {
       return bossState().supportLevels[skillId] || 0;
@@ -4802,8 +4809,7 @@
         let stat;
         if (skill.support) {
           const spec = SUPPORT_SPECS[skill.support];
-          const turns = skill.support === 'guard' ? '다음 공격 1회' : `${SUPPORT_TURNS}턴 유지`;
-          stat = `<p>${spec.label} ${supportValue(skill)}% · ${turns} <span class="training-detail">(최대 ${spec.max}%)</span></p>
+          stat = `<p>${supportStatLine(skill)} <span class="training-detail">(최대 ${spec.max}%)</span></p>
             <p class="training-detail">단련 ${supportLevelOf(skill.id)}단계 · 한 번에 +${spec.step}%</p>`;
         } else {
           stat = `<p>위력 ${skill.power + atkBonus}${atkBonus ? ` (기본 ${skill.power} + 단련 ${atkBonus})` : ''} · 명중 ${skill.accuracy}%</p>`;
@@ -5475,10 +5481,8 @@
         btn.className = 'battle-skill-btn';
         btn.disabled = battle.busy;
         if (skill.support) {
-          const spec = SUPPORT_SPECS[skill.support];
-          const turns = skill.support === 'guard' ? '다음 공격 1회' : `${SUPPORT_TURNS}턴`;
           btn.classList.add('is-support');
-          btn.innerHTML = `${skill.emoji} ${skill.name}<br><span style="font-weight:normal;font-size:0.8rem;">${spec.label} ${supportValue(skill)}% · ${turns}</span>`;
+          btn.innerHTML = `${skill.emoji} ${skill.name}<br><span style="font-weight:normal;font-size:0.8rem;">${supportStatLine(skill)}</span>`;
         } else {
           const power = skill.power + battle.atkBonus;
           btn.innerHTML = `${skill.emoji} ${skill.name}<br><span style="font-weight:normal;font-size:0.8rem;">위력 ${power}${battle.atkBonus ? ` (+${battle.atkBonus})` : ''} · 명중 ${skill.accuracy}%</span>`;
@@ -5528,6 +5532,17 @@
       const seconds = (Date.now() - battle.quizStart) / 1000;
 
       const skill = BATTLE_SKILLS.find(s => s.id === battle.pendingSkill);
+
+      // 보조 기술은 공격이 아니라 몸을 다스리는 기술이라, 빨리 풀어도 효과가 더 커지지 않는다.
+      if (skill.support) {
+        document.getElementById('battleQuiz').style.display = 'none';
+        battleLog(correct
+          ? '✅ 정답! 기운이 고르게 모였다.'
+          : `❌ 오답… (정답: ${battle.answer.numerator}/${battle.answer.denominator})`);
+        applySupportSkill(skill, correct);
+        return;
+      }
+
       let accuracy = skill.accuracy;
       let multiplier = 1;
       if (correct) {
@@ -5543,12 +5558,6 @@
       }
 
       document.getElementById('battleQuiz').style.display = 'none';
-
-      // 보조 기술은 공격하지 않고 효과만 건다. 답을 맞히면 효과가 온전히 들어간다.
-      if (skill.support) {
-        applySupportSkill(skill, correct);
-        return;
-      }
 
       // 조준경이 걸려 있으면 명중률이 올라가고, 이번 공격이 유지 턴 하나를 쓴다.
       if (battle.focusTurns > 0) {

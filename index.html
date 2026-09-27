@@ -4689,22 +4689,22 @@
 
     const BATTLE_SKILLS = [
       { id: 'reduce_slash', name: '약분 베기', emoji: '✂️', effect: 'slash', motion: 'slash', price: 150, power: 18, accuracy: 85, description: '군더더기를 단칼에 걷어낸다. 안정적으로 맞는다.' },
-      { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', motion: 'volley', price: 600, power: 27, accuracy: 70, description: '보스 머리 위에서 연달아 터진다. 위력은 크지만 빗나가기 쉽다.' },
-      { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', motion: 'melee', price: 250, power: 20, accuracy: 88, description: '보스 코앞까지 달려들어 내리찍는다.' },
-      { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', sprite: 'images/effect_beam.webp', spriteMode: 'beam', price: 450, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
-      { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', sprite: 'images/effect_storm.webp', spriteMode: 'travel', price: 900, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
-      { id: 'meteor_strike', name: '대분수 운석', emoji: '☄️', effect: 'blast', motion: 'meteor', price: 1400, power: 40, accuracy: 72, description: '거대한 대분수 덩어리를 하늘에서 떨어뜨린다. 최대 위력.' },
+      { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', motion: 'volley', price: 1800, power: 27, accuracy: 70, description: '보스 머리 위에서 연달아 터진다. 위력은 크지만 빗나가기 쉽다.' },
+      { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', motion: 'melee', price: 400, power: 20, accuracy: 88, description: '보스 코앞까지 달려들어 내리찍는다.' },
+      { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', sprite: 'images/effect_beam.webp', spriteMode: 'beam', price: 1200, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
+      { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', sprite: 'images/effect_storm.webp', spriteMode: 'travel', price: 3200, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
+      { id: 'meteor_strike', name: '대분수 운석', emoji: '☄️', effect: 'blast', motion: 'meteor', price: 5500, power: 40, accuracy: 72, description: '거대한 대분수 덩어리를 하늘에서 떨어뜨린다. 최대 위력.' },
       // 공격 대신 몸을 지키는 기술. 코인을 더 들여 효과를 키울 수 있다.
-      { id: 'reduce_guard', name: '약분의 방벽', emoji: '🛡️', support: 'guard', price: 500, description: '다음에 오는 보스의 공격 피해를 줄인다. 보스가 힘을 모을 때 쓰면 가장 효과가 크다.' },
-      { id: 'afterimage_step', name: '기약분수 잔상', emoji: '💨', support: 'evade', price: 700, description: '3턴 동안 보스의 공격을 통째로 피할 확률이 올라간다.' },
-      { id: 'denominator_scope', name: '분모 조준경', emoji: '🎯', support: 'focus', price: 650, description: '3턴 동안 내 기술의 명중률이 올라간다.' }
+      { id: 'reduce_guard', name: '약분의 방벽', emoji: '🛡️', support: 'guard', price: 800, description: '다음에 오는 보스의 공격 피해를 줄인다. 보스가 힘을 모을 때 쓰면 가장 효과가 크다.' },
+      { id: 'afterimage_step', name: '기약분수 잔상', emoji: '💨', support: 'evade', price: 1500, description: '3턴 동안 보스의 공격을 통째로 피할 확률이 올라간다.' },
+      { id: 'denominator_scope', name: '분모 조준경', emoji: '🎯', support: 'focus', price: 1000, description: '3턴 동안 내 기술의 명중률이 올라간다.' }
     ];
 
     // 보조 기술은 코인을 거듭 들여 효과를 키운다. 효과에는 상한이 있다.
     const SUPPORT_SPECS = {
-      guard: { label: '피해 경감', suffix: '', base: 50, step: 5, max: 95, baseCost: 250, costStep: 150 },
-      evade: { label: '회피율', suffix: '', base: 10, step: 4, max: 50, baseCost: 300, costStep: 180 },
-      focus: { label: '공격 명중률', suffix: ' 증가', base: 3, step: 1, max: 9, baseCost: 350, costStep: 220 }
+      guard: { label: '피해 경감', suffix: '', base: 50, step: 5, max: 95, baseCost: 300, costStep: 180 },
+      evade: { label: '회피율', suffix: '', base: 10, step: 4, max: 50, baseCost: 350, costStep: 200 },
+      focus: { label: '공격 명중률', suffix: ' 증가', base: 3, step: 1, max: 9, baseCost: 400, costStep: 240 }
     };
 
     const SUPPORT_TURNS = 3;

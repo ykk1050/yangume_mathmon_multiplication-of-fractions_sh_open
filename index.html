@@ -2723,13 +2723,13 @@
           <div class="admin-section">
             <h3>치트 기능</h3>
             <div class="admin-buttons">
-              <button class="btn btn-cheat-inactive" onclick="toggleInfiniteCoins()">
+              <button class="btn btn-cheat-inactive" id="cheatInfiniteCoinsBtn">
                 <span id="coinCheatStatus">무한 코인: OFF</span>
               </button>
-              <button class="btn btn-cheat-inactive" onclick="toggleShowAnswers()">
+              <button class="btn btn-cheat-inactive" id="cheatShowAnswersBtn">
                 <span id="answerCheatStatus">정답 미리보기: OFF</span>
               </button>
-              <button class="btn btn-cheat-inactive" onclick="toggleBossTest()">
+              <button class="btn btn-cheat-inactive" id="cheatBossTestBtn">
                 <span id="bossTestStatus">보스전(테스트): OFF</span>
               </button>
             </div>
@@ -2739,9 +2739,9 @@
           <div class="admin-section">
             <h3>게임 상태 조작</h3>
             <div class="admin-buttons">
-              <button class="btn btn-success" onclick="addCoins(1000)">코인 +1000</button>
-              <button class="btn btn-success" onclick="addRandomMonster()">랜덤 환상 동물 추가</button>
-              <button class="btn btn-success" onclick="unlockAllMonsters()">모든 환상 동물 획득</button>
+              <button class="btn btn-success" id="cheatAddCoinsBtn">코인 +1000</button>
+              <button class="btn btn-success" id="cheatAddMonsterBtn">랜덤 환상 동물 추가</button>
+              <button class="btn btn-success" id="cheatUnlockAllBtn">모든 환상 동물 획득</button>
             </div>
             <p style="margin-top: 15px; color: #718096; font-size: 0.9rem;">
               ℹ️ 게임 데이터 초기화는 메인 화면 왼쪽 위의 '🔄 초기화' 버튼을 사용하세요.
@@ -2769,7 +2769,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.105</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.106</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -2840,6 +2840,9 @@
 
 
   <script>
+  // 게임의 값과 함수를 이 울타리 안에 가둔다. 밖(개발자 콘솔)에서는 gameState 같은
+  // 이름에 손댈 수 없다. 화면의 onclick이 부르는 것만 아래에서 따로 내보낸다.
+  (function () {
     // Game State
     let gameState = {
       coins: 0,
@@ -6236,12 +6239,37 @@
       }
     });
 
+    // 치트 단추는 이름을 밖에 내놓지 않고 여기서 직접 묶는다.
+    const cheatButtons = {
+      cheatInfiniteCoinsBtn: toggleInfiniteCoins,
+      cheatShowAnswersBtn: toggleShowAnswers,
+      cheatBossTestBtn: toggleBossTest,
+      cheatAddCoinsBtn: () => addCoins(1000),
+      cheatAddMonsterBtn: addRandomMonster,
+      cheatUnlockAllBtn: unlockAllMonsters
+    };
+    Object.entries(cheatButtons).forEach(([id, handler]) => {
+      const button = document.getElementById(id);
+      if (button) button.addEventListener('click', handler);
+    });
+
+    // 화면의 onclick이 부르는 것만 밖으로 내보낸다.
+    // 치트 기능은 여기에 없으므로 콘솔에서 이름만으로는 부를 수 없다.
+    Object.assign(window, {
+      checkAdminPassword, checkAnswer, closeAdminLogin, closeImageModal, closeMonsterDetail,
+      closeResetModal, confirmResetGame, executeReset, forgetSkill, generateProblem, learnSkill,
+      purchaseItem, resetCapture, retreatFromBoss, setBgmVolume, showAdminLogin, showBallSelection,
+      startBossBattle, startExploration, submitBattleAnswer, submitCaptureAnswer, switchTab,
+      toggleBgm, trainPartnerAtk, trainPartnerHp, upgradeSupportSkill
+    });
+
     // Initialize
     loadData();
     updateAllUI();
     bgm.init();
     bgm.refresh();
     updateBossTabVisibility();
+  })();
   </script>
 </body>
 </html>

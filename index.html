@@ -2755,7 +2755,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.101</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.102</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -2943,7 +2943,7 @@
       { name: '수학 현자', emoji: '🔮', requirement: '문제 500개 해결', check: () => gameState.totalProblems >= 500 },
       { name: '전설 수집가', emoji: '🌈', requirement: '전설 수학몬 3종 등록', check: () => countCollected('legendary') >= 3 },
       { name: '불굴의 집중', emoji: '💫', requirement: '연속 정답 20회', check: () => gameState.bestStreak >= 20 },
-      { name: '도감 완성자', emoji: '🌌', requirement: '수학몬 전종 등록', check: () => gameState.collection.length >= totalMonsterCount() },
+      { name: '수학몬 마스터', emoji: '🌌', requirement: '수학몬 전종 등록', check: () => gameState.collection.length >= totalMonsterCount() },
       { name: '오류의 종결자', emoji: '👹', requirement: '보스 4명을 모두 격파', hidden: bossOnly, check: () => clearedBossCount() >= 4 }
     ];
 
@@ -3050,6 +3050,15 @@
         const loadedData = JSON.parse(saved);
         // Always set isAdminLoggedIn to false on load
         loadedData.isAdminLoggedIn = false;
+
+        // 이름이 바뀐 칭호는 옛 이름으로 저장돼 있어도 이어 받는다.
+        const renamedTitles = { '도감 완성자': '수학몬 마스터' };
+        if (Array.isArray(loadedData.unlockedTitles)) {
+          loadedData.unlockedTitles = loadedData.unlockedTitles.map(n => renamedTitles[n] || n);
+        }
+        if (renamedTitles[loadedData.currentTitle]) {
+          loadedData.currentTitle = renamedTitles[loadedData.currentTitle];
+        }
         gameState = { ...gameState, ...loadedData };
         
         // 중복된 몬스터 제거 (기존 데이터 정리)

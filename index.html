@@ -2755,7 +2755,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.1</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.101</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -2883,19 +2883,68 @@
       }
     };
 
+    // 칭호 조건을 따질 때 쓰는 잣대들. 저장된 값에서 그때그때 헤아린다.
+    function attemptCount() {
+      return gameState.correctAnswers + gameState.wrongAnswers;
+    }
+
+    function answerAccuracy() {
+      const tries = attemptCount();
+      return tries > 0 ? gameState.correctAnswers / tries : 0;
+    }
+
+    function countCollected(rarity) {
+      return gameState.collection.filter(m => m.rarity === rarity).length;
+    }
+
+    function totalMonsterCount() {
+      return Object.values(monsters).flat().length;
+    }
+
+    function clearedBossCount() {
+      return bossState().cleared.length;
+    }
+
+    function topTrainingLevel(kind) {
+      const levels = Object.values(bossState()[kind] || {});
+      return levels.length ? Math.max(...levels) : 0;
+    }
+
+    function guardFullyTrained() {
+      const skill = BATTLE_SKILLS.find(s => s.id === 'reduce_guard');
+      return !!skill && bossState().skills.includes(skill.id) && supportMaxed(skill);
+    }
+
+    // 보스전은 관리 콘솔로 열어야 보이는 기능이라, 칭호도 그때만 목록에 드러낸다.
+    const bossOnly = () => !gameState.bossTestEnabled;
+
+    // 쉬운 것부터 어려운 것 차례로 둔다. 가장 뒤에 있는 것이 대표 칭호가 된다.
     const titles = [
       { name: '초보자', emoji: '🌱', requirement: '게임 시작', check: () => true },
       { name: '수학 학생', emoji: '📚', requirement: '문제 10개 해결', check: () => gameState.totalProblems >= 10 },
-      { name: '수학 학자', emoji: '🎓', requirement: '문제 50개 해결', check: () => gameState.totalProblems >= 50 },
-      { name: '수학 마스터', emoji: '🧠', requirement: '문제 100개 해결', check: () => gameState.totalProblems >= 100 },
-      { name: '수학 천재', emoji: '⚡', requirement: '문제 200개 해결', check: () => gameState.totalProblems >= 200 },
-      { name: '정확한 사수', emoji: '🎯', requirement: '정답률 90% 이상 (20문제 이상)', check: () => gameState.totalProblems >= 20 && (gameState.correctAnswers / totalAttempts) >= 0.9 },
+      { name: '수집가', emoji: '👾', requirement: '수학몬 5마리 포획', check: () => gameState.totalCaught >= 5 },
       { name: '연속 달성자', emoji: '🔥', requirement: '연속 정답 5회', check: () => gameState.bestStreak >= 5 },
+      { name: '수학 학자', emoji: '🎓', requirement: '문제 50개 해결', check: () => gameState.totalProblems >= 50 },
+      { name: '부자', emoji: '💰', requirement: '코인 1,000개 보유', check: () => gameState.coins >= 1000 },
+      { name: '몬스터 헌터', emoji: '🏹', requirement: '수학몬 15마리 포획', check: () => gameState.totalCaught >= 15 },
       { name: '연속 마스터', emoji: '🌟', requirement: '연속 정답 10회', check: () => gameState.bestStreak >= 10 },
-      { name: '부자', emoji: '💰', requirement: '코인 1000개 보유', check: () => gameState.coins >= 1000 },
-      { name: '수집가', emoji: '👾', requirement: '몬스터 5마리 포획', check: () => gameState.totalCaught >= 5 },
-      { name: '몬스터 헌터', emoji: '🏹', requirement: '몬스터 15마리 포획', check: () => gameState.totalCaught >= 15 },
-      { name: '전설 사냥꾼', emoji: '👑', requirement: '전설 몬스터 포획', check: () => gameState.rarestMonster === '전설' }
+      { name: '정확한 사수', emoji: '🎯', requirement: '20번 이상 풀고 정답률 90% 이상', check: () => attemptCount() >= 20 && answerAccuracy() >= 0.9 },
+      { name: '수학 마스터', emoji: '🧠', requirement: '문제 100개 해결', check: () => gameState.totalProblems >= 100 },
+      { name: '전설 사냥꾼', emoji: '👑', requirement: '전설 수학몬 포획', check: () => countCollected('legendary') >= 1 },
+      { name: '도전자', emoji: '⚔️', requirement: '보스 1명 격파', hidden: bossOnly, check: () => clearedBossCount() >= 1 },
+      { name: '훈련 교관', emoji: '🏋️', requirement: '한 수학몬을 체력 10단계까지 단련', hidden: bossOnly, check: () => topTrainingLevel('hpLevels') >= 10 },
+      { name: '수학 천재', emoji: '⚡', requirement: '문제 200개 해결', check: () => gameState.totalProblems >= 200 },
+      { name: '기술 연마자', emoji: '🗡️', requirement: '전투 기술 4개를 모두 익히기', hidden: bossOnly, check: () => bossState().skills.length >= 4 },
+      { name: '도감 절반', emoji: '📖', requirement: '수학몬 31종 등록', check: () => gameState.collection.length >= 31 },
+      { name: '대부호', emoji: '💎', requirement: '코인 10,000개 보유', check: () => gameState.coins >= 10000 },
+      { name: '정밀 사수', emoji: '🧿', requirement: '100번 이상 풀고 정답률 95% 이상', check: () => attemptCount() >= 100 && answerAccuracy() >= 0.95 },
+      { name: '보스 정복자', emoji: '🏆', requirement: '보스 2명 격파', hidden: bossOnly, check: () => clearedBossCount() >= 2 },
+      { name: '방패의 수호자', emoji: '🛡️', requirement: '약분의 방벽을 최대 효과까지 단련', hidden: bossOnly, check: () => guardFullyTrained() },
+      { name: '수학 현자', emoji: '🔮', requirement: '문제 500개 해결', check: () => gameState.totalProblems >= 500 },
+      { name: '전설 수집가', emoji: '🌈', requirement: '전설 수학몬 3종 등록', check: () => countCollected('legendary') >= 3 },
+      { name: '불굴의 집중', emoji: '💫', requirement: '연속 정답 20회', check: () => gameState.bestStreak >= 20 },
+      { name: '도감 완성자', emoji: '🌌', requirement: '수학몬 전종 등록', check: () => gameState.collection.length >= totalMonsterCount() },
+      { name: '오류의 종결자', emoji: '👹', requirement: '보스 4명을 모두 격파', hidden: bossOnly, check: () => clearedBossCount() >= 4 }
     ];
 
     const monsters = {
@@ -3085,7 +3134,11 @@
     function checkAndUnlockTitles() {
       let newTitles = [];
       titles.forEach(title => {
-        if (!gameState.unlockedTitles.includes(title.name) && title.check()) {
+        if (gameState.unlockedTitles.includes(title.name)) return;
+        // 조건 하나가 잘못돼도 뒤따르는 칭호까지 멈추지 않도록 따로 감싼다.
+        let earned = false;
+        try { earned = title.check(); } catch (error) { console.warn('칭호 조건 확인 실패:', title.name, error); }
+        if (earned) {
           gameState.unlockedTitles.push(title.name);
           newTitles.push(title);
         }
@@ -3110,6 +3163,7 @@
       titles.forEach(title => {
         const isUnlocked = gameState.unlockedTitles.includes(title.name);
         const isCurrent = gameState.currentTitle === title.name;
+        if (!isUnlocked && title.hidden && title.hidden()) return;
         const div = document.createElement('div');
         div.className = `title-item ${isCurrent ? 'current' : isUnlocked ? 'unlocked' : 'locked'}`;
         if (isUnlocked && !isCurrent) {
@@ -4418,11 +4472,10 @@
       gameState.encounteredMonsters = gameState.encounteredMonsters.filter(m =>
         !(m.name === gameState.currentMonster.name && m.rarity === gameState.currentMonster.rarity));
       
-      const rarityOrder = ['common', 'rare', 'epic', 'legendary'];
-      const currentRarityIndex = rarityOrder.indexOf(gameState.currentMonster.rarity);
-      const currentBestIndex = rarityOrder.indexOf(gameState.rarestMonster === '없음' ? 'common' : gameState.rarestMonster);
+      const currentRarityIndex = rarityRank(gameState.currentMonster.rarity);
+      const currentBestIndex = savedRarestRank();
       
-      if (currentRarityIndex > currentBestIndex || gameState.rarestMonster === '없음') {
+      if (currentRarityIndex > currentBestIndex) {
         gameState.rarestMonster = getRarityText(gameState.currentMonster.rarity);
       }
       
@@ -4612,6 +4665,18 @@
         closeMonsterDetail();
       }
     });
+
+    const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'];
+
+    function rarityRank(rarity) {
+      return RARITY_ORDER.indexOf(rarity);
+    }
+
+    // 저장된 값은 '전설'처럼 한글이라 한글로 견준다. 아직 없으면 -1이 되어
+    // 무엇을 잡든 첫 기록으로 남는다.
+    function savedRarestRank() {
+      return RARITY_ORDER.map(getRarityText).indexOf(gameState.rarestMonster);
+    }
 
     function getRarityText(rarity) {
       const rarityTexts = { common: '일반', rare: '레어', epic: '에픽', legendary: '전설' };
@@ -5858,11 +5923,10 @@
       gameState.collection.push(newMonster);
       gameState.totalCaught++;
       
-      const rarityOrder = ['common', 'rare', 'epic', 'legendary'];
-      const currentRarityIndex = rarityOrder.indexOf(randomMonster.rarity);
-      const currentBestIndex = rarityOrder.indexOf(gameState.rarestMonster === '없음' ? 'common' : gameState.rarestMonster);
+      const currentRarityIndex = rarityRank(randomMonster.rarity);
+      const currentBestIndex = savedRarestRank();
       
-      if (currentRarityIndex > currentBestIndex || gameState.rarestMonster === '없음') {
+      if (currentRarityIndex > currentBestIndex) {
         gameState.rarestMonster = getRarityText(randomMonster.rarity);
       }
       

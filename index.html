@@ -2769,7 +2769,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.104</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.105</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -4722,11 +4722,25 @@
       document.getElementById('adminLoginError').style.display = 'none';
     }
 
+    // 비밀번호를 그대로 적어 두면 소스에서 검색 한 번에 드러난다.
+    // 대신 섞어 만든 값만 남긴다. 다만 판정이 이 페이지 안에서 일어나므로,
+    // 코드를 읽을 줄 아는 사람까지 막아 주지는 못한다.
+    const ADMIN_PASS_HASH = '1u55lnb';
+
+    function hashSecret(text) {
+      const salted = `mathmon:${text}:gamtudyssam`;
+      let hash = 5381;
+      for (let i = 0; i < salted.length; i++) {
+        hash = ((hash * 33) ^ salted.charCodeAt(i)) >>> 0;
+      }
+      return hash.toString(36);
+    }
+
     function checkAdminPassword() {
       const password = document.getElementById('adminPasswordInput').value;
       const errorDiv = document.getElementById('adminLoginError');
-      
-      if (password === '1050') {
+
+      if (hashSecret(password) === ADMIN_PASS_HASH) {
         gameState.isAdminLoggedIn = true;
         closeAdminLogin();
         switchTab('admin');

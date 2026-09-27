@@ -1318,6 +1318,139 @@
             margin-bottom: 12px;
         }
 
+        /* 지금 걸려 있는 효과를 무대 바로 아래에 한 줄로 보여 준다. */
+        .battle-buffs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0 0 10px;
+        }
+
+        .battle-buffs:empty { margin: 0; }
+
+        .battle-buff {
+            font-size: 0.78rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+        }
+
+        .battle-buff.is-danger { background: #fed7d7; color: #822727; border-color: #fc8181; }
+        .battle-buff.is-guard { background: #c6f6d5; color: #22543d; border-color: #68d391; }
+        .battle-buff.is-evade { background: #e9d8fd; color: #44337a; border-color: #b794f4; }
+        .battle-buff.is-focus { background: #feebc8; color: #7b341e; border-color: #f6ad55; }
+
+        /* 보스가 힘을 모을 때 여러 번 번쩍인다. 나중에 전용 그림으로 바꿀 자리. */
+        .battle-figure.is-powering {
+            animation: bossPowerUp 1.3s ease-in-out;
+        }
+
+        @keyframes bossPowerUp {
+            0%, 100% { filter: none; transform: scale(1); }
+            10%, 30%, 50%, 70% { filter: brightness(2.6) saturate(1.6) drop-shadow(0 0 18px rgba(255, 90, 90, 0.95)); transform: scale(1.05); }
+            20%, 40%, 60%, 80% { filter: brightness(1.05); transform: scale(1.01); }
+            90% { filter: brightness(2.2) drop-shadow(0 0 26px rgba(255, 140, 60, 0.95)); transform: scale(1.08); }
+        }
+
+        .boss-charge-aura {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 3px solid rgba(255, 130, 90, 0.9);
+            box-shadow: 0 0 22px rgba(255, 120, 60, 0.8), inset 0 0 26px rgba(255, 180, 90, 0.7);
+            pointer-events: none;
+            z-index: 2;
+            animation: chargeAura 1.3s ease-in-out;
+        }
+
+        @keyframes chargeAura {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+            25% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+            55% { opacity: 0.75; transform: translate(-50%, -50%) scale(1.35); }
+            85% { opacity: 1; transform: translate(-50%, -50%) scale(0.95); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        .charge-label {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: #fff;
+            background: rgba(120, 20, 20, 0.72);
+            padding: 4px 12px;
+            border-radius: 999px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 4;
+            animation: chargeLabel 1.3s ease-in-out;
+        }
+
+        @keyframes chargeLabel {
+            0% { opacity: 0; }
+            15%, 85% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* 필살기는 같은 그림을 더 크고 붉게 쓴다. 전용 그림이 생기면 여기를 바꾼다. */
+        .boss-wave.is-ultimate {
+            width: 92%;
+            animation-duration: 1.4s;
+        }
+
+        .boss-wave.is-ultimate .boss-wave-frames {
+            filter: drop-shadow(0 0 20px rgba(255, 90, 60, 0.95))
+                    drop-shadow(0 0 44px rgba(255, 40, 40, 0.75))
+                    saturate(1.5);
+        }
+
+        /* 잔상으로 피하면 우리 수학몬이 옆으로 흐려지며 빠진다. */
+        .battle-figure.is-slipping {
+            animation: partnerSlip 0.6s ease-out;
+        }
+
+        @keyframes partnerSlip {
+            0% { transform: translateX(0); opacity: 1; }
+            30% { transform: translateX(-34px) skewX(8deg); opacity: 0.35; }
+            60% { transform: translateX(-26px) skewX(4deg); opacity: 0.6; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        .support-aura {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.85);
+            pointer-events: none;
+            z-index: 2;
+            animation: supportAura 0.9s ease-out;
+        }
+
+        .support-aura.is-guard { border-color: rgba(104, 211, 145, 0.95); box-shadow: 0 0 20px rgba(72, 187, 120, 0.85); }
+        .support-aura.is-evade { border-color: rgba(183, 148, 244, 0.95); box-shadow: 0 0 20px rgba(128, 90, 213, 0.85); }
+        .support-aura.is-focus { border-color: rgba(246, 173, 85, 0.95); box-shadow: 0 0 20px rgba(221, 107, 32, 0.85); }
+
+        @keyframes supportAura {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+            30% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+        }
+
+        .support-tag {
+            font-size: 0.7rem;
+            background: #e9d8fd;
+            color: #44337a;
+            padding: 2px 8px;
+            border-radius: 999px;
+            vertical-align: middle;
+        }
+
+        .battle-skill-btn.is-support {
+            border-color: #805ad5;
+            background: #faf5ff;
+        }
+
         .battle-skill-btn {
             border: 2px solid #667eea;
             background: #ebf4ff;
@@ -2164,6 +2297,8 @@
             .battle-name { font-size: 0.75rem; }
             .battle-hp { width: 110px; height: 10px; }
             .battle-hp-text { font-size: 0.65rem; padding: 2px 6px; }
+            .battle-buff { font-size: 0.7rem; padding: 3px 8px; }
+            .charge-label { font-size: 0.8rem; padding: 3px 9px; }
             .battle-figure { min-height: 110px; }
             .battle-figure.is-boss img { max-height: 130px; }
             .battle-figure.is-partner img { max-height: 100px; }
@@ -2371,6 +2506,8 @@
             </div>
             <div class="battle-effect" id="battleEffect"></div>
           </div>
+
+          <div id="battleBuffs" class="battle-buffs"></div>
 
           <div id="battleSkills" class="battle-skills"></div>
 
@@ -4487,14 +4624,46 @@
       { id: 'denominator_press', name: '분모 강타', emoji: '🔨', effect: 'slash', motion: 'melee', price: 250, power: 20, accuracy: 88, description: '보스 코앞까지 달려들어 내리찍는다.' },
       { id: 'common_beam', name: '통분 광선', emoji: '🔆', effect: 'beam', sprite: 'images/effect_beam.webp', spriteMode: 'beam', price: 450, power: 24, accuracy: 90, description: '두 수를 맞추듯 정확히 꿰뚫는다.' },
       { id: 'improper_storm', name: '가분수 폭풍', emoji: '🌪️', effect: 'storm', sprite: 'images/effect_storm.webp', spriteMode: 'travel', price: 900, power: 34, accuracy: 65, description: '한 방이 크지만 매우 불안정하다.' },
-      { id: 'meteor_strike', name: '대분수 운석', emoji: '☄️', effect: 'blast', motion: 'meteor', price: 1400, power: 40, accuracy: 72, description: '거대한 대분수 덩어리를 하늘에서 떨어뜨린다. 최대 위력.' }
+      { id: 'meteor_strike', name: '대분수 운석', emoji: '☄️', effect: 'blast', motion: 'meteor', price: 1400, power: 40, accuracy: 72, description: '거대한 대분수 덩어리를 하늘에서 떨어뜨린다. 최대 위력.' },
+      // 공격 대신 몸을 지키는 기술. 코인을 더 들여 효과를 키울 수 있다.
+      { id: 'reduce_guard', name: '약분의 방벽', emoji: '🛡️', support: 'guard', price: 500, description: '다음에 오는 보스의 공격 피해를 줄인다. 보스가 힘을 모을 때 쓰면 가장 효과가 크다.' },
+      { id: 'afterimage_step', name: '기약분수 잔상', emoji: '💨', support: 'evade', price: 700, description: '3턴 동안 보스의 공격을 통째로 피할 확률이 올라간다.' },
+      { id: 'denominator_scope', name: '분모 조준경', emoji: '🎯', support: 'focus', price: 650, description: '3턴 동안 내 기술의 명중률이 올라간다.' }
     ];
+
+    // 보조 기술은 코인을 거듭 들여 효과를 키운다. 효과에는 상한이 있다.
+    const SUPPORT_SPECS = {
+      guard: { label: '피해 경감', base: 30, step: 5, max: 95, baseCost: 250, costStep: 150 },
+      evade: { label: '회피율', base: 10, step: 4, max: 50, baseCost: 300, costStep: 180 },
+      focus: { label: '명중률', base: 3, step: 1, max: 9, baseCost: 350, costStep: 220 }
+    };
+
+    const SUPPORT_TURNS = 3;
+
+    function supportLevelOf(skillId) {
+      return bossState().supportLevels[skillId] || 0;
+    }
+
+    function supportValue(skill) {
+      const spec = SUPPORT_SPECS[skill.support];
+      return Math.min(spec.max, spec.base + supportLevelOf(skill.id) * spec.step);
+    }
+
+    function supportMaxed(skill) {
+      return supportValue(skill) >= SUPPORT_SPECS[skill.support].max;
+    }
+
+    function supportUpgradeCost(skill) {
+      const spec = SUPPORT_SPECS[skill.support];
+      return spec.baseCost + supportLevelOf(skill.id) * spec.costStep;
+    }
 
     const PARTNER_HP = { common: 90, rare: 110, epic: 130, legendary: 150 };
 
     // 육성이 이 모드의 중심이다. 체력과 공격을 따로 단련한다.
-    const HP_TRAINING = { step: 20, maxLevel: 20, baseCost: 120, costStep: 50 };
-    const ATK_TRAINING = { step: 2, maxLevel: 15, baseCost: 200, costStep: 80 };
+    // 단계 상한은 없다. 대신 올릴수록 코인이 계속 더 든다.
+    const HP_TRAINING = { step: 20, baseCost: 120, costStep: 50 };
+    const ATK_TRAINING = { step: 2, baseCost: 200, costStep: 80 };
 
     function hpLevelOf(name) {
       return bossState().hpLevels[name] || 0;
@@ -4558,13 +4727,14 @@
     }
 
     function bossState() {
-      if (!gameState.boss) gameState.boss = { partner: null, skills: [], cleared: [], hpLevels: {}, atkLevels: {} };
+      if (!gameState.boss) gameState.boss = { partner: null, skills: [], cleared: [], hpLevels: {}, atkLevels: {}, supportLevels: {} };
       if (!Array.isArray(gameState.boss.skills)) gameState.boss.skills = [];
       // 사라진 기술이 저장돼 있으면 전투에서 오류가 나므로 걸러낸다.
       gameState.boss.skills = gameState.boss.skills.filter(id => BATTLE_SKILLS.some(skill => skill.id === id));
       if (!Array.isArray(gameState.boss.cleared)) gameState.boss.cleared = [];
       if (!gameState.boss.hpLevels || typeof gameState.boss.hpLevels !== 'object') gameState.boss.hpLevels = {};
       if (!gameState.boss.atkLevels || typeof gameState.boss.atkLevels !== 'object') gameState.boss.atkLevels = {};
+      if (!gameState.boss.supportLevels || typeof gameState.boss.supportLevels !== 'object') gameState.boss.supportLevels = {};
       return gameState.boss;
     }
 
@@ -4603,27 +4773,21 @@
       } else {
         const hpLevel = hpLevelOf(partner.name);
         const atkLevel = atkLevelOf(partner.name);
-        const hpMaxed = hpLevel >= HP_TRAINING.maxLevel;
-        const atkMaxed = atkLevel >= ATK_TRAINING.maxLevel;
         training.innerHTML = `
           <h4>🏋️ ${partner.name} 단련</h4>
           <div class="training-rows">
             <div class="training-row">
               <p><strong>💪 체력</strong> ${partnerMaxHp(partner)} <span class="training-detail">(기본 ${PARTNER_HP[partner.rarity] || 100}${hpLevel ? ` + 훈련 ${hpLevel * HP_TRAINING.step}` : ''})</span></p>
-              <p class="training-detail">단계 ${hpLevel}/${HP_TRAINING.maxLevel} · 한 번에 +${HP_TRAINING.step}</p>
-              ${hpMaxed
-                ? '<button class="btn btn-success" disabled>최대 단계</button>'
-                : `<button class="btn btn-primary" onclick="trainPartnerHp()">체력 단련 💰 ${hpTrainingCost(hpLevel)}</button>`}
+              <p class="training-detail">${hpLevel}단계 · 한 번에 +${HP_TRAINING.step} · 단계 제한 없음</p>
+              <button class="btn btn-primary" onclick="trainPartnerHp()">체력 단련 💰 ${hpTrainingCost(hpLevel)}</button>
             </div>
             <div class="training-row">
               <p><strong>⚔️ 공격</strong> 모든 기술 위력 +${partnerAtkBonus(partner)}</p>
-              <p class="training-detail">단계 ${atkLevel}/${ATK_TRAINING.maxLevel} · 한 번에 +${ATK_TRAINING.step}</p>
-              ${atkMaxed
-                ? '<button class="btn btn-success" disabled>최대 단계</button>'
-                : `<button class="btn btn-primary" onclick="trainPartnerAtk()">공격 단련 💰 ${atkTrainingCost(atkLevel)}</button>`}
+              <p class="training-detail">${atkLevel}단계 · 한 번에 +${ATK_TRAINING.step} · 단계 제한 없음</p>
+              <button class="btn btn-primary" onclick="trainPartnerAtk()">공격 단련 💰 ${atkTrainingCost(atkLevel)}</button>
             </div>
           </div>
-          <p class="boss-hint">단련한 능력은 수학몬마다 따로 쌓입니다. 다음 보스는 더 강하니 미리 키워두세요.</p>`;
+          <p class="boss-hint">단련한 능력은 수학몬마다 따로 쌓이며 단계 제한은 없습니다. 다만 올릴수록 드는 코인이 계속 늘어납니다.</p>`;
       }
 
       // 기술
@@ -4635,14 +4799,31 @@
         const learned = boss.skills.includes(skill.id);
         const div = document.createElement('div');
         div.className = `boss-skill ${learned ? 'learned' : ''}`;
+        let stat;
+        if (skill.support) {
+          const spec = SUPPORT_SPECS[skill.support];
+          const turns = skill.support === 'guard' ? '다음 공격 1회' : `${SUPPORT_TURNS}턴 유지`;
+          stat = `<p>${spec.label} ${supportValue(skill)}% · ${turns} <span class="training-detail">(최대 ${spec.max}%)</span></p>
+            <p class="training-detail">단련 ${supportLevelOf(skill.id)}단계 · 한 번에 +${spec.step}%</p>`;
+        } else {
+          stat = `<p>위력 ${skill.power + atkBonus}${atkBonus ? ` (기본 ${skill.power} + 단련 ${atkBonus})` : ''} · 명중 ${skill.accuracy}%</p>`;
+        }
+
+        const upgrade = (skill.support && learned)
+          ? (supportMaxed(skill)
+            ? '<button class="btn btn-success" disabled>효과 최대</button>'
+            : `<button class="btn btn-primary" onclick="upgradeSupportSkill('${skill.id}')">효과 올리기 💰 ${supportUpgradeCost(skill)}</button>`)
+          : '';
+
         div.innerHTML = `
-          <h4>${skill.emoji} ${skill.name}</h4>
+          <h4>${skill.emoji} ${skill.name}${skill.support ? ' <span class="support-tag">보조</span>' : ''}</h4>
           <p>${skill.description}</p>
-          <p>위력 ${skill.power + atkBonus}${atkBonus ? ` (기본 ${skill.power} + 단련 ${atkBonus})` : ''} · 명중 ${skill.accuracy}%</p>
+          ${stat}
           <p>💰 ${skill.price} 코인</p>
           <button class="btn ${learned ? 'btn-danger' : 'btn-primary'}" onclick="${learned ? `forgetSkill('${skill.id}')` : `learnSkill('${skill.id}')`}">
             ${learned ? '잊게 하기' : '배우기'}
-          </button>`;
+          </button>
+          ${upgrade}`;
         skillGrid.appendChild(div);
       });
 
@@ -4679,8 +4860,6 @@
       if (!partner) return showNotification('함께 싸울 수학몬을 먼저 고르세요!');
 
       const level = hpLevelOf(partner.name);
-      if (level >= HP_TRAINING.maxLevel) return showNotification('이미 최대 단계입니다!');
-
       const cost = hpTrainingCost(level);
       if (!gameState.infiniteCoinsEnabled && gameState.coins < cost) {
         return showNotification('코인이 부족합니다!');
@@ -4700,8 +4879,6 @@
       if (!partner) return showNotification('함께 싸울 수학몬을 먼저 고르세요!');
 
       const level = atkLevelOf(partner.name);
-      if (level >= ATK_TRAINING.maxLevel) return showNotification('이미 최대 단계입니다!');
-
       const cost = atkTrainingCost(level);
       if (!gameState.infiniteCoinsEnabled && gameState.coins < cost) {
         return showNotification('코인이 부족합니다!');
@@ -4728,6 +4905,27 @@
       saveData();
       renderBossTab();
       showNotification(`${skill.emoji} ${skill.name}을(를) 배웠습니다!`);
+    }
+
+    // 보조 기술은 코인을 거듭 들여 효과를 키운다. 효과가 최대면 더 올릴 수 없다.
+    function upgradeSupportSkill(skillId) {
+      const boss = bossState();
+      const skill = BATTLE_SKILLS.find(s => s.id === skillId);
+      if (!skill || !skill.support) return;
+      if (!boss.skills.includes(skillId)) return showNotification('먼저 이 기술을 배워야 합니다!');
+      if (supportMaxed(skill)) return showNotification('이미 효과가 최대입니다!');
+
+      const cost = supportUpgradeCost(skill);
+      if (!gameState.infiniteCoinsEnabled && gameState.coins < cost) {
+        return showNotification('코인이 부족합니다!');
+      }
+      if (!gameState.infiniteCoinsEnabled) gameState.coins -= cost;
+
+      boss.supportLevels[skillId] = supportLevelOf(skillId) + 1;
+      updateUI();
+      saveData();
+      renderBossTab();
+      showNotification(`${skill.emoji} ${skill.name}의 ${SUPPORT_SPECS[skill.support].label}이(가) ${supportValue(skill)}%가 되었습니다!`);
     }
 
     function forgetSkill(skillId) {
@@ -4758,7 +4956,12 @@
         pendingSkill: null,
         quizStart: 0,
         answer: null,
-        busy: true
+        busy: true,
+        bossTurns: 0,      // 보스가 움직인 횟수. 이 수로 힘을 모으는 때를 정한다.
+        charged: false,    // 힘을 다 모아 다음 공격이 필살기인 상태
+        guard: 0,          // 다음 공격 한 번을 줄여 줄 비율
+        evadeTurns: 0, evadePercent: 0,
+        focusTurns: 0, focusPercent: 0
       };
 
       renderBossTab();
@@ -4775,6 +4978,7 @@
       document.getElementById('battlePartnerName').textContent = partnerData.name;
       document.getElementById('battleLog').innerHTML = '';
       updateBattleBars();
+      renderBattleBuffs();
       battleLog(`⚔️ ${boss.name}이(가) 나타났다!`);
       renderBattleSkills();
       scheduleBattle(bossTurn, 900);
@@ -4906,7 +5110,7 @@
     }
 
     function clearBursts() {
-      document.querySelectorAll('.blast-burst, .boss-wave, .boss-ring, .slash-flurry, .meteor-strike, .dodge-label, .damage-label').forEach(el => el.remove());
+      document.querySelectorAll('.blast-burst, .boss-wave, .boss-ring, .slash-flurry, .meteor-strike, .dodge-label, .damage-label, .boss-charge-aura, .charge-label, .support-aura').forEach(el => el.remove());
     }
 
     // 앞선 전투의 공격 동작이 남아 다음 전투 시작과 겹쳐 보이던 문제를 막는다.
@@ -4924,7 +5128,7 @@
       ['battlePartnerFigure', 'battleBossFigure'].forEach(id => {
         const figure = document.getElementById(id);
         if (!figure) return;
-        figure.classList.remove('is-hit', 'is-charging', 'is-damaged', 'is-dodging');
+        figure.classList.remove('is-hit', 'is-charging', 'is-damaged', 'is-dodging', 'is-powering', 'is-slipping');
         figure.getAnimations().forEach(animation => animation.cancel());
       });
 
@@ -5065,9 +5269,90 @@
     }
 
     const BOSS_WAVE_MS = 560;
+    const BOSS_CHARGE_MS = 1300;          // 힘을 모으는 동안 멈춰 있는 시간
+    const BOSS_CHARGE_EVERY = 4;          // 이 횟수마다 힘을 모은다
+    const BOSS_ULTIMATE_MULTIPLIER = 3;   // 필살기는 평소의 몇 배인가
+
+    // 힘을 모으는 연출. 보스가 여러 번 번쩍이고 둘레에 기운이 모인다.
+    // 나중에 전용 그림이 생기면 이 자리를 그 그림으로 바꾸면 된다.
+    function chargeUpBoss() {
+      const figure = document.getElementById('battleBossFigure');
+      const stage = document.getElementById('battleStage');
+      if (!figure || !stage) return;
+
+      figure.classList.remove('is-powering');
+      void figure.offsetWidth;
+      figure.classList.add('is-powering');
+      figure.addEventListener('animationend', () => figure.classList.remove('is-powering'), { once: true });
+      setTimeout(() => figure.classList.remove('is-powering'), BOSS_CHARGE_MS + 400);
+
+      const target = (figure.querySelector('img') || figure).getBoundingClientRect();
+      const base = stage.getBoundingClientRect();
+
+      const aura = document.createElement('div');
+      aura.className = 'boss-charge-aura';
+      aura.style.left = `${target.left - base.left + target.width / 2}px`;
+      aura.style.top = `${target.top - base.top + target.height / 2}px`;
+      aura.style.width = `${Math.max(120, target.width * 1.1)}px`;
+      aura.style.height = `${Math.max(120, target.width * 1.1)}px`;
+      aura.addEventListener('animationend', () => aura.remove());
+      setTimeout(() => aura.remove(), BOSS_CHARGE_MS + 600);
+      stage.appendChild(aura);
+
+      const label = document.createElement('div');
+      label.className = 'charge-label';
+      label.textContent = '힘을 모으는 중…';
+      label.style.left = `${target.left - base.left + target.width / 2}px`;
+      label.style.top = `${Math.max(16, target.top - base.top + target.height * 0.12)}px`;
+      setTimeout(() => label.remove(), BOSS_CHARGE_MS + 200);
+      stage.appendChild(label);
+    }
+
+    // 우리 수학몬이 잔상을 남기며 뒤로 빠진다.
+    function dodgePartner() {
+      const figure = document.getElementById('battlePartnerFigure');
+      const stage = document.getElementById('battleStage');
+      if (!figure || !stage) return;
+
+      figure.classList.remove('is-slipping');
+      void figure.offsetWidth;
+      figure.classList.add('is-slipping');
+      figure.addEventListener('animationend', () => figure.classList.remove('is-slipping'), { once: true });
+      setTimeout(() => figure.classList.remove('is-slipping'), 1000);
+
+      const target = (figure.querySelector('img') || figure).getBoundingClientRect();
+      const base = stage.getBoundingClientRect();
+      const label = document.createElement('div');
+      label.className = 'dodge-label';
+      label.textContent = '회피!';
+      label.style.left = `${target.left - base.left + target.width / 2}px`;
+      label.style.top = `${target.top - base.top + target.height * 0.25}px`;
+      label.addEventListener('animationend', () => label.remove());
+      setTimeout(() => label.remove(), 1200);
+      stage.appendChild(label);
+    }
+
+    // 보조 기술을 쓸 때 우리 수학몬 둘레에 기운이 돈다.
+    function playSupportAura(kind) {
+      const figure = document.getElementById('battlePartnerFigure');
+      const stage = document.getElementById('battleStage');
+      if (!figure || !stage) return;
+
+      const target = (figure.querySelector('img') || figure).getBoundingClientRect();
+      const base = stage.getBoundingClientRect();
+      const aura = document.createElement('div');
+      aura.className = `support-aura is-${kind}`;
+      aura.style.left = `${target.left - base.left + target.width / 2}px`;
+      aura.style.top = `${target.top - base.top + target.height / 2}px`;
+      aura.style.width = `${Math.max(110, target.width)}px`;
+      aura.style.height = `${Math.max(110, target.width)}px`;
+      aura.addEventListener('animationend', () => aura.remove());
+      setTimeout(() => aura.remove(), 1200);
+      stage.appendChild(aura);
+    }
 
     // 보스의 선율이 겹겹이 메아리치며 내 수학몬 쪽으로 밀려온다.
-    function playBossWave(sprite) {
+    function playBossWave(sprite, ultimate) {
       const stage = document.getElementById('battleStage');
       stage.querySelectorAll('.boss-wave, .boss-ring').forEach(el => el.remove());
 
@@ -5078,7 +5363,7 @@
 
       layers.forEach((delay, index) => {
         const wave = document.createElement('div');
-        wave.className = `boss-wave layer-${index}${boss.attackStyle === 'burst' ? ' is-burst' : ''}`;
+        wave.className = `boss-wave layer-${index}${boss.attackStyle === 'burst' ? ' is-burst' : ''}${ultimate ? ' is-ultimate' : ''}`;
         wave.style.animationDelay = `${delay}ms`;
         const frames = document.createElement('div');
         frames.className = 'boss-wave-frames';
@@ -5115,18 +5400,60 @@
 
     function bossTurn() {
       if (!battle) return;
+      battle.bossTurns++;
+
+      // 몇 턴에 한 번은 공격 대신 힘을 모은다. 다음 턴 공격이 세 배로 세진다.
+      if (!battle.charged && battle.bossTurns % BOSS_CHARGE_EVERY === 0) {
+        battle.charged = true;
+        chargeUpBoss();
+        battleLog(`⚠️ ${battle.boss.name}이(가) 힘을 모으고 있다… 다음 공격은 평소의 3배다!`);
+        renderBattleBuffs();
+        scheduleBattle(startPlayerTurn, BOSS_CHARGE_MS);
+        return;
+      }
+
+      const ultimate = battle.charged;
+      battle.charged = false;
+
       const [min, max] = battle.boss.attack;
-      const damage = Math.floor(Math.random() * (max - min + 1)) + min;
+      const base = Math.floor(Math.random() * (max - min + 1)) + min;
+      const damage = ultimate ? base * BOSS_ULTIMATE_MULTIPLIER : base;
       const sprite = battle.boss.attackSprite;
 
-      if (sprite) playBossWave(sprite);
+      if (sprite) playBossWave(sprite, ultimate);
       else playEffect('blast', '🌀', 'partner');
 
       const land = () => {
-        hitPartner(damage);
-        battle.hp = Math.max(0, battle.hp - damage);
+        if (!battle) return;
+
+        // 잔상이 남아 있으면 통째로 피할 수 있다.
+        if (battle.evadeTurns > 0) {
+          battle.evadeTurns--;
+          if (Math.random() * 100 < battle.evadePercent) {
+            dodgePartner();
+            battleLog(`💨 ${battle.partner.name}이(가) 잔상을 남기고 공격을 피했다!`);
+            renderBattleBuffs();
+            scheduleBattle(startPlayerTurn, 900);
+            return;
+          }
+        }
+
+        let dealt = damage;
+        const guarded = battle.guard;
+        if (guarded > 0) {
+          dealt = Math.max(1, Math.round(dealt * (1 - guarded / 100)));
+          battle.guard = 0;
+        }
+
+        hitPartner(dealt);
+        if (ultimate) { flashStage(); shakeStage(); }
+        battle.hp = Math.max(0, battle.hp - dealt);
         updateBattleBars();
-        battleLog(`🌀 ${battle.boss.name}의 공격! ${battle.partner.name}이(가) ${damage}의 피해를 입었다.`);
+        renderBattleBuffs();
+        battleLog(ultimate
+          ? `💥 ${battle.boss.name}의 필살 공격! ${battle.partner.name}이(가) ${dealt}의 피해를 입었다!`
+          : `🌀 ${battle.boss.name}의 공격! ${battle.partner.name}이(가) ${dealt}의 피해를 입었다.`);
+        if (guarded > 0) battleLog(`🛡️ 약분의 방벽이 피해를 ${guarded}% 줄였다!`);
 
         if (battle.hp <= 0) {
           scheduleBattle(() => finishBattle(false), 800);
@@ -5147,8 +5474,15 @@
         const btn = document.createElement('button');
         btn.className = 'battle-skill-btn';
         btn.disabled = battle.busy;
-        const power = skill.power + battle.atkBonus;
-        btn.innerHTML = `${skill.emoji} ${skill.name}<br><span style="font-weight:normal;font-size:0.8rem;">위력 ${power}${battle.atkBonus ? ` (+${battle.atkBonus})` : ''} · 명중 ${skill.accuracy}%</span>`;
+        if (skill.support) {
+          const spec = SUPPORT_SPECS[skill.support];
+          const turns = skill.support === 'guard' ? '다음 공격 1회' : `${SUPPORT_TURNS}턴`;
+          btn.classList.add('is-support');
+          btn.innerHTML = `${skill.emoji} ${skill.name}<br><span style="font-weight:normal;font-size:0.8rem;">${spec.label} ${supportValue(skill)}% · ${turns}</span>`;
+        } else {
+          const power = skill.power + battle.atkBonus;
+          btn.innerHTML = `${skill.emoji} ${skill.name}<br><span style="font-weight:normal;font-size:0.8rem;">위력 ${power}${battle.atkBonus ? ` (+${battle.atkBonus})` : ''} · 명중 ${skill.accuracy}%</span>`;
+        }
         btn.onclick = () => chooseSkill(id);
         wrap.appendChild(btn);
       });
@@ -5209,6 +5543,20 @@
       }
 
       document.getElementById('battleQuiz').style.display = 'none';
+
+      // 보조 기술은 공격하지 않고 효과만 건다. 답을 맞히면 효과가 온전히 들어간다.
+      if (skill.support) {
+        applySupportSkill(skill, correct);
+        return;
+      }
+
+      // 조준경이 걸려 있으면 명중률이 올라가고, 이번 공격이 유지 턴 하나를 쓴다.
+      if (battle.focusTurns > 0) {
+        accuracy += battle.focusPercent;
+        battle.focusTurns--;
+        renderBattleBuffs();
+      }
+
       const hit = Math.random() * 100 <= Math.min(100, Math.max(5, accuracy));
 
       const melee = skill.motion === 'melee';
@@ -5260,6 +5608,45 @@
       };
       battle.pendingSkill = null;
       if (travel) scheduleBattle(miss, travel); else miss();
+    }
+
+    function applySupportSkill(skill, correct) {
+      const full = supportValue(skill);
+      // 틀리면 기운이 흐트러져 효과가 절반으로 줄어든다.
+      const value = correct ? full : Math.max(1, Math.round(full * 0.5));
+      battle.pendingSkill = null;
+
+      if (skill.support === 'guard') {
+        battle.guard = value;
+        battleLog(`🛡️ ${skill.name}! 다음에 오는 공격의 피해를 ${value}% 줄인다.`);
+      } else if (skill.support === 'evade') {
+        battle.evadePercent = value;
+        battle.evadeTurns = SUPPORT_TURNS;
+        battleLog(`💨 ${skill.name}! ${SUPPORT_TURNS}턴 동안 회피율이 ${value}%가 된다.`);
+      } else {
+        battle.focusPercent = value;
+        battle.focusTurns = SUPPORT_TURNS;
+        battleLog(`🎯 ${skill.name}! ${SUPPORT_TURNS}턴 동안 명중률이 ${value}% 올라간다.`);
+      }
+      if (!correct) battleLog('…다만 기운이 흐트러져 효과가 절반이다.');
+
+      playSupportAura(skill.support);
+      renderBattleBuffs();
+      scheduleBattle(bossTurn, 1100);
+    }
+
+    // 지금 걸려 있는 효과와 보스의 상태를 한 줄로 보여 준다.
+    function renderBattleBuffs() {
+      const wrap = document.getElementById('battleBuffs');
+      if (!wrap) return;
+      if (!battle) { wrap.innerHTML = ''; return; }
+
+      const chips = [];
+      if (battle.charged) chips.push('<span class="battle-buff is-danger">⚠️ 보스가 힘을 모으는 중 · 다음 공격 3배</span>');
+      if (battle.guard > 0) chips.push(`<span class="battle-buff is-guard">🛡️ 피해 경감 ${battle.guard}%</span>`);
+      if (battle.evadeTurns > 0) chips.push(`<span class="battle-buff is-evade">💨 회피율 ${battle.evadePercent}% · ${battle.evadeTurns}턴</span>`);
+      if (battle.focusTurns > 0) chips.push(`<span class="battle-buff is-focus">🎯 명중률 +${battle.focusPercent}% · ${battle.focusTurns}턴</span>`);
+      wrap.innerHTML = chips.join('');
     }
 
     function finishBattle(won) {

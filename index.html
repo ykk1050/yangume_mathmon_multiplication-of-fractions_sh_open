@@ -2769,7 +2769,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.106</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.107</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -3054,7 +3054,17 @@
     ];
 
     // Data Management
+    let checkingTitles = false;
+
     function saveData() {
+      // 상태가 바뀌는 곳은 모두 저장을 거치므로, 여기서 칭호도 함께 살핀다.
+      // 코인 직장과 포획에서만 살피던 탓에, 보스를 깨거나 단련을 해도 다음에
+      // 문제를 풀기 전까지는 칭호가 풀리지 않았다.
+      if (!checkingTitles) {
+        checkingTitles = true;
+        try { checkAndUnlockTitles(); } finally { checkingTitles = false; }
+      }
+
       // Don't save admin login status - require password every time
       const dataToSave = { ...gameState };
       delete dataToSave.isAdminLoggedIn;

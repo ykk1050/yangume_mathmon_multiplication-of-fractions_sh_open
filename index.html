@@ -839,6 +839,7 @@
         }
 
         .battle-figure {
+            position: relative;
             display: flex;
             justify-content: center;
             align-items: flex-end;
@@ -1417,6 +1418,63 @@
             100% { transform: translateX(0); opacity: 1; }
         }
 
+        /* 효과가 걸려 있는 동안 수학몬 둘레를 도는 고리들 */
+        .partner-auras {
+            position: absolute;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .partner-aura {
+            position: absolute;
+            left: 0;
+            top: 0;
+            border-radius: 50%;
+            border-width: 3px;
+            box-sizing: border-box;
+        }
+
+        /* 방벽은 또렷한 실선 고리가 천천히 숨 쉰다. */
+        .partner-aura.is-guard {
+            border-style: solid;
+            border-color: rgba(104, 211, 145, 0.95);
+            box-shadow: 0 0 16px rgba(72, 187, 120, 0.8), inset 0 0 18px rgba(72, 187, 120, 0.45);
+            animation: auraBreathe 1.8s ease-in-out infinite;
+        }
+
+        /* 잔상은 끊어진 고리가 빙글빙글 돈다. */
+        .partner-aura.is-evade {
+            border-style: dashed;
+            border-color: rgba(183, 148, 244, 0.95);
+            box-shadow: 0 0 16px rgba(128, 90, 213, 0.75);
+            animation: auraSpin 3.4s linear infinite;
+        }
+
+        /* 조준경은 점선 고리가 반대로 돌며 겨눈다. */
+        .partner-aura.is-focus {
+            border-style: dotted;
+            border-color: rgba(246, 173, 85, 0.95);
+            box-shadow: 0 0 16px rgba(221, 107, 32, 0.75);
+            animation: auraSpinBack 2.6s linear infinite;
+        }
+
+        @keyframes auraBreathe {
+            0%, 100% { transform: scale(1); opacity: 0.95; }
+            50% { transform: scale(1.07); opacity: 0.6; }
+        }
+
+        @keyframes auraSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes auraSpinBack {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+        }
+
         .support-aura {
             position: absolute;
             transform: translate(-50%, -50%);
@@ -1711,6 +1769,7 @@
 
         @media (prefers-reduced-motion: reduce) {
             .effect-sprite { animation: none; }
+            .partner-aura { animation: none; }
             .effect-beam { animation-duration: 0.2s; }
             .battle-figure.is-charging { animation-duration: 0.3s; }
             .battle-stage.is-quaking { animation: none; }
@@ -5135,6 +5194,8 @@
         const figure = document.getElementById(id);
         if (!figure) return;
         figure.classList.remove('is-hit', 'is-charging', 'is-damaged', 'is-dodging', 'is-powering', 'is-slipping');
+        const auras = figure.querySelector('.partner-auras');
+        if (auras) auras.remove();
         figure.getAnimations().forEach(animation => animation.cancel());
       });
 
@@ -5656,6 +5717,44 @@
       if (battle.evadeTurns > 0) chips.push(`<span class="battle-buff is-evade">💨 회피율 ${battle.evadePercent}% · ${battle.evadeTurns}턴</span>`);
       if (battle.focusTurns > 0) chips.push(`<span class="battle-buff is-focus">🎯 명중률 +${battle.focusPercent}% · ${battle.focusTurns}턴</span>`);
       wrap.innerHTML = chips.join('');
+
+      renderPartnerAuras();
+    }
+
+    // 글자만으로는 허전하니, 걸려 있는 효과마다 수학몬 둘레에 색이 다른 고리를 둔다.
+    function renderPartnerAuras() {
+      const figure = document.getElementById('battlePartnerFigure');
+      if (!figure) return;
+
+      const kinds = [];
+      if (battle && battle.guard > 0) kinds.push('guard');
+      if (battle && battle.evadeTurns > 0) kinds.push('evade');
+      if (battle && battle.focusTurns > 0) kinds.push('focus');
+
+      let holder = figure.querySelector('.partner-auras');
+      if (!kinds.length) {
+        if (holder) holder.remove();
+        return;
+      }
+      if (!holder) {
+        holder = document.createElement('div');
+        holder.className = 'partner-auras';
+        figure.appendChild(holder);
+      }
+
+      // 고리는 그림 한가운데를 기준으로 겹겹이 놓는다.
+      const art = figure.querySelector('img') || figure;
+      const fb = figure.getBoundingClientRect();
+      const ib = art.getBoundingClientRect();
+      holder.style.left = `${ib.left - fb.left + ib.width / 2}px`;
+      holder.style.top = `${ib.top - fb.top + ib.height / 2}px`;
+
+      const inner = Math.max(96, Math.min(ib.width, ib.height) * 1.02);
+      holder.innerHTML = kinds.map((kind, i) => {
+        const size = inner + i * 20;
+        const half = size / 2;
+        return `<span class="partner-aura is-${kind}" style="width:${size}px;height:${size}px;margin-left:-${half}px;margin-top:-${half}px;"></span>`;
+      }).join('');
     }
 
     function finishBattle(won) {

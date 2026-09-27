@@ -838,8 +838,12 @@
             background: linear-gradient(90deg, #f56565, #fc8181);
         }
 
+        /* 무대에 겹쳐 놓이는 것들의 층 순서
+           1 수학몬과 보스 · 3 공격 효과 · 5 붉은 막 · 6 피해 숫자와 글자
+           효과가 수학몬을 가리는 대신, 맞은 표시는 그 위로 올라오게 한다. */
         .battle-figure {
             position: relative;
+            z-index: 1;
             display: flex;
             justify-content: center;
             align-items: flex-end;
@@ -856,20 +860,23 @@
         }
 
         .battle-figure.is-damaged {
-            animation: partnerDamaged 0.6s ease-in-out;
+            animation: partnerDamaged 0.95s ease-in-out;
         }
 
         @keyframes partnerDamaged {
             0% { transform: translateX(0); filter: none; }
-            12% { transform: translateX(-16px) rotate(-4deg); filter: brightness(2.4) saturate(0.4) drop-shadow(0 0 14px rgba(255, 90, 90, 0.95)); }
-            30% { transform: translateX(13px) rotate(3deg); filter: brightness(1.1) drop-shadow(0 0 10px rgba(255, 90, 90, 0.8)); }
-            48% { transform: translateX(-9px) rotate(-2deg); filter: brightness(2.1) saturate(0.5) drop-shadow(0 0 14px rgba(255, 90, 90, 0.9)); }
-            70% { transform: translateX(6px); filter: brightness(1.05); }
+            8% { transform: translateX(-18px) rotate(-5deg); filter: brightness(2.8) saturate(0.3) drop-shadow(0 0 22px rgba(255, 70, 70, 1)); }
+            20% { transform: translateX(15px) rotate(3deg); filter: brightness(1.15) drop-shadow(0 0 16px rgba(255, 90, 90, 0.9)); }
+            34% { transform: translateX(-11px) rotate(-3deg); filter: brightness(2.6) saturate(0.35) drop-shadow(0 0 22px rgba(255, 70, 70, 1)); }
+            48% { transform: translateX(8px); filter: brightness(1.15) drop-shadow(0 0 16px rgba(255, 90, 90, 0.9)); }
+            62% { transform: translateX(-5px); filter: brightness(2.4) saturate(0.4) drop-shadow(0 0 20px rgba(255, 70, 70, 0.95)); }
+            80% { transform: translateX(2px); filter: brightness(1.1) drop-shadow(0 0 12px rgba(255, 90, 90, 0.7)); }
             100% { transform: translateX(0); filter: none; }
         }
 
         .damage-label {
             position: absolute;
+            z-index: 6;
             transform: translate(-50%, -50%);
             font-weight: bold;
             font-size: 1.5rem;
@@ -891,9 +898,9 @@
             position: absolute;
             inset: 0;
             background: radial-gradient(circle at 25% 55%, transparent 45%, rgba(220, 40, 40, 0.5));
-            animation: hurtFlash 0.6s ease-out forwards;
+            animation: hurtFlash 0.7s ease-out forwards;
             pointer-events: none;
-            z-index: 3;
+            z-index: 5;
         }
 
         @keyframes hurtFlash {
@@ -914,6 +921,7 @@
 
         .dodge-label {
             position: absolute;
+            z-index: 6;
             transform: translate(-50%, -50%);
             font-weight: bold;
             font-size: 1.3rem;
@@ -948,6 +956,7 @@
 
         .boss-wave {
             position: absolute;
+            z-index: 3;
             left: 6%;
             right: 6%;
             top: 50%;
@@ -1016,6 +1025,7 @@
 
         .boss-ring {
             position: absolute;
+            z-index: 3;
             width: 30px;
             height: 30px;
             margin: -15px 0 0 -15px;
@@ -1057,6 +1067,7 @@
 
         .meteor-strike {
             position: absolute;
+            z-index: 3;
             pointer-events: none;
             background-image: url('images/effect_meteor.webp');
             background-repeat: no-repeat;
@@ -1082,6 +1093,7 @@
 
         .slash-flurry {
             position: absolute;
+            z-index: 3;
             background-image: url('images/effect_slash.webp');
             background-repeat: no-repeat;
             pointer-events: none;
@@ -1098,6 +1110,7 @@
 
         .blast-burst {
             position: absolute;
+            z-index: 3;
             background-image: url('images/effect_explosion.webp');
             background-repeat: no-repeat;
             pointer-events: none;
@@ -1148,6 +1161,7 @@
 
         .battle-effect {
             position: absolute;
+            z-index: 3;
             left: 75%;
             top: 55%;
             transform: translate(-50%, -50%);
@@ -1361,7 +1375,7 @@
             border: 3px solid rgba(255, 130, 90, 0.9);
             box-shadow: 0 0 22px rgba(255, 120, 60, 0.8), inset 0 0 26px rgba(255, 180, 90, 0.7);
             pointer-events: none;
-            z-index: 2;
+            z-index: 3;
             animation: chargeAura 1.3s ease-in-out;
         }
 
@@ -1384,7 +1398,7 @@
             border-radius: 999px;
             white-space: nowrap;
             pointer-events: none;
-            z-index: 4;
+            z-index: 6;
             animation: chargeLabel 1.3s ease-in-out;
         }
 
@@ -1491,7 +1505,7 @@
             border-radius: 50%;
             border: 3px solid rgba(255, 255, 255, 0.85);
             pointer-events: none;
-            z-index: 2;
+            z-index: 3;
             animation: supportAura 0.9s ease-out;
         }
 
@@ -2755,7 +2769,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.102</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.103</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -5384,7 +5398,7 @@
       void figure.offsetWidth;
       figure.classList.add('is-damaged');
       figure.addEventListener('animationend', () => figure.classList.remove('is-damaged'), { once: true });
-      setTimeout(() => figure.classList.remove('is-damaged'), 1000);   // 화면이 멈춰 끝나지 않는 경우 대비
+      setTimeout(() => figure.classList.remove('is-damaged'), 1200);   // 화면이 멈춰 끝나지 않는 경우 대비
 
       const stage = document.getElementById('battleStage');
       const target = (figure.querySelector('img') || figure).getBoundingClientRect();

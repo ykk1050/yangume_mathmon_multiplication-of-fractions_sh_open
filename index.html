@@ -766,6 +766,16 @@
             object-fit: contain;
         }
 
+        /* 싸울 수 있는 보스만 눌러서 크게 볼 수 있다. */
+        .boss-entry img.is-zoomable {
+            cursor: zoom-in;
+            transition: transform 0.2s ease;
+        }
+
+        .boss-entry img.is-zoomable:hover {
+            transform: scale(1.06);
+        }
+
         .battle-stage {
             position: relative;
             display: grid;
@@ -2439,10 +2449,10 @@
     <div class="tabs">
       <button class="tab active" id="tabPractice" onclick="switchTab('practice')">코인 직장</button>
       <button class="tab" id="tabShop" onclick="switchTab('shop')">상점 및 훈련</button>
-      <button class="tab" onclick="switchTab('minigame')">수학몬 포획하러 가기</button>
-      <button class="tab" onclick="switchTab('collection')">도감</button>
+      <button class="tab" id="tabMinigame" onclick="switchTab('minigame')">수학몬 포획하러 가기</button>
+      <button class="tab" id="tabCollection" onclick="switchTab('collection')">도감</button>
       <button class="tab" id="tabBoss" onclick="switchTab('boss')" style="display: none;">⚔️ 보스전</button>
-      <button class="tab admin-tab" onclick="showAdminLogin()">🔧 관리 콘솔</button>
+      <button class="tab admin-tab" id="tabAdmin" onclick="showAdminLogin()">🔧 관리 콘솔</button>
     </div>
 
     <div class="content">
@@ -2769,7 +2779,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.107</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.108</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -3378,17 +3388,41 @@
       return !!phase && phase.style.display !== 'none';
     }
 
+    function isInBattle() {
+      return !!battle;
+    }
+
+    // 지금 옮겨 갈 수 없는 곳이면 까닭을 알려 준다. 갈 수 있으면 빈 값이다.
+    function tabBlockReason(tabName) {
+      if (isInBattle() && tabName !== 'boss') {
+        return '보스전이 끝난 뒤에 이동할 수 있습니다!';
+      }
+      const closedWhileCapturing = ['practice', 'shop', 'boss'];
+      if (isCapturing() && closedWhileCapturing.includes(tabName)) {
+        return '포획을 마치거나 포기한 뒤에 이동할 수 있습니다!';
+      }
+      return '';
+    }
+
     function updateTabLock() {
-      const locked = isCapturing();
-      ['tabPractice', 'tabShop'].forEach(id => {
+      const tabs = {
+        tabPractice: 'practice',
+        tabShop: 'shop',
+        tabMinigame: 'minigame',
+        tabCollection: 'collection',
+        tabBoss: 'boss',
+        tabAdmin: 'admin'
+      };
+      Object.entries(tabs).forEach(([id, name]) => {
         const tab = document.getElementById(id);
-        if (tab) tab.classList.toggle('locked', locked);
+        if (tab) tab.classList.toggle('locked', !!tabBlockReason(name));
       });
     }
 
     function switchTab(tabName) {
-      if ((tabName === 'practice' || tabName === 'shop') && isCapturing()) {
-        showNotification('포획을 마치거나 포기한 뒤에 이동할 수 있습니다!');
+      const blocked = tabBlockReason(tabName);
+      if (blocked) {
+        showNotification(blocked);
         return;
       }
 
@@ -4721,6 +4755,8 @@
 
     // Admin Functions
     function showAdminLogin() {
+      const blocked = tabBlockReason('admin');
+      if (blocked) return showNotification(blocked);
       if (gameState.isAdminLoggedIn) {
         switchTab('admin');
         return;
@@ -4945,6 +4981,7 @@
       const boss = bossState();
       document.getElementById('bossSetup').style.display = battle ? 'none' : 'block';
       document.getElementById('bossBattle').style.display = battle ? 'block' : 'none';
+      updateTabLock();
       if (battle) return;
 
       // 파트너
@@ -5042,6 +5079,17 @@
           ${unlocked
             ? `<button class="btn btn-primary" onclick="startBossBattle('${b.id}')">도전하기</button>`
             : '<p><strong>이전 보스를 먼저 쓰러뜨려야 합니다.</strong></p>'}`;
+
+        // 아직 만나지 못한 보스는 크게 볼 수 없다.
+        if (unlocked) {
+          const art = div.querySelector('img');
+          if (art) {
+            art.classList.add('is-zoomable');
+            art.title = '눌러서 크게 보기';
+            art.addEventListener('click', () => showImageModal(b.image, `${b.name} (${b.title})`));
+          }
+        }
+
         list.appendChild(div);
       });
     }
@@ -5163,6 +5211,7 @@
       };
 
       renderBossTab();
+      updateTabLock();
       resetBattleVisuals();
       const stage = document.getElementById('battleStage');
       // 배경 위에 어두운 막을 한 겹 깔아야 이름과 체력바가 읽힌다.

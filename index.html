@@ -4659,14 +4659,14 @@
         id: 'resonance', name: '공명의 현자', title: '심해의 파동 지배자',
         image: 'images/boss_1.webp', background: 'images/boss_1_bg.webp',
         attackSprite: 'images/boss_1_attack.webp', attackAspect: '320 / 255', attackStyle: 'wave',
-        hp: 300, attack: [13, 19], reward: 500,
+        hp: 300, attack: [20, 26], reward: 500,
         description: '빛조차 닿지 않는 심해에서 소리의 파동을 수학으로 해석해 세상을 진동시키는 지배자. 보석 하프에서 흘러나온 푸리에 급수의 선율이 상대의 구조를 계산해 무너뜨린다.'
       },
       {
         id: 'entropy', name: '엔트로피의 지배자', title: '카오스와 붕괴의 여왕',
         image: 'images/boss_2.webp', background: 'images/boss_2_bg.webp',
         attackSprite: 'images/boss_2_attack.webp', attackAspect: '320 / 185', attackStyle: 'burst',
-        hp: 520, attack: [19, 27], reward: 1200,
+        hp: 520, attack: [27, 39], reward: 1200,
         description: '완벽했던 수학적 질서가 무질서로 치닫는 끝에서 태어난 종말의 존재. 손 위의 은하가 모든 수식을 삼켜 무(NULL)로 되돌리고, 지나간 자리에는 혼돈의 궤적만 남는다.'
       },
       {
@@ -4674,7 +4674,7 @@
         image: 'images/boss_3.webp', background: 'images/boss_3_bg.webp',
         attackSprite: 'images/boss_3_attack.webp', attackAspect: '320 / 180', attackStyle: 'burst',
         attackGlow: ['rgba(255, 214, 130, 0.9)', 'rgba(140, 190, 255, 0.6)'],
-        hp: 900, attack: [27, 37], reward: 2500,
+        hp: 900, attack: [39, 53], reward: 2500,
         description: '우주의 탄생과 함께 시작된 모든 논리와 질서의 수호자. 손 위에 떠 있는 정다면체로 물질계의 설계도를 다루고, 혼천의 지팡이로 천체의 운행을 통제한다.'
       },
       {
@@ -4682,7 +4682,7 @@
         image: 'images/boss_4.webp', background: 'images/boss_4_bg.webp',
         attackSprite: 'images/boss_4_attack.webp', attackAspect: '320 / 180', attackStyle: 'burst',
         attackGlow: ['rgba(214, 120, 255, 0.9)', 'rgba(120, 40, 200, 0.6)'],
-        hp: 1100, attack: [33, 45], reward: 5000,
+        hp: 1100, attack: [48, 65], reward: 5000,
         description: '0으로 나누기, 정의되지 않음, 오류처럼 수학이 결코 허락하지 않는 모순을 현실로 만드는 재앙. 무한대와 공집합의 지팡이가 올바른 수식을 순식간에 오염시킨다.'
       }
     ];
@@ -4734,7 +4734,7 @@
       return spec.baseCost + supportLevelOf(skill.id) * spec.costStep;
     }
 
-    const PARTNER_HP = { common: 90, rare: 110, epic: 130, legendary: 150 };
+    const PARTNER_HP = { common: 90, rare: 150, epic: 215, legendary: 285 };
 
     // 육성이 이 모드의 중심이다. 체력과 공격을 따로 단련한다.
     // 단계 상한은 없다. 대신 올릴수록 코인이 계속 더 든다.

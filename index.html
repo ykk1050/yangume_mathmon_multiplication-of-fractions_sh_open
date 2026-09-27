@@ -1400,10 +1400,10 @@
             animation-duration: 1.4s;
         }
 
+        /* 빛 번짐 색은 보스마다 다르므로 자바스크립트가 직접 넣는다. */
         .boss-wave.is-ultimate .boss-wave-frames {
             filter: drop-shadow(0 0 20px rgba(255, 90, 60, 0.95))
-                    drop-shadow(0 0 44px rgba(255, 40, 40, 0.75))
-                    saturate(1.5);
+                    drop-shadow(0 0 44px rgba(255, 40, 40, 0.75));
         }
 
         /* 잔상으로 피하면 우리 수학몬이 옆으로 흐려지며 빠진다. */
@@ -4659,6 +4659,8 @@
         id: 'resonance', name: '공명의 현자', title: '심해의 파동 지배자',
         image: 'images/boss_1.webp', background: 'images/boss_1_bg.webp',
         attackSprite: 'images/boss_1_attack.webp', attackAspect: '320 / 255', attackStyle: 'wave',
+        ultimateSprite: 'images/boss_1_ultimate.webp', ultimateAspect: '320 / 180',
+        ultimateGlow: ['rgba(120, 220, 255, 0.95)', 'rgba(40, 140, 255, 0.7)'],
         hp: 300, attack: [20, 26], reward: 500,
         description: '빛조차 닿지 않는 심해에서 소리의 파동을 수학으로 해석해 세상을 진동시키는 지배자. 보석 하프에서 흘러나온 푸리에 급수의 선율이 상대의 구조를 계산해 무너뜨린다.'
       },
@@ -4666,6 +4668,8 @@
         id: 'entropy', name: '엔트로피의 지배자', title: '카오스와 붕괴의 여왕',
         image: 'images/boss_2.webp', background: 'images/boss_2_bg.webp',
         attackSprite: 'images/boss_2_attack.webp', attackAspect: '320 / 185', attackStyle: 'burst',
+        ultimateSprite: 'images/boss_2_ultimate.webp', ultimateAspect: '320 / 180',
+        ultimateGlow: ['rgba(255, 160, 90, 0.95)', 'rgba(170, 70, 230, 0.7)'],
         hp: 520, attack: [27, 39], reward: 1200,
         description: '완벽했던 수학적 질서가 무질서로 치닫는 끝에서 태어난 종말의 존재. 손 위의 은하가 모든 수식을 삼켜 무(NULL)로 되돌리고, 지나간 자리에는 혼돈의 궤적만 남는다.'
       },
@@ -4673,6 +4677,8 @@
         id: 'geometry', name: '진리의 감시자', title: '신성한 기하학의 여신',
         image: 'images/boss_3.webp', background: 'images/boss_3_bg.webp',
         attackSprite: 'images/boss_3_attack.webp', attackAspect: '320 / 180', attackStyle: 'burst',
+        ultimateSprite: 'images/boss_3_ultimate.webp', ultimateAspect: '320 / 180',
+        ultimateGlow: ['rgba(255, 224, 150, 0.95)', 'rgba(200, 180, 255, 0.7)'],
         attackGlow: ['rgba(255, 214, 130, 0.9)', 'rgba(140, 190, 255, 0.6)'],
         hp: 900, attack: [39, 53], reward: 2500,
         description: '우주의 탄생과 함께 시작된 모든 논리와 질서의 수호자. 손 위에 떠 있는 정다면체로 물질계의 설계도를 다루고, 혼천의 지팡이로 천체의 운행을 통제한다.'
@@ -4681,6 +4687,8 @@
         id: 'error', name: '수학적 오류의 군주', title: 'Lord of Errors & Infinity',
         image: 'images/boss_4.webp', background: 'images/boss_4_bg.webp',
         attackSprite: 'images/boss_4_attack.webp', attackAspect: '320 / 180', attackStyle: 'burst',
+        ultimateSprite: 'images/boss_4_ultimate.webp', ultimateAspect: '320 / 180',
+        ultimateGlow: ['rgba(235, 120, 255, 0.95)', 'rgba(120, 40, 200, 0.75)'],
         attackGlow: ['rgba(214, 120, 255, 0.9)', 'rgba(120, 40, 200, 0.6)'],
         hp: 1100, attack: [48, 65], reward: 5000,
         description: '0으로 나누기, 정의되지 않음, 오류처럼 수학이 결코 허락하지 않는 모순을 현실로 만드는 재앙. 무한대와 공집합의 지팡이가 올바른 수식을 순식간에 오염시킨다.'
@@ -5434,22 +5442,26 @@
       stage.querySelectorAll('.boss-wave, .boss-ring').forEach(el => el.remove());
 
       const boss = battle ? battle.boss : {};
-      const aspect = boss.attackAspect || '320 / 255';
+      // 필살기에는 전용 그림이 있다. 없으면 평소 공격 그림을 크게 써서 대신한다.
+      const useUltimate = ultimate && sprite === boss.ultimateSprite;
+      const aspect = (useUltimate ? boss.ultimateAspect : boss.attackAspect) || '320 / 255';
       // 훑고 지나가는 연출은 겹을 나누고, 터뜨리는 연출은 한가운데서 한 번에 부푼다.
-      const layers = boss.attackStyle === 'burst' ? [0] : [0, 200];
+      const layers = (useUltimate || boss.attackStyle === 'burst') ? [0] : [0, 200];
 
       layers.forEach((delay, index) => {
         const wave = document.createElement('div');
-        wave.className = `boss-wave layer-${index}${boss.attackStyle === 'burst' ? ' is-burst' : ''}${ultimate ? ' is-ultimate' : ''}`;
+        wave.className = `boss-wave layer-${index}${(useUltimate || boss.attackStyle === 'burst') ? ' is-burst' : ''}${ultimate ? ' is-ultimate' : ''}`;
         wave.style.animationDelay = `${delay}ms`;
         const frames = document.createElement('div');
         frames.className = 'boss-wave-frames';
         frames.style.backgroundImage = `url('${sprite}')`;
         frames.style.aspectRatio = aspect;
         // 보스마다 기운의 색이 달라 빛 번짐 색도 함께 바꾼다.
-        if (boss.attackGlow) {
-          const [near, far] = boss.attackGlow;
-          frames.style.filter = `drop-shadow(0 0 14px ${near}) drop-shadow(0 0 30px ${far})`;
+        const glow = useUltimate ? (boss.ultimateGlow || boss.attackGlow) : boss.attackGlow;
+        if (glow) {
+          const [near, far] = glow;
+          const blur = useUltimate ? [20, 44] : [14, 30];
+          frames.style.filter = `drop-shadow(0 0 ${blur[0]}px ${near}) drop-shadow(0 0 ${blur[1]}px ${far})`;
         }
         frames.style.animationDelay = `${delay}ms`;
         wave.appendChild(frames);
@@ -5495,7 +5507,7 @@
       const [min, max] = battle.boss.attack;
       const base = Math.floor(Math.random() * (max - min + 1)) + min;
       const damage = ultimate ? base * BOSS_ULTIMATE_MULTIPLIER : base;
-      const sprite = battle.boss.attackSprite;
+      const sprite = (ultimate && battle.boss.ultimateSprite) || battle.boss.attackSprite;
 
       if (sprite) playBossWave(sprite, ultimate);
       else playEffect('blast', '🌀', 'partner');

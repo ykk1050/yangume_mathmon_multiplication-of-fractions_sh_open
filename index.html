@@ -1421,16 +1421,26 @@
         /* 효과가 걸려 있는 동안 수학몬 둘레를 도는 고리들 */
         .partner-auras {
             position: absolute;
-            width: 0;
-            height: 0;
+            inset: 0;
             pointer-events: none;
             z-index: 1;
         }
 
-        .partner-aura {
+        /* 자리를 잡는 껍데기와 도는 고리를 나눈다.
+           한 요소에서 자리와 회전을 같이 다루면 서로 덮어써 버린다. */
+        .partner-aura-slot {
             position: absolute;
-            left: 0;
-            top: 0;
+            left: 50%;
+            top: 50%;
+            height: calc(92% + var(--ring) * 18%);
+            aspect-ratio: 1;
+            transform: translate(-50%, -50%);
+        }
+
+        .partner-aura {
+            display: block;
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
             border-width: 3px;
             box-sizing: border-box;
@@ -5742,19 +5752,11 @@
         figure.appendChild(holder);
       }
 
-      // 고리는 그림 한가운데를 기준으로 겹겹이 놓는다.
-      const art = figure.querySelector('img') || figure;
-      const fb = figure.getBoundingClientRect();
-      const ib = art.getBoundingClientRect();
-      holder.style.left = `${ib.left - fb.left + ib.width / 2}px`;
-      holder.style.top = `${ib.top - fb.top + ib.height / 2}px`;
-
-      const inner = Math.max(96, Math.min(ib.width, ib.height) * 1.02);
-      holder.innerHTML = kinds.map((kind, i) => {
-        const size = inner + i * 20;
-        const half = size / 2;
-        return `<span class="partner-aura is-${kind}" style="width:${size}px;height:${size}px;margin-left:-${half}px;margin-top:-${half}px;"></span>`;
-      }).join('');
+      // 자리와 크기는 모두 CSS가 그림 상자를 기준으로 잡는다.
+      // 픽셀로 재어 두면 창 크기가 바뀌었을 때 고리만 제자리에 남는다.
+      holder.innerHTML = kinds.map((kind, i) =>
+        `<span class="partner-aura-slot" style="--ring:${i}"><i class="partner-aura is-${kind}"></i></span>`
+      ).join('');
     }
 
     function finishBattle(won) {

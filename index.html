@@ -3074,7 +3074,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.113</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.114</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -3097,7 +3097,7 @@
   <div id="rankingModal" class="ranking-overlay" aria-hidden="true">
     <div class="ranking-card" role="dialog" aria-labelledby="rankingTitle">
       <h3 id="rankingTitle">🏆 랭킹에 참여해 보세요!</h3>
-      <p class="ranking-intro">문제 25개를 풀었어요. 닉네임을 정하면 앞으로 25문제마다 기록이 랭킹에 올라갑니다.
+      <p class="ranking-intro">문제 25개를 풀었어요. 닉네임을 정하면 <strong>그다음부터 푸는 문제</strong>가 25문제마다 랭킹에 올라갑니다.
         <strong>닉네임은 한 번 정하면 바꿀 수 없어요.</strong></p>
       <label for="rankingNicknameInput" class="ranking-label">랭킹에 올릴 닉네임</label>
       <input id="rankingNicknameInput" class="ranking-input" maxlength="12" placeholder="예) 콩콩탐험가" autocomplete="off" spellcheck="false">
@@ -3952,172 +3952,89 @@
     //
 
 
-    function generateFractionProblem() {
-        let problemHtml, answer, answerMixed;
-        let attempts = 0;
-        const maxAttempts = 100;
-        
+    // 문제를 '모양(spec)'으로 먼저 정하고, 답과 화면은 모양에서 만든다.
+    // 랭킹 문제는 서버가 모양을 내주므로, 같은 규칙으로 그려야 서버와 답이 맞는다.
+    //   spec = { t: 종류, a: 왼쪽 수, b: 오른쪽 수 }
+    //   수   = 진분수 {n, d} / 대분수 {w, n, d} / 자연수 {w}
+    function randomFractionSpec(rand) {
+      const r = (count, base) => Math.floor(rand() * count) + base;
+      const properFrac = () => { let f; do { f = { n: r(8, 1), d: r(8, 2) }; } while (f.n >= f.d); return f; };
+      const mixed = () => { let m; do { m = { w: r(3, 1), n: r(4, 1), d: r(4, 2) }; } while (m.n >= m.d); return m; };
+      const type = Math.floor(rand() * 6);
+      if (type === 0) { const a = properFrac(); const b = properFrac(); return { t: 0, a, b }; }
+      if (type === 1) {
+        let m;
         do {
-            attempts++;
-            if (attempts > maxAttempts) {
-                // Fallback to guaranteed proper fraction
-                const frac1 = { numerator: 1, denominator: 3 };
-                const frac2 = { numerator: 2, denominator: 5 };
-                problemHtml = `<div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> × <div class="fraction-display"><span>${frac2.numerator}</span><div class="fraction-line"></div><span>${frac2.denominator}</span></div> = ?`;
-                
-                let num = Math.round(frac1.numerator) * Math.round(frac2.numerator);
-                let den = Math.round(frac1.denominator) * Math.round(frac2.denominator);
-                answer = reduceFraction(num, den);
-                
-                answerMixed = improperToMixed(answer.numerator, answer.denominator);
-                break;
-            }
-            
-            const type = Math.floor(Math.random() * 6); // 6 types of problems
-            
-            if (type === 0) {
-                // Proper Fraction × Proper Fraction
-                let frac1, frac2;
-                do {
-                    frac1 = { 
-                        numerator: Math.floor(Math.random() * 8) + 1, 
-                        denominator: Math.floor(Math.random() * 8) + 2 
-                    };
-                } while (frac1.numerator >= frac1.denominator);
-                
-                do {
-                    frac2 = { 
-                        numerator: Math.floor(Math.random() * 8) + 1, 
-                        denominator: Math.floor(Math.random() * 8) + 2 
-                    };
-                } while (frac2.numerator >= frac2.denominator);
-                
-                problemHtml = `<div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> × <div class="fraction-display"><span>${frac2.numerator}</span><div class="fraction-line"></div><span>${frac2.denominator}</span></div> = ?`;
-                
-                let num = Math.round(frac1.numerator) * Math.round(frac2.numerator);
-                let den = Math.round(frac1.denominator) * Math.round(frac2.denominator);
-                answer = reduceFraction(num, den);
-                
-            } else if (type === 1) {
-                // Mixed Number × Proper Fraction
-                let mixed1, frac1;
-                do {
-                    mixed1 = { 
-                        whole: Math.floor(Math.random() * 3) + 1, 
-                        numerator: Math.floor(Math.random() * 4) + 1, 
-                        denominator: Math.floor(Math.random() * 4) + 2 
-                    };
+          m = { w: r(3, 1), n: r(4, 1), d: r(4, 2) };
+          // 분수 부분을 기약분수로 만든다
+          const reduced = reduceFraction(m.n, m.d);
+          m.n = reduced.numerator;
+          m.d = reduced.denominator;
+        } while (m.n >= m.d);
+        return { t: 1, a: m, b: properFrac() };
+      }
+      if (type === 2) { const w = r(7, 2); return { t: 2, a: { w }, b: properFrac() }; }
+      if (type === 3) { const a = properFrac(); return { t: 3, a, b: { w: r(7, 2) } }; }
+      if (type === 4) { const w = r(5, 2); return { t: 4, a: { w }, b: mixed() }; }
+      const a = mixed();
+      return { t: 5, a, b: { w: r(5, 2) } };
+    }
 
-                    // 🔧 분수 부분을 기약분수로 만들기
-                    const reduced = reduceFraction(mixed1.numerator, mixed1.denominator);
-                    mixed1.numerator = reduced.numerator;
-                    mixed1.denominator = reduced.denominator;
+    function specOperandImproper(x) {
+      if (x.d === undefined) return { numerator: x.w, denominator: 1 };
+      if (x.w === undefined) return { numerator: x.n, denominator: x.d };
+      return mixedToImproper(x.w, x.n, x.d);
+    }
 
-                } while (mixed1.numerator >= mixed1.denominator);
-                
-                do {
-                    frac1 = { 
-                        numerator: Math.floor(Math.random() * 8) + 1, 
-                        denominator: Math.floor(Math.random() * 8) + 2 
-                    };
-                } while (frac1.numerator >= frac1.denominator);
-                
-                problemHtml = `<div class="mixed-number">${mixed1.whole}<div class="fraction-display"><span>${mixed1.numerator}</span><div class="fraction-line"></div><span>${mixed1.denominator}</span></div></div> × <div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> = ?`;
-                
-                const imp1 = mixedToImproper(mixed1.whole, mixed1.numerator, mixed1.denominator);
-                let num = Math.round(imp1.numerator) * Math.round(frac1.numerator);
-                let den = Math.round(imp1.denominator) * Math.round(frac1.denominator);
-                answer = reduceFraction(num, den);
-                
-            } else if (type === 2) {
-                // Natural Number × Proper Fraction
-                const nat1 = Math.floor(Math.random() * 7) + 2;
-                let frac1;
-                do {
-                    frac1 = { 
-                        numerator: Math.floor(Math.random() * 8) + 1, 
-                        denominator: Math.floor(Math.random() * 8) + 2 
-                    };
-                } while (frac1.numerator >= frac1.denominator);
-                
-                problemHtml = `${nat1} × <div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> = ?`;
-                
-                let num = Math.round(nat1) * Math.round(frac1.numerator);
-                let den = Math.round(frac1.denominator);
-                answer = reduceFraction(num, den);
-                
-            } else if (type === 3) {
-                // Proper Fraction × Natural Number
-                let frac1;
-                do {
-                    frac1 = { 
-                        numerator: Math.floor(Math.random() * 8) + 1, 
-                        denominator: Math.floor(Math.random() * 8) + 2 
-                    };
-                } while (frac1.numerator >= frac1.denominator);
-                
-                const nat1 = Math.floor(Math.random() * 7) + 2;
-                problemHtml = `<div class="fraction-display"><span>${frac1.numerator}</span><div class="fraction-line"></div><span>${frac1.denominator}</span></div> × ${nat1} = ?`;
-                
-                let num = Math.round(frac1.numerator) * Math.round(nat1);
-                let den = Math.round(frac1.denominator);
-                answer = reduceFraction(num, den);
-                
-            } else if (type === 4) {
-                // Natural Number × Mixed Number
-                const nat1 = Math.floor(Math.random() * 5) + 2;
-                let mixed1;
-                do {
-                    mixed1 = { 
-                        whole: Math.floor(Math.random() * 3) + 1, 
-                        numerator: Math.floor(Math.random() * 4) + 1, 
-                        denominator: Math.floor(Math.random() * 4) + 2 
-                    };
-                } while (mixed1.numerator >= mixed1.denominator);
-                
-                problemHtml = `${nat1} × <div class="mixed-number">${mixed1.whole}<div class="fraction-display"><span>${mixed1.numerator}</span><div class="fraction-line"></div><span>${mixed1.denominator}</span></div></div> = ?`;
-                
-                const imp1 = mixedToImproper(mixed1.whole, mixed1.numerator, mixed1.denominator);
-                let num = Math.round(nat1) * Math.round(imp1.numerator);
-                let den = Math.round(imp1.denominator);
-                answer = reduceFraction(num, den);
-                
-            } else {
-                // Mixed Number × Natural Number
-                let mixed1;
-                do {
-                    mixed1 = { 
-                        whole: Math.floor(Math.random() * 3) + 1, 
-                        numerator: Math.floor(Math.random() * 4) + 1, 
-                        denominator: Math.floor(Math.random() * 4) + 2 
-                    };
-                } while (mixed1.numerator >= mixed1.denominator);
-                
-                const nat1 = Math.floor(Math.random() * 5) + 2;
-                problemHtml = `<div class="mixed-number">${mixed1.whole}<div class="fraction-display"><span>${mixed1.numerator}</span><div class="fraction-line"></div><span>${mixed1.denominator}</span></div></div> × ${nat1} = ?`;
-                
-                const imp1 = mixedToImproper(mixed1.whole, mixed1.numerator, mixed1.denominator);
-                let num = Math.round(imp1.numerator) * Math.round(nat1);
-                let den = Math.round(imp1.denominator);
-                answer = reduceFraction(num, den);
-            }
-            
-            // Calculate answer as mixed number for validation
-            answerMixed = improperToMixed(answer.numerator, answer.denominator);
-            
-        } while (
-            answer.denominator === 1 || // Whole number answer (e.g., 8/8 = 1)
-            (answerMixed.whole > 0 && answerMixed.numerator >= answerMixed.denominator) || // Improper fraction part in mixed number
-            (answerMixed.numerator === 0 && answerMixed.whole > 0) // Pure whole number (e.g., 3 0/1)
-        );
-        
-        return { problemHtml, answer };
-    }       
+    function fractionSpecAnswer(spec) {
+      const a = specOperandImproper(spec.a);
+      const b = specOperandImproper(spec.b);
+      return reduceFraction(a.numerator * b.numerator, a.denominator * b.denominator);
+    }
+
+    function fractionSpecHtml(spec) {
+      const frac = (n, d) => `<div class="fraction-display"><span>${n}</span><div class="fraction-line"></div><span>${d}</span></div>`;
+      const side = x => {
+        if (x.d === undefined) return `${x.w}`;
+        if (x.w === undefined) return frac(x.n, x.d);
+        return `<div class="mixed-number">${x.w}${frac(x.n, x.d)}</div>`;
+      };
+      return `${side(spec.a)} × ${side(spec.b)} = ?`;
+    }
+
+    // 답이 자연수로 떨어지는 문제는 내지 않는다.
+    function isUsableAnswer(answer) {
+      const mixed = improperToMixed(answer.numerator, answer.denominator);
+      return !(
+        answer.denominator === 1 ||
+        (mixed.whole > 0 && mixed.numerator >= mixed.denominator) ||
+        (mixed.numerator === 0 && mixed.whole > 0)
+      );
+    }
+
+    const FALLBACK_SPEC = { t: 0, a: { n: 1, d: 3 }, b: { n: 2, d: 5 } };
+
+    function problemFromSpec(spec) {
+      return { problemHtml: fractionSpecHtml(spec), answer: fractionSpecAnswer(spec), spec };
+    }
+
+    function generateFractionProblem() {
+      let spec;
+      let attempts = 0;
+      do {
+        if (++attempts > 100) { spec = FALLBACK_SPEC; break; }
+        spec = randomFractionSpec(Math.random);
+      } while (!isUsableAnswer(fractionSpecAnswer(spec)));
+      return problemFromSpec(spec);
+    }
 
     // Practice Functions
     function generateProblem() {
       document.getElementById('startBtn').disabled = true; // <-- 이 줄을 추가하세요
-      const problem = generateFractionProblem();
+      // 랭킹에 등록했으면 서버가 낸 문제를 차례로 푼다. 묶음이 아직 없으면 평소 문제를 낸다.
+      const ranked = nextRankedProblem();
+      const problem = ranked || generateFractionProblem();
+      gameState.currentRanked = ranked ? { batchId: ranked.batchId, index: ranked.index } : null;
       // 🌟🌟🌟 [핵심 수정] 이 위치에 코드를 추가합니다. 🌟🌟🌟
       // 새로운 문제가 생성되었으므로 '총 문제 수'를 증가시킵니다.
       gameState.totalProblems++;
@@ -4274,7 +4191,7 @@
             updatePracticeStats();
             checkAndUnlockTitles();
             saveData();
-            afterPracticeAttempt();
+            afterPracticeAttempt(true, userReduced);
             setTimeout(() => generateProblem(), 1500);
         } else {
             // 수학적으로는 틀린 답일 경우
@@ -4288,7 +4205,7 @@
             if (!isRankingModalOpen()) document.getElementById('wholeInput').focus();
             updatePracticeStats();
             saveData();
-            afterPracticeAttempt();
+            afterPracticeAttempt(false, userReduced);
             setTimeout(() => { feedback.style.display = 'none'; }, 2000);
         }
         feedback.style.display = 'block';
@@ -4402,11 +4319,12 @@
           if (result.reason === 'taken') input.select();
           return;
         }
-        gameState.ranking = { nickname: result.nickname || name, token, lastSent: 0, pending: true };
+        gameState.ranking = { nickname: result.nickname || name, token, batch: null, pendingGrade: null, lastTry: attemptCount() };
+        takeBatch(result.batch);
         saveData();
         closeNicknameModal();
-        showNotification(`🏆 "${gameState.ranking.nickname}"(으)로 랭킹에 등록했습니다!`);
-        submitRanking();
+        showNotification(`🏆 "${gameState.ranking.nickname}"(으)로 랭킹에 등록했습니다! 지금부터 25문제마다 기록이 올라가요.`);
+        if (!gameState.ranking.batch) syncRanking();
       } catch (error) {
         console.warn('랭킹 등록 실패:', error);
         setRankingHint('랭킹 서버에 연결하지 못했어요. 잠시 뒤 다시 눌러 주세요.', 'error');
@@ -4417,56 +4335,103 @@
       }
     }
 
-    async function submitRanking() {
+    // 서버가 낸 문제 묶음을 받아 둔다.
+    function takeBatch(batch) {
       const info = rankingInfo();
-      if (!rankingEnabled() || !info || !info.nickname || submitRanking.running) return;
-      submitRanking.running = true;
-      const attempts = attemptCount();
-      info.lastTry = attempts;
+      if (!info || !batch || !Array.isArray(batch.problems)) return;
+      info.batch = { id: batch.id, size: batch.size || RANKING_EVERY, problems: batch.problems, next: 0, attempts: [] };
+    }
+
+    // 지금 풀 랭킹 문제. 묶음이 다 찼거나 없으면 null.
+    function nextRankedProblem() {
+      const info = rankingInfo();
+      if (!rankingEnabled() || !info || !info.nickname || !info.batch) return null;
+      const batch = info.batch;
+      if (batch.attempts.length >= batch.size || batch.next >= batch.problems.length) return null;
+      return Object.assign(problemFromSpec(batch.problems[batch.next]), { batchId: batch.id, index: batch.next });
+    }
+
+    // 서버에 보낼 일이 남아 있는가 (채점을 못 맡겼거나, 문제 묶음이 없다)
+    function rankingCallLater(info) {
+      return !!info.pendingGrade || !info.batch;
+    }
+
+    let rankingRequest = null;
+
+    // 다 푼 묶음은 채점을 맡기고, 묶음이 없으면 새로 받는다.
+    async function syncRanking() {
+      const info = rankingInfo();
+      if (!rankingEnabled() || !info || !info.nickname || rankingRequest) return;
+      info.lastTry = attemptCount();
+      const grading = !!info.pendingGrade;
+      const payload = grading
+        ? { action: 'grade', nickname: info.nickname, token: info.token, batchId: info.pendingGrade.batchId, attempts: info.pendingGrade.attempts }
+        : { action: 'start', nickname: info.nickname, token: info.token };
+
+      rankingRequest = rankingCall(payload);
       try {
-        const result = await rankingCall({
-          action: 'submit',
-          nickname: info.nickname,
-          token: info.token,
-          attempts,
-          correct: gameState.correctAnswers,
-          bestStreak: gameState.bestStreak
-        });
-        if (result.ok) {
-          info.pending = false;
-          info.lastSent = attempts;
-          Object.keys(rankCache).forEach(key => delete rankCache[key]);
-        } else if (result.reason === 'unknown' || result.reason === 'forbidden') {
+        const result = await rankingRequest;
+        const now = rankingInfo();
+        if (!now || now.nickname !== info.nickname) return;   // 그사이 초기화했으면 버린다
+
+        if (result.reason === 'unknown' || result.reason === 'forbidden') {
           // 선생님이 시트에서 지웠다면, 다음 25문제 때 닉네임을 다시 정한다.
           gameState.ranking = null;
-        } else if (result.reason === 'busy') {
-          info.pending = true;
-        } else {
-          info.pending = false;   // 서버가 받지 않는 기록이면 다시 보내지 않는다
+          gameState.currentRanked = null;
+          return;
         }
+        if (result.reason === 'busy') return;   // 다음에 다시 해 본다
+
+        if (grading) {
+          now.pendingGrade = null;   // 받았든 거절했든 같은 묶음은 다시 보내지 않는다
+          if (result.ok) {
+            Object.keys(rankCache).forEach(key => delete rankCache[key]);
+            showNotification(`🏆 랭킹 기록이 올라갔어요! (이번 25문제 중 정답 ${result.graded.correct}개)`);
+          }
+        }
+        if (result.batch) takeBatch(result.batch);
       } catch (error) {
-        console.warn('랭킹 기록 전송 실패:', error);
-        info.pending = true;      // 연결이 끊겼으면 다음 풀이 때 다시 보낸다
+        console.warn('랭킹 서버 연결 실패:', error);   // 연결이 끊겼으면 다음 풀이 때 다시 해 본다
       } finally {
-        submitRanking.running = false;
+        rankingRequest = null;
         saveData();
       }
     }
 
     // 코인 직장에서 한 문제를 맞히거나 틀릴 때마다 부른다.
-    function afterPracticeAttempt() {
+    function afterPracticeAttempt(isCorrect, given) {
       if (!rankingEnabled()) return;
       const attempts = attemptCount();
       const info = rankingInfo();
-      const milestone = attempts > 0 && attempts % RANKING_EVERY === 0;
 
       if (!info || !info.nickname) {
-        if (milestone) openNicknameModal();
+        if (attempts > 0 && attempts % RANKING_EVERY === 0) openNicknameModal();
         return;
       }
-      if (milestone) return submitRanking();
-      // 지난번에 못 보냈으면 다섯 문제마다 다시 해 본다.
-      if (info.pending && attempts - (info.lastTry || 0) >= 5) submitRanking();
+
+      // 서버가 낸 문제를 풀었으면 낸 답을 묶음에 적는다. 채점은 서버가 한다.
+      const current = gameState.currentRanked;
+      const batch = info.batch;
+      if (current && batch && current.batchId === batch.id && batch.attempts.length < batch.size) {
+        batch.attempts.push({ p: current.index, n: given.numerator, d: given.denominator });
+        if (isCorrect) {
+          batch.next = current.index + 1;
+          gameState.currentRanked = null;
+        }
+        if (batch.attempts.length >= batch.size) {
+          info.pendingGrade = { batchId: batch.id, attempts: batch.attempts };
+          info.batch = null;
+          gameState.currentRanked = null;
+          saveData();
+          syncRanking();
+          return;
+        }
+        saveData();
+        return;
+      }
+
+      // 지난번에 서버와 연결하지 못했으면 다섯 문제마다 다시 해 본다.
+      if (rankingCallLater(info) && attempts - (info.lastTry || 0) >= 5) syncRanking();
     }
 
     // ---------- 랭킹 보기 ----------
@@ -4505,7 +4470,10 @@
         return;
       }
 
-      const left = RANKING_EVERY - (attempts % RANKING_EVERY);
+      let left;
+      if (info.batch) left = `<strong>${info.batch.size - info.batch.attempts.length}문제</strong>`;
+      else if (info.pendingGrade) left = '<strong>기록을 보내는 중</strong>';
+      else left = '<strong>랭킹 문제를 받는 중</strong>';
       let rankText = '';
       if (list) {
         const mine = list.find(r => r.nickname === info.nickname);
@@ -4514,7 +4482,7 @@
           : (list.length >= RANK_FETCH_LIMIT ? ` · ${RANK_BOARDS[rankBoard].label} ${RANK_FETCH_LIMIT}위 밖` : ' · 아직 순위에 오르지 않았어요');
       }
       box.innerHTML = `내 닉네임 <strong>${escapeHtml(info.nickname)}</strong>${rankText}<br>
-        다음 랭킹 반영까지 <strong>${left}문제</strong>`;
+        다음 랭킹 반영까지 ${left}`;
     }
 
     function rankRow(row, board, myName, extraClass = '') {
@@ -6854,6 +6822,7 @@
       gameState.currentMonster = null;
       gameState.captureTrainingLevel = 0;
       gameState.ranking = null;
+      gameState.currentRanked = null;
 
       // 보스전 진행도 처음으로 돌린다. (파트너, 배운 기술, 체력·공격·보조 단련, 격파 기록)
       // 싸우던 중에 초기화하면 전투도 끝낸다.
@@ -7020,6 +6989,10 @@
 
     // Initialize
     loadData();
+    setTimeout(() => {
+      const info = rankingInfo();
+      if (info && info.nickname && rankingCallLater(info)) syncRanking();
+    }, 1500);
     updateAllUI();
     bgm.init();
     bgm.refresh();

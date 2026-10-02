@@ -2181,6 +2181,21 @@
             color: #718096;
         }
 
+        .rank-status {
+            margin: 0 0 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            color: #553c9a;
+            background: #faf5ff;
+        }
+
+        .rank-status.is-old {
+            color: #975a16;
+            background: #fffaf0;
+            border: 1px solid #fbd38d;
+        }
+
         .rank-note {
             margin-top: 14px;
             font-size: 0.8rem;
@@ -3074,7 +3089,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.115</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.116</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -4232,8 +4247,22 @@
     }
 
     // 앱스 스크립트는 사전 확인 요청을 받지 못하므로 text/plain 으로 보낸다.
+    // 구글 서버가 가끔 응답 없이 붙잡혀 있을 때가 있어, 정해진 시간이 지나면 실패로 본다.
+    async function fetchWithTimeout(url, options = {}, ms = 15000) {
+      const controller = typeof AbortController === 'function' ? new AbortController() : null;
+      const timer = controller ? setTimeout(() => controller.abort(), ms) : null;
+      try {
+        return await fetch(url, controller ? Object.assign({}, options, { signal: controller.signal }) : options);
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+    }
+
+    // 앱스 스크립트는 사전 확인 요청을 받지 못하므로 text/plain 으로 보낸다.
+    // 채점이 서버에서 끝났는데 응답만 늦게 와도 괜찮다. 같은 묶음을 다시 보내면 서버가
+    // '이미 채점함'으로 알려 주고 다음 묶음을 준다.
     async function rankingCall(payload) {
-      const response = await fetch(RANKING_URL, {
+      const response = await fetchWithTimeout(RANKING_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
@@ -4557,6 +4586,55 @@
       });
     }
 
+    const RANK_SAVED_KEY = 'mathmonRankSaved';   // 마지막으로 받은 순위표 (이 기기에만 둔다)
+
+    function savedRankBoard(board) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(RANK_SAVED_KEY) || '{}');
+        return saved[board] || null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function saveRankBoard(board, entry) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(RANK_SAVED_KEY) || '{}');
+        saved[board] = entry;
+        localStorage.setItem(RANK_SAVED_KEY, JSON.stringify(saved));
+      } catch (error) {
+        // 저장하지 못해도 화면에는 그대로 보인다.
+      }
+    }
+
+    // '방금' / '5분 전에' / '2시간 전에' / '3일 전에'
+    function agoText(at) {
+      const minutes = Math.round((Date.now() - at) / 60000);
+      if (minutes < 1) return '방금';
+      if (minutes < 60) return `${minutes}분 전에`;
+      const hours = Math.round(minutes / 60);
+      if (hours < 24) return `${hours}시간 전에`;
+      return `${Math.round(hours / 24)}일 전에`;
+    }
+
+    // 한 번 실패해도 바로 포기하지 않고 두 번 더 해 본다.
+    async function fetchRankBoard(board) {
+      const waits = [0, 1200, 3000];
+      let lastError;
+      for (const wait of waits) {
+        if (wait) await new Promise(resolve => setTimeout(resolve, wait));
+        try {
+          const response = await fetchWithTimeout(`${RANKING_URL}?by=${board}&limit=${RANK_FETCH_LIMIT}`, {}, 12000);
+          const data = await response.json();
+          if (!data.ok) throw new Error(data.reason || '응답 오류');
+          return data.list;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError;
+    }
+
     async function loadRanking(force = false) {
       document.querySelectorAll('.rank-tab').forEach(t => t.classList.toggle('active', t.dataset.by === rankBoard));
       const box = document.getElementById('rankList');
@@ -4575,20 +4653,34 @@
         return;
       }
 
-      renderRankMe(cached ? cached.list : null);
-      box.innerHTML = '<div class="rank-empty">랭킹을 불러오는 중…</div>';
+      // 받아 오는 동안에도 마지막으로 받은 순위표가 있으면 먼저 보여 준다.
+      const saved = cached || savedRankBoard(board);
+      renderRankMe(saved ? saved.list : null);
+      if (saved) {
+        renderRankList(saved.list);
+        box.insertAdjacentHTML('afterbegin', '<p class="rank-status">🔄 최신 순위를 받아 오는 중…</p>');
+      } else {
+        box.innerHTML = '<div class="rank-empty">랭킹을 불러오는 중…</div>';
+      }
+
       try {
-        const response = await fetch(`${RANKING_URL}?by=${board}&limit=${RANK_FETCH_LIMIT}`);
-        const data = await response.json();
-        if (!data.ok) throw new Error(data.reason || '응답 오류');
-        rankCache[board] = { at: Date.now(), list: withSharedRanks(data.list, board) };
+        const list = withSharedRanks(await fetchRankBoard(board), board);
+        rankCache[board] = { at: Date.now(), list };
+        saveRankBoard(board, rankCache[board]);
         if (board !== rankBoard) return;   // 그사이 다른 순위표로 넘어갔으면 그리지 않는다
-        renderRankMe(rankCache[board].list);
-        renderRankList(rankCache[board].list);
+        renderRankMe(list);
+        renderRankList(list);
       } catch (error) {
         console.warn('랭킹 불러오기 실패:', error);
         if (board !== rankBoard) return;
-        box.innerHTML = '<div class="rank-empty">랭킹을 불러오지 못했어요.<br>잠시 뒤 🔄 새로고침을 눌러 주세요.</div>';
+        if (saved) {
+          // 지난 순위표를 그대로 두고, 언제 것인지만 알려 준다.
+          renderRankMe(saved.list);
+          renderRankList(saved.list);
+          box.insertAdjacentHTML('afterbegin', `<p class="rank-status is-old">지금은 랭킹 서버와 연결이 안 돼서 ${agoText(saved.at)} 받은 순위를 보여 드려요. 잠시 뒤 🔄 새로고침을 눌러 주세요.</p>`);
+        } else {
+          box.innerHTML = '<div class="rank-empty">랭킹을 불러오지 못했어요.<br>잠시 뒤 🔄 새로고침을 눌러 주세요.</div>';
+        }
       }
     }
 

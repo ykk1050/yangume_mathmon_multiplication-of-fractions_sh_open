@@ -3074,7 +3074,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.114</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.115</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -3097,7 +3097,7 @@
   <div id="rankingModal" class="ranking-overlay" aria-hidden="true">
     <div class="ranking-card" role="dialog" aria-labelledby="rankingTitle">
       <h3 id="rankingTitle">🏆 랭킹에 참여해 보세요!</h3>
-      <p class="ranking-intro">문제 25개를 풀었어요. 닉네임을 정하면 <strong>그다음부터 푸는 문제</strong>가 25문제마다 랭킹에 올라갑니다.
+      <p class="ranking-intro">문제 25개를 풀었어요. 닉네임을 정하면 <strong>방금 푼 25문제부터</strong> 랭킹에 올라가고, 앞으로 25문제마다 기록이 더해집니다.
         <strong>닉네임은 한 번 정하면 바꿀 수 없어요.</strong></p>
       <label for="rankingNicknameInput" class="ranking-label">랭킹에 올릴 닉네임</label>
       <input id="rankingNicknameInput" class="ranking-input" maxlength="12" placeholder="예) 콩콩탐험가" autocomplete="off" spellcheck="false">
@@ -4034,6 +4034,7 @@
       // 랭킹에 등록했으면 서버가 낸 문제를 차례로 푼다. 묶음이 아직 없으면 평소 문제를 낸다.
       const ranked = nextRankedProblem();
       const problem = ranked || generateFractionProblem();
+      if (!ranked) syncRanking();   // 묶음이 없으면 받아 둔다 (이미 받는 중이면 그냥 넘어간다)
       gameState.currentRanked = ranked ? { batchId: ranked.batchId, index: ranked.index } : null;
       // 🌟🌟🌟 [핵심 수정] 이 위치에 코드를 추가합니다. 🌟🌟🌟
       // 새로운 문제가 생성되었으므로 '총 문제 수'를 증가시킵니다.
@@ -4310,21 +4311,34 @@
       button.textContent = '확인 중…';
       setRankingHint('랭킹 서버에 닉네임을 확인하고 있어요…', '');
 
-      const token = makeRankingToken();
+      const device = ensureRankingDevice();
+      const token = device.token;
+      const first = device.pendingGrade;
       try {
         // 서버가 같은 닉네임이 있는지 확인하고, 없을 때만 등록한다.
-        const result = await rankingCall({ action: 'register', nickname: name, token });
+        // 닉네임을 정하기 전에 푼 25문제가 있으면 함께 보내 채점받는다.
+        const result = await rankingCall({
+          action: 'register', nickname: name, token,
+          batchId: first ? first.batchId : undefined,
+          attempts: first ? first.attempts : undefined
+        });
         if (!result.ok) {
           setRankingHint(RANKING_REASONS[result.reason] || '등록하지 못했어요. 다른 닉네임으로 해 보세요.', 'error');
           if (result.reason === 'taken') input.select();
           return;
         }
-        gameState.ranking = { nickname: result.nickname || name, token, batch: null, pendingGrade: null, lastTry: attemptCount() };
+        device.nickname = result.nickname || name;
+        device.pendingGrade = null;
+        device.batch = null;
+        device.lastTry = attemptCount();
         takeBatch(result.batch);
+        Object.keys(rankCache).forEach(key => delete rankCache[key]);
         saveData();
         closeNicknameModal();
-        showNotification(`🏆 "${gameState.ranking.nickname}"(으)로 랭킹에 등록했습니다! 지금부터 25문제마다 기록이 올라가요.`);
-        if (!gameState.ranking.batch) syncRanking();
+        showNotification(result.graded
+          ? `🏆 "${device.nickname}"(으)로 랭킹에 등록했습니다! 지금까지 푼 25문제 중 정답 ${result.graded.correct}개가 랭킹에 올라갔어요.`
+          : `🏆 "${device.nickname}"(으)로 랭킹에 등록했습니다! 지금부터 25문제마다 기록이 올라가요.`);
+        if (!device.batch) syncRanking();
       } catch (error) {
         console.warn('랭킹 등록 실패:', error);
         setRankingHint('랭킹 서버에 연결하지 못했어요. 잠시 뒤 다시 눌러 주세요.', 'error');
@@ -4342,37 +4356,54 @@
       info.batch = { id: batch.id, size: batch.size || RANKING_EVERY, problems: batch.problems, next: 0, attempts: [] };
     }
 
+    // 닉네임을 정하기 전에도 서버 문제를 풀 수 있게, 기기마다 토큰을 하나 만들어 둔다.
+    // 닉네임을 정하면 이 토큰이 그대로 그 닉네임의 열쇠가 된다.
+    function ensureRankingDevice() {
+      if (!rankingEnabled()) return null;
+      if (!gameState.ranking) {
+        gameState.ranking = { nickname: null, token: makeRankingToken(), batch: null, pendingGrade: null, lastTry: 0 };
+      }
+      return gameState.ranking;
+    }
+
     // 지금 풀 랭킹 문제. 묶음이 다 찼거나 없으면 null.
     function nextRankedProblem() {
-      const info = rankingInfo();
-      if (!rankingEnabled() || !info || !info.nickname || !info.batch) return null;
+      const info = ensureRankingDevice();
+      if (!info || !info.batch) return null;
       const batch = info.batch;
       if (batch.attempts.length >= batch.size || batch.next >= batch.problems.length) return null;
       return Object.assign(problemFromSpec(batch.problems[batch.next]), { batchId: batch.id, index: batch.next });
     }
 
-    // 서버에 보낼 일이 남아 있는가 (채점을 못 맡겼거나, 문제 묶음이 없다)
+    // 서버에 보낼 일이 남아 있는가
+    //  - 닉네임이 있으면: 다 푼 묶음의 채점을 못 맡겼거나, 다음 묶음이 없다
+    //  - 닉네임이 없으면: 아직 묶음을 받지 못했다 (다 푼 묶음은 닉네임을 정할 때 보낸다)
     function rankingCallLater(info) {
-      return !!info.pendingGrade || !info.batch;
+      if (!info) return false;
+      if (info.nickname) return !!info.pendingGrade || !info.batch;
+      return !info.pendingGrade && !info.batch;
     }
 
     let rankingRequest = null;
 
-    // 다 푼 묶음은 채점을 맡기고, 묶음이 없으면 새로 받는다.
     async function syncRanking() {
-      const info = rankingInfo();
-      if (!rankingEnabled() || !info || !info.nickname || rankingRequest) return;
+      const info = ensureRankingDevice();
+      if (!info || rankingRequest || !rankingCallLater(info)) return;
+      // 서버와 연결이 안 될 때 문제마다 요청을 쏟지 않도록 5초에 한 번만 해 본다.
+      if (Date.now() - (info.lastTryAt || 0) < 5000) return;
+      info.lastTryAt = Date.now();
       info.lastTry = attemptCount();
-      const grading = !!info.pendingGrade;
-      const payload = grading
-        ? { action: 'grade', nickname: info.nickname, token: info.token, batchId: info.pendingGrade.batchId, attempts: info.pendingGrade.attempts }
-        : { action: 'start', nickname: info.nickname, token: info.token };
+      const grading = !!(info.nickname && info.pendingGrade);
+      let payload;
+      if (grading) payload = { action: 'grade', nickname: info.nickname, token: info.token, batchId: info.pendingGrade.batchId, attempts: info.pendingGrade.attempts };
+      else if (info.nickname) payload = { action: 'start', nickname: info.nickname, token: info.token };
+      else payload = { action: 'start', token: info.token };
 
       rankingRequest = rankingCall(payload);
       try {
         const result = await rankingRequest;
         const now = rankingInfo();
-        if (!now || now.nickname !== info.nickname) return;   // 그사이 초기화했으면 버린다
+        if (!now || now.token !== info.token) return;   // 그사이 초기화했으면 버린다
 
         if (result.reason === 'unknown' || result.reason === 'forbidden') {
           // 선생님이 시트에서 지웠다면, 다음 25문제 때 닉네임을 다시 정한다.
@@ -4400,14 +4431,9 @@
 
     // 코인 직장에서 한 문제를 맞히거나 틀릴 때마다 부른다.
     function afterPracticeAttempt(isCorrect, given) {
-      if (!rankingEnabled()) return;
+      const info = ensureRankingDevice();
+      if (!info) return;
       const attempts = attemptCount();
-      const info = rankingInfo();
-
-      if (!info || !info.nickname) {
-        if (attempts > 0 && attempts % RANKING_EVERY === 0) openNicknameModal();
-        return;
-      }
 
       // 서버가 낸 문제를 풀었으면 낸 답을 묶음에 적는다. 채점은 서버가 한다.
       const current = gameState.currentRanked;
@@ -4423,13 +4449,19 @@
           info.batch = null;
           gameState.currentRanked = null;
           saveData();
-          syncRanking();
+          // 닉네임이 있으면 바로 채점을 맡기고, 없으면 닉네임을 정할 때 함께 보낸다.
+          if (info.nickname) syncRanking();
+          else openNicknameModal();
           return;
         }
         saveData();
         return;
       }
 
+      // 서버와 연결하지 못해 묶음이 없을 때: 예전처럼 25문제마다 닉네임을 물어본다.
+      if (!info.nickname && !info.pendingGrade && attempts > 0 && attempts % RANKING_EVERY === 0) {
+        openNicknameModal();
+      }
       // 지난번에 서버와 연결하지 못했으면 다섯 문제마다 다시 해 본다.
       if (rankingCallLater(info) && attempts - (info.lastTry || 0) >= 5) syncRanking();
     }
@@ -4465,7 +4497,9 @@
       const attempts = attemptCount();
 
       if (!info || !info.nickname) {
-        const left = RANKING_EVERY - (attempts % RANKING_EVERY);
+        const left = info && info.batch
+          ? info.batch.size - info.batch.attempts.length
+          : RANKING_EVERY - (attempts % RANKING_EVERY);
         box.innerHTML = `아직 랭킹에 등록하지 않았어요. 코인 직장에서 <strong>${left}문제</strong>를 더 풀면 닉네임을 정할 수 있어요.`;
         return;
       }
@@ -4577,6 +4611,13 @@
     document.getElementById('rankingRegisterBtn').addEventListener('click', registerNickname);
     document.getElementById('rankingSkipBtn').addEventListener('click', () => {
       closeNicknameModal();
+      const info = rankingInfo();
+      if (info && !info.nickname) {
+        info.pendingGrade = null;
+        info.batch = null;
+        saveData();
+        syncRanking();
+      }
       showNotification(`랭킹 등록을 건너뛰었습니다. ${RANKING_EVERY}문제를 더 풀면 다시 물어볼게요.`);
     });
 
@@ -6990,8 +7031,7 @@
     // Initialize
     loadData();
     setTimeout(() => {
-      const info = rankingInfo();
-      if (info && info.nickname && rankingCallLater(info)) syncRanking();
+      if (ensureRankingDevice()) syncRanking();
     }, 1500);
     updateAllUI();
     bgm.init();

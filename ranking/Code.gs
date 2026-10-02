@@ -16,6 +16,8 @@
  * 조작 방지
  *  - 랭킹에 쓰이는 문제는 서버가 25개씩 묶어 내고, 학생이 낸 답을 서버가 직접 채점한다.
  *    학생 브라우저가 보낸 '정답 수' 같은 숫자는 믿지 않는다.
+ *  - 닉네임을 정하기 전에도 기기마다 받은 토큰으로 문제를 내준다. 처음 25문제를 풀고
+ *    닉네임을 정하는 순간 그 25문제를 함께 채점하므로, 처음 25문제도 랭킹에 들어간다.
  *  - 게임은 정답을 맞히면 다음 문제가 1.5초 뒤에 나온다. 서버가 잰 시간이 이보다 짧으면
  *    사람이 할 수 없는 기록이므로 받지 않는다. 실력과는 상관없는 기준이다.
  *  - 아주 빠르지만 불가능하지는 않은 기록은 받되, '확인 필요' 칸에 표시만 한다.
@@ -230,18 +232,34 @@ function checkName(data) {
   return { ok: true, available: findPlayerRow(getSheet(), name) === 0 };
 }
 
+// 닉네임을 정하기 전에는 기기마다 받은 토큰으로 문제를 받는다. 묶음 주인 칸에 '#토큰'으로 적는다.
+function anonymousOwner(token) {
+  return '#' + String(token);
+}
+
+function validToken(token) {
+  return !!token && String(token).length >= 16;
+}
+
 function register(data) {
   const name = cleanNickname(data.nickname);
   const problem = nicknameProblem(name);
   if (problem) return { ok: false, reason: problem };
-  if (!data.token || String(data.token).length < 16) return { ok: false, reason: 'bad_request' };
+  if (!validToken(data.token)) return { ok: false, reason: 'bad_request' };
 
   const sheet = getSheet();
   if (findPlayerRow(sheet, name)) return { ok: false, reason: 'taken' };
 
   const now = new Date();
   sheet.appendRow([name, 0, 0, 0, 0, now, now, String(data.token), 0, '']);
-  return { ok: true, nickname: name, batch: issueBatch(name) };
+
+  // 닉네임을 정하기 전에 푼 25문제가 있으면 함께 채점해 올린다.
+  let graded = null;
+  if (data.batchId) {
+    const owner = ownedRow({ nickname: name, token: data.token });
+    graded = gradeBatch(owner, data.batchId, data.attempts, anonymousOwner(data.token));
+  }
+  return { ok: true, nickname: name, graded: graded && graded.ok ? graded.graded : null, firstBatch: graded, batch: issueBatch(name) };
 }
 
 // 닉네임과 토큰이 맞는 학생의 줄을 찾는다.
@@ -255,6 +273,11 @@ function ownedRow(data) {
 }
 
 function start(data) {
+  // 닉네임이 없으면 기기 토큰으로 문제를 받는다. 이 기록은 닉네임을 정할 때 채점한다.
+  if (!data.nickname) {
+    if (!validToken(data.token)) return { ok: false, reason: 'bad_request' };
+    return { ok: true, batch: issueBatch(anonymousOwner(data.token)) };
+  }
   const owner = ownedRow(data);
   if (owner.error) return owner.error;
   return { ok: true, batch: issueBatch(owner.nickname) };
@@ -263,22 +286,29 @@ function start(data) {
 function grade(data) {
   const owner = ownedRow(data);
   if (owner.error) return owner.error;
+  const result = gradeBatch(owner, data.batchId, data.attempts, null);
+  if (result.reason === 'forbidden') return result;
+  result.batch = issueBatch(owner.nickname);
+  return result;
+}
 
+// 학생이 낸 답을 서버가 직접 채점해 그 학생의 줄에 더한다.
+// batchOwner 가 있으면 그 주인의 묶음도 받는다. (닉네임을 정하기 전에 받은 묶음)
+function gradeBatch(owner, batchId, rawAttempts, batchOwner) {
   const batches = getBatchSheet();
-  const batchRow = findRowIn(batches, 1, v => String(v) === String(data.batchId));
-  if (!batchRow) {
-    // 이미 채점했거나 너무 오래된 묶음이다. 새 묶음으로 이어 간다.
-    return { ok: false, reason: 'no_batch', batch: issueBatch(owner.nickname) };
-  }
+  const batchRow = findRowIn(batches, 1, v => String(v) === String(batchId));
+  // 이미 채점했거나 너무 오래된 묶음이다.
+  if (!batchRow) return { ok: false, reason: 'no_batch' };
   const batch = batches.getRange(batchRow, 1, 1, BATCH_HEADERS.length).getValues()[0];
-  if (!sameName(batch[1], owner.nickname)) return { ok: false, reason: 'forbidden' };
+  const mine = sameName(batch[1], owner.nickname) || (batchOwner && String(batch[1]) === batchOwner);
+  if (!mine) return { ok: false, reason: 'forbidden' };
 
   const problems = JSON.parse(batch[3]);
   const issuedAt = new Date(batch[2]).getTime();
-  const attempts = Array.isArray(data.attempts) ? data.attempts : [];
-  if (attempts.length !== BATCH_SIZE) return { ok: false, reason: 'rejected', batch: issueBatch(owner.nickname) };
+  const attempts = Array.isArray(rawAttempts) ? rawAttempts : [];
+  batches.deleteRow(batchRow);   // 받든 거절하든 같은 묶음은 한 번만 쓴다
+  if (attempts.length !== BATCH_SIZE) return { ok: false, reason: 'rejected' };
 
-  // 학생이 낸 답을 서버가 직접 채점한다.
   // 틀리면 같은 문제를 다시 풀고, 맞혀야 다음 문제로 넘어간다. 그 차례를 지켰는지도 본다.
   let index = 0;
   let correct = 0;
@@ -289,8 +319,7 @@ function grade(data) {
     const n = Math.floor(Number(at.n));
     const d = Math.floor(Number(at.d));
     if (Number(at.p) !== index || index >= problems.length || !(d > 0) || !(n >= 0)) {
-      batches.deleteRow(batchRow);
-      return { ok: false, reason: 'rejected', batch: issueBatch(owner.nickname) };
+      return { ok: false, reason: 'rejected' };
     }
     const answer = specAnswer(problems[index]);
     const given = reduce(n, d);
@@ -304,16 +333,12 @@ function grade(data) {
     }
   }
 
-  batches.deleteRow(batchRow);
-
   // 정답 뒤에는 1.5초가 지나야 다음 문제가 나오고, 오답 뒤에는 답을 다시 쳐야 한다.
   // 이보다 빠른 기록은 사람이 게임에서 낼 수 없다. 실력과는 상관없는 기준이다.
   const seconds = (Date.now() - issuedAt) / 1000;
   const wrong = attempts.length - correct;
   const fastest = Math.max(0, correct - 1) * MIN_SECONDS_PER_CORRECT + wrong * MIN_SECONDS_PER_WRONG;
-  if (seconds < fastest) {
-    return { ok: false, reason: 'too_fast', batch: issueBatch(owner.nickname) };
-  }
+  if (seconds < fastest) return { ok: false, reason: 'too_fast' };
 
   const sheet = owner.sheet;
   const totalAttempts = (Number(owner.stored[COL.attempts - 1]) || 0) + attempts.length;
@@ -334,8 +359,7 @@ function grade(data) {
   return {
     ok: true,
     graded: { attempts: attempts.length, correct: correct },
-    totals: { attempts: totalAttempts, correct: totalCorrect, best: best, accuracy: accuracy },
-    batch: issueBatch(owner.nickname)
+    totals: { attempts: totalAttempts, correct: totalCorrect, best: best, accuracy: accuracy }
   };
 }
 

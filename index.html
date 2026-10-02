@@ -2918,7 +2918,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.110</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.111</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -6564,6 +6564,14 @@
       gameState.currentMonster = null;
       gameState.captureTrainingLevel = 0;
       gameState.ranking = null;
+
+      // 보스전 진행도 처음으로 돌린다. (파트너, 배운 기술, 체력·공격·보조 단련, 격파 기록)
+      // 싸우던 중에 초기화하면 전투도 끝낸다.
+      if (battle) {
+        battle = null;
+        resetBattleVisuals();
+      }
+      gameState.boss = { partner: null, skills: [], cleared: [], hpLevels: {}, atkLevels: {}, supportLevels: {} };
       
       // Restore admin settings
       gameState.isAdminLoggedIn = keepAdminLogin;
@@ -6578,6 +6586,7 @@
       // Update all UI components
       console.log('UI 업데이트 중...');
       updateAllUI();
+      renderBossTab();
       console.log('UI 업데이트 완료');
 
       // --- 수정 시작: 버튼 및 문제 상태 초기화 ---

@@ -437,6 +437,16 @@
             margin-top: 20px;
         }
 
+        .finder-toggle-area {
+            margin-top: 14px;
+        }
+
+        .finder-status {
+            margin: 0 0 6px;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
         .shop-item {
             background: linear-gradient(135deg, #f7fafc, #edf2f7);
             padding: 20px;
@@ -2502,6 +2512,7 @@
             <p>새로운 몬스터를 찾아 탐색을 시작하세요!</p>
             <p><strong>포획볼이 필요합니다. 상점에서 구매하세요!</strong></p>
             <button class="btn btn-primary" onclick="startExploration()">탐색 준비물을 구입하여 탐색 떠나기 💰 15</button>
+            <div id="finderToggleArea" class="finder-toggle-area"></div>
           </div>
           <div id="capturePhase" style="display: none;">
             <div class="capture-layout">
@@ -2779,7 +2790,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.108</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.109</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -3059,7 +3070,7 @@
       { id: 'super_ball', name: '메가볼', image: 'images/captureball_2.webp', description: '포획볼보다 포획률이 높다.', price: 100, type: 'ball', power: 10 },
       { id: 'hyper_ball', name: '슈퍼메가볼', image: 'images/captureball_3.webp', description: '메가볼보다 포획률이 높다.', price: 250, type: 'ball', power: 14 },
       { id: 'master_ball', name: '울트라볼', image: 'images/captureball_4.webp', description: '포획 확률이 가장 높다.', price: 500, type: 'ball', power: 25 },
-      { id: 'rare_finder', name: '🔍 레어 탐지기', description: '일반 환상 동물의 등장 확률을 낮추고(60%→50%), 레어(29%→29%), 에픽(10%→16%), 전설(1%→5%) 등급의 희귀 환상 동물 등장 확률을 높여줍니다.', price: 700, type: 'skill' },
+      { id: 'rare_finder', name: '🔍 레어 탐지기', description: '장착하면 일반 환상 동물의 등장 확률을 낮추고(60%→50%), 레어(29%→29%), 에픽(10%→16%), 전설(1%→5%) 등급의 희귀 환상 동물 등장 확률을 높여줍니다. 구입한 뒤 장착하거나 뺄 수 있습니다.', price: 700, type: 'skill' },
       { id: 'capture_training', name: '💪 포획 자세 연습', description: '포획률을 영구적으로 2% 높여줍니다. (최대 10회까지 구매 가능)', price: 100, type: 'training' }
     ];
 
@@ -3447,6 +3458,7 @@
 
       if (tabName === 'collection') updateCollection();
       if (tabName === 'shop') updateShop();
+      if (tabName === 'minigame') renderFinderToggle();
       if (tabName === 'admin') updateAdminStatus();
       if (tabName === 'boss') renderBossTab();
 
@@ -3971,6 +3983,41 @@
     } 
 
     // Shop Functions
+    // 레어 탐지기는 산 뒤에 장착하거나 뺄 수 있다. 장착했을 때만 희귀한 수학몬이 더 자주 나온다.
+    // 장착 여부를 저장하기 전에 산 사람은 그동안 늘 켜져 있었으므로, 값이 없으면 장착으로 본다.
+    function ownsRareFinder() {
+      return gameState.purchasedSkills.includes('rare_finder');
+    }
+
+    function rareFinderActive() {
+      return ownsRareFinder() && gameState.finderEquipped !== false;
+    }
+
+    function toggleRareFinder() {
+      if (!ownsRareFinder()) return showNotification('먼저 상점에서 레어 탐지기를 구입하세요!');
+      gameState.finderEquipped = !rareFinderActive();
+      saveData();
+      updateShop();
+      renderFinderToggle();
+      showNotification(gameState.finderEquipped
+        ? '🔍 레어 탐지기를 장착했습니다! 희귀한 수학몬이 더 자주 나타납니다.'
+        : '🔍 레어 탐지기를 뺐습니다. 평소 확률로 수학몬이 나타납니다.');
+    }
+
+    function finderToggleButton() {
+      return rareFinderActive()
+        ? '<button class="btn btn-success finder-toggle is-on" onclick="toggleRareFinder()">🔍 장착 중 · 빼기</button>'
+        : '<button class="btn btn-primary finder-toggle" onclick="toggleRareFinder()">🔍 장착하기</button>';
+    }
+
+    // 탐색 화면에도 장착 상태를 보여 주고, 그 자리에서 바꿀 수 있게 한다.
+    function renderFinderToggle() {
+      const area = document.getElementById('finderToggleArea');
+      if (!area) return;
+      if (!ownsRareFinder()) { area.innerHTML = ''; return; }
+      area.innerHTML = `<p class="finder-status">레어 탐지기: <strong>${rareFinderActive() ? '장착 중' : '빼 둠'}</strong></p>${finderToggleButton()}`;
+    }
+
     function updateShop() {
       const shopGrid = document.getElementById('shopGrid');
       shopGrid.innerHTML = '';
@@ -3983,7 +4030,9 @@
         itemDiv.className = `shop-item ${isPurchased || maxTraining ? 'purchased' : ''}`;
         
         let purchaseSection;
-        if (item.type === 'skill') {
+        if (item.id === 'rare_finder' && isPurchased) {
+          purchaseSection = `<p style="margin: 10px 0;"><strong>보유 중 · ${rareFinderActive() ? '장착 중' : '빼 둠'}</strong></p>${finderToggleButton()}`;
+        } else if (item.type === 'skill') {
           purchaseSection = isPurchased ? `<button class="btn btn-success" disabled>구매완료</button>` : `<button class="btn btn-primary" onclick="purchaseItem('${item.id}', 1)">구매</button>`;
         } else if (item.type === 'training') {
           const currentBonus = trainingLevel * 2;
@@ -4027,6 +4076,7 @@
       
       if (item.type === 'skill') {
         gameState.purchasedSkills.push(itemId);
+        if (itemId === 'rare_finder') gameState.finderEquipped = true;
       } else if (item.type === 'training') {
         gameState.captureTrainingLevel = (gameState.captureTrainingLevel || 0) + 1;
       } else if (item.type === 'ball') {
@@ -4073,8 +4123,7 @@
       document.getElementById('capturePhase').style.display = 'block';
       
       // NEW BALANCE: Updated spawn rates
-      const hasRareFinder = gameState.purchasedSkills.includes('rare_finder');
-      const rates = hasRareFinder ? GAME_BALANCE.SPAWN_RATES.withFinder : GAME_BALANCE.SPAWN_RATES.normal;
+      const rates = rareFinderActive() ? GAME_BALANCE.SPAWN_RATES.withFinder : GAME_BALANCE.SPAWN_RATES.normal;
       
       const roll = Math.random() * 100;
       let rarity;
@@ -6319,7 +6368,7 @@
       closeResetModal, confirmResetGame, executeReset, forgetSkill, generateProblem, learnSkill,
       purchaseItem, resetCapture, retreatFromBoss, setBgmVolume, showAdminLogin, showBallSelection,
       startBossBattle, startExploration, submitBattleAnswer, submitCaptureAnswer, switchTab,
-      toggleBgm, trainPartnerAtk, trainPartnerHp, upgradeSupportSkill
+      toggleBgm, toggleRareFinder, trainPartnerAtk, trainPartnerHp, upgradeSupportSkill
     });
 
     // Initialize

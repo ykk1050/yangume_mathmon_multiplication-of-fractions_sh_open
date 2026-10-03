@@ -2809,6 +2809,24 @@
             line-height: 1.55;
         }
 
+        /* 설명은 접어 두되, 여는 단추는 눈에 띄게 한다. */
+        .raid-story-toggle { margin: 8px 0; }
+        .raid-story-toggle summary {
+            display: inline-block;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 2px solid #b794f4;
+            background: rgba(159, 122, 234, 0.25);
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.9rem;
+            list-style: none;
+        }
+        .raid-story-toggle summary::-webkit-details-marker { display: none; }
+        .raid-story-toggle summary:hover { background: rgba(159, 122, 234, 0.45); }
+        .raid-story-toggle[open] summary { margin-bottom: 6px; }
+
         .raid-panel {
             margin: 10px 0;
             padding: 12px;
@@ -3271,7 +3289,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.126</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.127</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -7239,7 +7257,7 @@
           <p class="raid-kicker">🌍 월드 토벌전 · 파이널 보스 · 모두가 함께 싸운다</p>
           <h4>${boss.event}</h4>
           <p><strong>${boss.title}, ${boss.name} (Discord)</strong></p>
-          ${raidStoryHtml(boss)}
+          <details class="raid-story-toggle"><summary>📖 디스코드 이야기 열어서 보기</summary>${raidStoryHtml(boss)}</details>
           <div class="raid-panel">
             ${statusHtml}
             <p>모든 도전자가 준 피해가 하나로 합쳐집니다. 피해량으로 순위가 매겨지고,

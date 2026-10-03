@@ -57,7 +57,7 @@ const RS = { season: 1, maxHp: 2, damage: 3, status: 4, started: 5, killedAt: 6,
 const RAID_PLAYER_SHEET = '월드토벌전';
 const RAID_PLAYER_HEADERS = ['시즌', '닉네임', '누적 피해', '전투 수', '최고 한 판', '마지막 갱신', '확인 필요', '토큰'];
 const RP = { season: 1, nickname: 2, damage: 3, battles: 4, best: 5, updated: 6, flag: 7, token: 8 };
-const RAID_BASE_HP = 3000000;           // 첫 시즌 체력. 시트에서 바꿀 수 있다.
+const RAID_BASE_HP = 2000000;           // 첫 시즌 체력. 시트에서 바꿀 수 있다.
 // 게임의 기술 위력 (보조 기술은 피해가 없다). 게임의 BATTLE_SKILLS 와 같아야 한다.
 const RAID_SKILL_POWER = {
   reduce_slash: 18, numerator_blast: 27, denominator_press: 20, common_beam: 24,

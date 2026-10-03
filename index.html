@@ -3271,7 +3271,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.124</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.125</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -3826,7 +3826,8 @@
       minigameEpic: 'audio/capture-epic.mp3',
       minigameLegendary: 'audio/capture-legendary.mp3',
       collection: 'audio/collection.mp3',
-      boss: 'audio/boss.mp3'
+      boss: 'audio/boss.mp3',
+      raid: 'audio/raid.mp3'   // 월드 토벌전 전투 (Crown of Broken Logic)
     };
 
     const bgm = {
@@ -3942,6 +3943,7 @@
       // 포획 탭은 등장한 몬스터 등급에 따라 곡이 달라진다.
       forTab(tabName) {
         if (tabName === 'ranking') return 'collection';
+        if (tabName === 'boss' && battle && battle.boss.raid) return 'raid';
         if (tabName !== 'minigame') return tabName;
         const capturing = document.getElementById('capturePhase');
         const rarity = capturing && capturing.style.display !== 'none' && gameState.currentMonster
@@ -6331,6 +6333,7 @@
         battleLog(`⚔️ ${boss.name}이(가) 나타났다!`);
       }
       renderBattleSkills();
+      bgm.refresh();   // 월드 토벌전은 전용 곡으로 바뀐다
       scheduleBattle(bossTurn, 900);
     }
 
@@ -7078,6 +7081,7 @@
         setTimeout(() => {
           resetBattleVisuals();
           renderBossTab();
+          bgm.refresh();
         }, 1600);
         return;
       }
@@ -7106,6 +7110,7 @@
       // 월드 토벌전에서 물러나도 그때까지 준 피해는 모두의 기록에 더한다.
       if (battle && battle.raid) submitRaidReport(battle.raid);
       battle = null;
+      bgm.refresh();
       resetBattleVisuals();
       document.getElementById('battleQuiz').style.display = 'none';
       renderBossTab();

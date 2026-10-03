@@ -2731,6 +2731,167 @@
             .capture-layout { grid-template-columns: minmax(200px, 300px) 1fr; }
             .capture-stage-column { background: none; padding-top: 0; }
         }
+
+        /* ---------- 월드 토벌전 ---------- */
+        .boss-entry.is-raid {
+            grid-column: 1 / -1;
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(150px, 240px) 1fr;
+            gap: 18px;
+            align-items: start;
+            border: 2px solid #6b46c1;
+            background: linear-gradient(135deg, #160c28 0%, #2d1b4e 55%, #1b2240 100%);
+            color: #e9d8fd;
+            overflow: hidden;
+        }
+
+        .boss-entry.is-raid h4 { color: #fff; font-size: 1.15rem; margin-bottom: 4px; }
+        .boss-entry.is-raid p { color: #e2d6f7; }
+
+        .raid-art {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .boss-entry.is-raid .raid-art img {
+            width: 100%;
+            height: 360px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 16px rgba(160, 100, 255, 0.55));
+        }
+
+        .raid-art.is-silhouette img {
+            filter: drop-shadow(0 0 10px rgba(190, 130, 255, 0.95)) drop-shadow(0 0 30px rgba(100, 40, 200, 0.7));
+        }
+
+        /* 실루엣 위에 비스듬히 찍힌 도장 */
+        .raid-soon {
+            position: absolute;
+            left: 50%;
+            top: 44%;
+            transform: translate(-50%, -50%) rotate(-9deg);
+            padding: 10px 18px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            white-space: nowrap;
+            color: #fff;
+            background: rgba(197, 48, 48, 0.9);
+            border: 2px solid #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+        }
+
+        .raid-kicker {
+            font-size: 0.78rem !important;
+            font-weight: bold;
+            letter-spacing: 0.06em;
+            color: #d6bcfa !important;
+        }
+
+        .raid-story p {
+            line-height: 1.6;
+            margin: 6px 0;
+        }
+
+        .raid-quote {
+            margin: 10px 0 0;
+            padding: 10px 14px;
+            border-left: 3px solid #b794f4;
+            border-radius: 0 10px 10px 0;
+            background: rgba(0, 0, 0, 0.28);
+            color: #faf5ff;
+            font-style: italic;
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+
+        .raid-panel {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .raid-hp {
+            height: 16px;
+            margin: 6px 0 4px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            overflow: hidden;
+        }
+
+        .raid-hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #805ad5, #ed64a6);
+            transition: width 0.6s ease;
+        }
+
+        .raid-hp-text {
+            font-size: 0.82rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .raid-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .raid-moves {
+            margin: 8px 0 0;
+            padding-left: 18px;
+            font-size: 0.82rem;
+            color: #e2d6f7;
+        }
+
+        .raid-moves li { margin: 2px 0; }
+        .raid-moves .is-ultimate { color: #feb2b2; font-weight: bold; }
+
+        .raid-board {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            background: #fff;
+            color: #2d3748;
+        }
+
+        .raid-board-head {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .raid-board-head strong { color: #44337a; }
+        .raid-board select { padding: 6px 8px; border-radius: 8px; border: 1px solid #cbd5e0; }
+        .raid-board .rank-empty { color: #718096; }
+        .raid-board .boss-hint { color: #553c9a; font-weight: bold; margin: 0 0 8px; }
+
+        /* 파이널 보스는 무대에서 다른 수학몬보다 훨씬 크게 선다. */
+        .battle-stage.is-raid { grid-template-columns: 1fr 1.6fr; }
+        .battle-stage.is-raid .battle-figure.is-boss { min-height: 380px; }
+        .battle-stage.is-raid .battle-figure.is-boss img {
+            max-height: 420px;
+            filter: drop-shadow(0 0 20px rgba(150, 90, 255, 0.6));
+        }
+        .battle-stage.is-raid .battle-hp { width: 230px; }
+
+        @media (max-width: 768px) {
+            .boss-entry.is-raid { grid-template-columns: 1fr; }
+            .boss-entry.is-raid .raid-art img { height: 280px; }
+            .battle-stage.is-raid { grid-template-columns: 1fr 1.5fr; }
+            .battle-stage.is-raid .battle-figure.is-boss { min-height: 240px; }
+            .battle-stage.is-raid .battle-figure.is-boss img { max-height: 260px; }
+            .battle-stage.is-raid .battle-hp { width: 140px; }
+        }
     </style>
 </head>
 <body>
@@ -2764,7 +2925,7 @@
       <button class="tab" id="tabMinigame" onclick="switchTab('minigame')">수학몬 포획하러 가기</button>
       <button class="tab" id="tabCollection" onclick="switchTab('collection')">도감</button>
       <button class="tab" id="tabRanking" onclick="switchTab('ranking')">🏆 랭킹</button>
-      <button class="tab" id="tabBoss" onclick="switchTab('boss')" style="display: none;">⚔️ 보스전</button>
+      <button class="tab" id="tabBoss" onclick="switchTab('boss')">⚔️ 보스전</button>
       <button class="tab admin-tab" id="tabAdmin" onclick="showAdminLogin()">🔧 관리 콘솔</button>
     </div>
 
@@ -3070,8 +3231,8 @@
               <button class="btn btn-cheat-inactive" id="cheatShowAnswersBtn">
                 <span id="answerCheatStatus">정답 미리보기: OFF</span>
               </button>
-              <button class="btn btn-cheat-inactive" id="cheatBossTestBtn">
-                <span id="bossTestStatus">보스전(테스트): OFF</span>
+              <button class="btn btn-cheat-inactive" id="cheatRaidTestBtn">
+                <span id="raidTestStatus">월드 토벌전(테스트): OFF</span>
               </button>
             </div>
           </div>
@@ -3110,7 +3271,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.123</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.124</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -3231,7 +3392,7 @@
       captureAnswer: null,
       currentMonster: null,
       isAdminLoggedIn: false,
-      bossTestEnabled: false,
+      raidTestEnabled: false,   // 월드 토벌전 시험 (관리자 콘솔)
       boss: { partner: null, skills: [], cleared: [], hpLevels: {}, atkLevels: {} },
       infiniteCoinsEnabled: false,
       showAnswers: false,
@@ -3296,7 +3457,9 @@
     }
 
     // 보스전은 관리 콘솔로 열어야 보이는 기능이라, 칭호도 그때만 목록에 드러낸다.
-    const bossOnly = () => !gameState.bossTestEnabled;
+    // 보스전은 이제 누구나 한다. 월드 토벌전 칭호는 토벌전이 열리기 전까지 숨긴다.
+    const bossOnly = () => false;
+    const raidHidden = () => !gameState.raidTestEnabled && !gameState.raidGuardian;
 
     // 쉬운 것부터 어려운 것 차례로 둔다. 가장 뒤에 있는 것이 대표 칭호가 된다.
     const titles = [
@@ -3324,7 +3487,8 @@
       { name: '전설 수집가', emoji: '🌈', requirement: '전설 수학몬 3종 포획', check: () => countCollected('legendary') >= 3 },
       { name: '불굴의 집중', emoji: '💫', requirement: '연속 정답 20회', check: () => gameState.bestStreak >= 20 },
       { name: '수학몬 마스터', emoji: '🌌', requirement: '수학몬 전종 포획', check: () => gameState.collection.length >= totalMonsterCount() },
-      { name: '오류의 종결자', emoji: '👹', requirement: '보스 4명을 모두 격파', hidden: bossOnly, check: () => clearedBossCount() >= 4 }
+      { name: '오류의 종결자', emoji: '👹', requirement: '보스 4명을 모두 격파', hidden: bossOnly, check: () => clearedBossCount() >= 4 },
+      { name: '수학의 세계를 지킨 자', emoji: '🌍', requirement: '월드 토벌전에서 디스코드에게 마지막 일격', hidden: raidHidden, check: () => !!gameState.raidGuardian }
     ];
 
     const monsters = {
@@ -3419,6 +3583,63 @@
     // Data Management
     let checkingTitles = false;
 
+    // ---------- 저장 데이터 지킴이 ----------
+    // 개발자 도구로 저장 데이터를 고쳐 코인·보스전 진행·도감을 부풀리는 것을 막는다.
+    // 저장할 때마다 저장본의 지문과 중요한 값의 사본을 따로 숨겨 두고, 불러올 때 지문이 맞지 않으면
+    // 중요한 값만 게임이 마지막으로 저장한 값으로 되돌린다. 문제 풀이 기록 같은 다른 값은 건드리지 않는다.
+    const SAVE_GUARD_KEY = 'mathMonsterGuard';
+    const SAVE_GUARD_SALT = 'mm-guard-7f3a91c2';
+    const GUARDED_FIELDS = ['coins', 'boss', 'collection', 'totalCaught', 'captureTrainingLevel', 'raidGuardian'];
+    let saveWasRestored = false;
+
+    function saveFingerprint(text) {
+      const str = SAVE_GUARD_SALT + text;
+      let h1 = 0xdeadbeef ^ str.length;
+      let h2 = 0x41c6ce57 ^ str.length;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+    }
+
+    function packGuard(obj) {
+      return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).split('').reverse().join('');
+    }
+
+    function unpackGuard(raw) {
+      try {
+        return JSON.parse(decodeURIComponent(escape(atob(String(raw).split('').reverse().join('')))));
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function writeSaveGuard(text, data) {
+      const keep = {};
+      GUARDED_FIELDS.forEach(key => { if (data[key] !== undefined) keep[key] = data[key]; });
+      try {
+        localStorage.setItem(SAVE_GUARD_KEY, packGuard({ sig: saveFingerprint(text), keep, check: saveFingerprint(JSON.stringify(keep)) }));
+      } catch (error) {
+        // 지킴이를 못 남겼으면 옛 지킴이를 지운다. 옛 값이 정상 저장본을 되돌리지 않게 한다.
+        try { localStorage.removeItem(SAVE_GUARD_KEY); } catch (ignored) { /* 저장소를 쓸 수 없음 */ }
+      }
+    }
+
+    // 저장본이 게임 밖에서 바뀌었으면 지켜 둔 값을 돌려준다. 그대로면 null.
+    function guardedValues(text) {
+      let raw = null;
+      try { raw = localStorage.getItem(SAVE_GUARD_KEY); } catch (error) { return null; }
+      if (!raw) return null;   // 지킴이가 생기기 전 저장본은 그대로 믿는다
+      const guard = unpackGuard(raw);
+      if (!guard || !guard.keep || guard.check !== saveFingerprint(JSON.stringify(guard.keep))) return null;
+      if (guard.sig === saveFingerprint(text)) return null;
+      return guard.keep;
+    }
+
     function saveData() {
       // 상태가 바뀌는 곳은 모두 저장을 거치므로, 여기서 칭호도 함께 살핀다.
       // 코인 직장과 포획에서만 살피던 탓에, 보스를 깨거나 단련을 해도 다음에
@@ -3431,13 +3652,21 @@
       // Don't save admin login status - require password every time
       const dataToSave = { ...gameState };
       delete dataToSave.isAdminLoggedIn;
-      localStorage.setItem('mathMonsterGame', JSON.stringify(dataToSave));
+      const text = JSON.stringify(dataToSave);
+      // 지킴이를 먼저 쓴다. 저장본 쓰기가 실패해도 지킴이에는 최신 값이 남는다.
+      writeSaveGuard(text, dataToSave);
+      localStorage.setItem('mathMonsterGame', text);
     }
 
     function loadData() {
       const saved = localStorage.getItem('mathMonsterGame');
       if (saved) {
         const loadedData = JSON.parse(saved);
+        const restored = guardedValues(saved);
+        if (restored) {
+          Object.assign(loadedData, restored);
+          saveWasRestored = true;
+        }
         // Always set isAdminLoggedIn to false on load
         loadedData.isAdminLoggedIn = false;
 
@@ -5650,6 +5879,35 @@
       }
     ];
 
+    // 월드 토벌전 보스. 모든 도전자의 피해를 더해 함께 쓰러뜨린다. 체력은 랭킹 서버가 맡는다.
+    const RAID_BOSS = {
+      id: 'discord', raid: true,
+      name: '디스코드', title: '궁극의 오류를 부르는 자',
+      event: '월드 토벌전: 디스코드 - 수학의 세계 붕괴를 막아라',
+      image: 'images/boss_5.webp', silhouette: 'images/boss_5_silhouette.webp', background: 'images/boss_5_bg.webp',
+      attack: [66, 88],          // 가장 센 보스. 4단계 보스(48~65)보다 강하다.
+      ultimateMultiplier: 5,     // 필살 공격은 평소의 5배. 방벽 없이는 버티기 어렵다.
+      attacks: [
+        { name: '흑요석 오류탄', sprite: 'images/boss_5_bolt.webp', aspect: '320 / 180',
+          glow: ['rgba(200, 120, 255, 0.9)', 'rgba(110, 40, 190, 0.6)'] },
+        { name: '균열 소환: 깨진 다면체 군단', sprite: 'images/boss_5_rift.webp', aspect: '320 / 180',
+          glow: ['rgba(190, 110, 255, 0.85)', 'rgba(90, 30, 170, 0.6)'] },
+        { name: '일그러진 입체의 폭주', sprite: 'images/boss_5_solids.webp', aspect: '320 / 180',
+          glow: ['rgba(170, 230, 255, 0.85)', 'rgba(120, 60, 220, 0.6)'] },
+        { name: '금기의 연산: 0으로 나누기', sprite: 'images/boss_5_zero.webp', aspect: '320 / 180',
+          glow: ['rgba(230, 150, 255, 0.85)', 'rgba(60, 200, 220, 0.55)'] }
+      ],
+      ultimate: { name: '궁극의 오류: 혼돈의 질서 마법진', sprite: 'images/boss_5_ultimate.webp', aspect: '320 / 180',
+        glow: ['rgba(120, 255, 240, 0.95)', 'rgba(150, 60, 255, 0.8)'] },
+      story: [
+        '한때는 완벽한 수학적 규칙과 아름다운 도형의 신전을 지키던 고대의 수호자였으나, \'계산할 수 없는 오류\'의 힘에 빠져 타락하고 말았습니다. 이제 그녀는 정답과 규칙을 모두 깨뜨리려는 어둠의 군주입니다.',
+        '어둠의 기운이 감도는 검은 갑옷을 입고 차가운 미소를 짓는 그녀는, 발아래에 \'수식과 규칙을 어지럽히는 마법진\'을 펼쳐 전장을 혼란에 빠뜨립니다. 지팡이 끝의 구체 속에는 바른 모양을 잃고 일그러진 입체도형들이 어둡게 고동치고 있습니다.',
+        '디스코드는 전투가 시작되면 뾰족하게 깨어진 다면체 조각들을 소환해 전장을 가득 채웁니다. 또한 \'0으로 나누기\'나 \'말이 되지 않는 잘못된 수식\' 같은 수학적 금기를 공격으로 사용하여, 도전자가 쌓아 올린 올바른 계산과 논리를 무너뜨리려 합니다.',
+        '그녀는 오만하고 차가운 눈빛으로 도전자를 내려다보며 말합니다.'
+      ],
+      quote: '정답과 규칙은 너희를 가두는 틀일 뿐이다. 오류야말로 진정한 힘의 완성! 나의 혼돈 속에서 너의 계산은 전부 무너질 것이다.'
+    };
+
     const BATTLE_SKILLS = [
       { id: 'reduce_slash', name: '약분 베기', emoji: '✂️', effect: 'slash', motion: 'slash', price: 150, power: 18, accuracy: 85, description: '군더더기를 단칼에 걷어낸다. 안정적으로 맞는다.' },
       { id: 'numerator_blast', name: '분자 폭발', emoji: '💥', effect: 'blast', motion: 'volley', price: 1800, power: 27, accuracy: 70, description: '보스 머리 위에서 연달아 터진다. 위력은 크지만 빗나가기 쉽다.' },
@@ -5741,27 +5999,23 @@
       }, delay);
     }
 
-    function toggleBossTest() {
-      gameState.bossTestEnabled = !gameState.bossTestEnabled;
-      const status = document.getElementById('bossTestStatus');
-      status.textContent = `보스전(테스트): ${gameState.bossTestEnabled ? 'ON' : 'OFF'}`;
-      status.parentElement.className = gameState.bossTestEnabled ? 'btn btn-cheat-active' : 'btn btn-cheat-inactive';
+    // 관리자 콘솔: 월드 토벌전을 시험으로 켜고 끈다. 꺼져 있으면 실루엣과 소개만 보인다.
+    function toggleRaidTest() {
+      gameState.raidTestEnabled = !gameState.raidTestEnabled;
       updateBossTabVisibility();
-      if (!gameState.bossTestEnabled && document.getElementById('bossContent').style.display !== 'none') {
-        switchTab('practice');
-      }
+      if (!battle && document.getElementById('bossContent').style.display !== 'none') renderBossTab();
+      updateTitleSystem();
       saveData();
     }
 
+    // 보스전은 이제 누구나 볼 수 있다. 콘솔 단추가 월드 토벌전 시험 상태를 보여 주게 맞춘다.
     function updateBossTabVisibility() {
       const tab = document.getElementById('tabBoss');
-      if (tab) tab.style.display = gameState.bossTestEnabled ? '' : 'none';
-
-      // 새로고침 뒤에도 콘솔 버튼이 실제 상태를 보여주도록 맞춘다.
-      const status = document.getElementById('bossTestStatus');
+      if (tab) tab.style.display = '';
+      const status = document.getElementById('raidTestStatus');
       if (status) {
-        status.textContent = `보스전(테스트): ${gameState.bossTestEnabled ? 'ON' : 'OFF'}`;
-        status.parentElement.className = gameState.bossTestEnabled ? 'btn btn-cheat-active' : 'btn btn-cheat-inactive';
+        status.textContent = `월드 토벌전(테스트): ${raidOpen() ? 'ON' : 'OFF'}`;
+        status.parentElement.className = raidOpen() ? 'btn btn-cheat-active' : 'btn btn-cheat-inactive';
       }
     }
 
@@ -5896,6 +6150,17 @@
 
         list.appendChild(div);
       });
+
+      // 4단계 보스 다음에 월드 토벌전
+      const raid = document.createElement('div');
+      raid.id = 'raidEntry';
+      raid.className = 'boss-entry is-raid';
+      list.appendChild(raid);
+      renderRaidCard();
+      if (raidOpen()) {
+        refreshRaidStatus(false);
+        flushRaidReport();
+      }
     }
 
     function selectBossPartner(name) {
@@ -6007,34 +6272,48 @@
       const partnerData = gameState.collection.find(m => m.name === state.partner);
       if (!partnerData) return showNotification('선택한 수학몬을 찾을 수 없습니다.');
 
+      if (bossId === RAID_BOSS.id) return startRaidBattle(partnerData);
       const boss = BOSSES.find(b => b.id === bossId);
+      if (!boss) return;
+      beginBattle(boss, partnerData, {});
+    }
+
+    function beginBattle(boss, partnerData, extra) {
       const maxHp = partnerMaxHp(partnerData);
-      battle = {
+      battle = Object.assign({
         id: ++battleRunId,
         boss,
         atkBonus: partnerAtkBonus(partnerData),
+        atkLevel: atkLevelOf(partnerData.name),
         bossHp: boss.hp,
+        bossMaxHp: boss.hp,
         partner: partnerData,
         hp: maxHp,
         maxHp,
         pendingSkill: null,
         quizStart: 0,
         answer: null,
+        spec: null,
         busy: true,
         bossTurns: 0,      // 보스가 움직인 횟수. 이 수로 힘을 모으는 때를 정한다.
         charged: false,    // 힘을 다 모아 다음 공격이 필살기인 상태
+        lastPattern: -1,   // 같은 공격이 연달아 나오지 않게 한다
         guard: 0,          // 다음 공격 한 번을 줄여 줄 비율
         evadeTurns: 0, evadePercent: 0,
-        focusTurns: 0, focusPercent: 0
-      };
+        focusTurns: 0, focusPercent: 0,
+        raid: null         // 월드 토벌전이면 { session, season, turns, dealt }
+      }, extra);
 
       renderBossTab();
       updateTabLock();
       resetBattleVisuals();
       const stage = document.getElementById('battleStage');
+      stage.classList.toggle('is-raid', !!boss.raid);
       // 배경 위에 어두운 막을 한 겹 깔아야 이름과 체력바가 읽힌다.
       stage.style.backgroundImage = boss.background ? `url('${boss.background}')` : '';
-      document.getElementById('battleBossName').textContent = `${boss.name} (${boss.title})`;
+      document.getElementById('battleBossName').textContent = boss.raid
+        ? `${boss.name} (${boss.title}) · 시즌 ${battle.raid.season}`
+        : `${boss.name} (${boss.title})`;
       document.getElementById('battleBossFigure').innerHTML = `<img src="${boss.image}" alt="${boss.name}">`;
       const art = partnerData.imageUrl || (findMonster(partnerData.name) || {}).imageUrl;
       const flip = art && FACING_LEFT_ART.has(art.split('/').pop()) ? ' class="is-flipped"' : '';
@@ -6045,17 +6324,23 @@
       document.getElementById('battleLog').innerHTML = '';
       updateBattleBars();
       renderBattleBuffs();
-      battleLog(`⚔️ ${boss.name}이(가) 나타났다!`);
+      if (boss.raid) {
+        battleLog(`🌍 ${boss.event}`);
+        battleLog(`"${boss.quote}"`);
+      } else {
+        battleLog(`⚔️ ${boss.name}이(가) 나타났다!`);
+      }
       renderBattleSkills();
       scheduleBattle(bossTurn, 900);
     }
 
     function updateBattleBars() {
+      const bossMax = battle.bossMaxHp || battle.boss.hp;
       const bossHp = Math.max(0, battle.bossHp);
       const partnerHp = Math.max(0, battle.hp);
-      document.getElementById('battleBossHp').style.width = `${bossHp / battle.boss.hp * 100}%`;
+      document.getElementById('battleBossHp').style.width = `${bossHp / bossMax * 100}%`;
       document.getElementById('battlePartnerHp').style.width = `${partnerHp / battle.maxHp * 100}%`;
-      document.getElementById('battleBossHpText').textContent = `${bossHp}/${battle.boss.hp}`;
+      document.getElementById('battleBossHpText').textContent = `${bossHp.toLocaleString()}/${bossMax.toLocaleString()}`;
       document.getElementById('battlePartnerHpText').textContent = `${partnerHp}/${battle.maxHp}`;
     }
 
@@ -6420,30 +6705,32 @@
     }
 
     // 보스의 선율이 겹겹이 메아리치며 내 수학몬 쪽으로 밀려온다.
-    function playBossWave(sprite, ultimate) {
+    // pattern 이 있으면(여러 공격을 가진 보스) 그 공격의 그림과 빛깔을 쓴다.
+    function playBossWave(sprite, ultimate, pattern) {
       const stage = document.getElementById('battleStage');
       stage.querySelectorAll('.boss-wave, .boss-ring').forEach(el => el.remove());
 
       const boss = battle ? battle.boss : {};
       // 필살기에는 전용 그림이 있다. 없으면 평소 공격 그림을 크게 써서 대신한다.
       const useUltimate = ultimate && sprite === boss.ultimateSprite;
-      const aspect = (useUltimate ? boss.ultimateAspect : boss.attackAspect) || '320 / 255';
+      const aspect = (pattern && pattern.aspect) || (useUltimate ? boss.ultimateAspect : boss.attackAspect) || '320 / 255';
+      const burst = !!pattern || useUltimate || boss.attackStyle === 'burst';
       // 훑고 지나가는 연출은 겹을 나누고, 터뜨리는 연출은 한가운데서 한 번에 부푼다.
-      const layers = (useUltimate || boss.attackStyle === 'burst') ? [0] : [0, 200];
+      const layers = burst ? [0] : [0, 200];
 
       layers.forEach((delay, index) => {
         const wave = document.createElement('div');
-        wave.className = `boss-wave layer-${index}${(useUltimate || boss.attackStyle === 'burst') ? ' is-burst' : ''}${ultimate ? ' is-ultimate' : ''}`;
+        wave.className = `boss-wave layer-${index}${burst ? ' is-burst' : ''}${ultimate ? ' is-ultimate' : ''}`;
         wave.style.animationDelay = `${delay}ms`;
         const frames = document.createElement('div');
         frames.className = 'boss-wave-frames';
         frames.style.backgroundImage = `url('${sprite}')`;
         frames.style.aspectRatio = aspect;
         // 보스마다 기운의 색이 달라 빛 번짐 색도 함께 바꾼다.
-        const glow = useUltimate ? (boss.ultimateGlow || boss.attackGlow) : boss.attackGlow;
+        const glow = (pattern && pattern.glow) || (useUltimate ? (boss.ultimateGlow || boss.attackGlow) : boss.attackGlow);
         if (glow) {
           const [near, far] = glow;
-          const blur = useUltimate ? [20, 44] : [14, 30];
+          const blur = ultimate ? [20, 44] : [14, 30];
           frames.style.filter = `drop-shadow(0 0 ${blur[0]}px ${near}) drop-shadow(0 0 ${blur[1]}px ${far})`;
         }
         frames.style.animationDelay = `${delay}ms`;
@@ -6470,15 +6757,32 @@
       });
     }
 
+    function ultimateMultiplier(boss) {
+      return boss.ultimateMultiplier || BOSS_ULTIMATE_MULTIPLIER;
+    }
+
+    // 여러 공격을 가진 보스는 그때그때 하나를 고른다. 바로 앞의 공격은 다시 고르지 않는다.
+    function pickBossPattern(boss) {
+      if (!boss.attacks || !boss.attacks.length) return null;
+      let index = Math.floor(Math.random() * boss.attacks.length);
+      if (boss.attacks.length > 1 && index === battle.lastPattern) index = (index + 1) % boss.attacks.length;
+      battle.lastPattern = index;
+      return boss.attacks[index];
+    }
+
     function bossTurn() {
       if (!battle) return;
       battle.bossTurns++;
+      const boss = battle.boss;
+      const times = ultimateMultiplier(boss);
 
-      // 몇 턴에 한 번은 공격 대신 힘을 모은다. 다음 턴 공격이 세 배로 세진다.
+      // 몇 턴에 한 번은 공격 대신 힘을 모은다. 다음 턴 공격이 몇 배로 세진다.
       if (!battle.charged && battle.bossTurns % BOSS_CHARGE_EVERY === 0) {
         battle.charged = true;
         chargeUpBoss();
-        battleLog(`⚠️ ${battle.boss.name}이(가) 힘을 모으고 있다… 다음 공격은 평소의 3배다!`);
+        battleLog(boss.ultimate
+          ? `⚠️ ${boss.name}이(가) 「${boss.ultimate.name}」을(를) 준비한다… 다음 공격은 평소의 ${times}배! 방벽으로 막아야 한다!`
+          : `⚠️ ${boss.name}이(가) 힘을 모으고 있다… 다음 공격은 평소의 ${times}배다!`);
         renderBattleBuffs();
         scheduleBattle(startPlayerTurn, BOSS_CHARGE_MS);
         return;
@@ -6487,12 +6791,13 @@
       const ultimate = battle.charged;
       battle.charged = false;
 
-      const [min, max] = battle.boss.attack;
+      const [min, max] = boss.attack;
       const base = Math.floor(Math.random() * (max - min + 1)) + min;
-      const damage = ultimate ? base * BOSS_ULTIMATE_MULTIPLIER : base;
-      const sprite = (ultimate && battle.boss.ultimateSprite) || battle.boss.attackSprite;
+      const damage = ultimate ? base * times : base;
+      const pattern = ultimate ? (boss.ultimate || null) : pickBossPattern(boss);
+      const sprite = pattern ? pattern.sprite : ((ultimate && boss.ultimateSprite) || boss.attackSprite);
 
-      if (sprite) playBossWave(sprite, ultimate);
+      if (sprite) playBossWave(sprite, ultimate, pattern);
       else playEffect('blast', '🌀', 'partner');
 
       const land = () => {
@@ -6522,9 +6827,10 @@
         battle.hp = Math.max(0, battle.hp - dealt);
         updateBattleBars();
         renderBattleBuffs();
+        const move = pattern ? `「${pattern.name}」` : '';
         battleLog(ultimate
-          ? `💥 ${battle.boss.name}의 필살 공격! ${battle.partner.name}이(가) ${dealt}의 피해를 입었다!`
-          : `🌀 ${battle.boss.name}의 공격! ${battle.partner.name}이(가) ${dealt}의 피해를 입었다.`);
+          ? `💥 ${boss.name}의 필살 공격${move ? ' ' + move : ''}! ${battle.partner.name}이(가) ${dealt}의 피해를 입었다!`
+          : `🌀 ${boss.name}의 ${move || '공격'}! ${battle.partner.name}이(가) ${dealt}의 피해를 입었다.`);
         if (guarded > 0) battleLog(`🛡️ 약분의 방벽이 피해를 ${guarded}% 줄였다!`);
 
         if (battle.hp <= 0) {
@@ -6573,6 +6879,7 @@
 
       const problem = generateFractionProblem();
       battle.answer = problem.answer;
+      battle.spec = problem.spec;
       battle.quizStart = Date.now();
       document.getElementById('battleProblem').innerHTML = problem.problemHtml;
       ['battleWholeInput', 'battleNumeratorInput', 'battleDenominatorInput'].forEach(id => {
@@ -6601,6 +6908,7 @@
 
       // 보조 기술은 공격이 아니라 몸을 다스리는 기술이라, 빨리 풀어도 효과가 더 커지지 않는다.
       if (skill.support) {
+        recordRaidTurn(skill.id, user, seconds, 0);
         document.getElementById('battleQuiz').style.display = 'none';
         battleLog(correct
           ? '✅ 정답! 기운이 고르게 모였다.'
@@ -6651,6 +6959,7 @@
 
       if (hit) {
         const damage = Math.max(1, Math.round((skill.power + battle.atkBonus) * multiplier * (0.9 + Math.random() * 0.2)));
+        recordRaidTurn(skill.id, user, seconds, damage);
         const land = () => {
           if (melee) playImpactBurst();
           else if (meteor) { playMeteorBlast(); flashStage(); }
@@ -6673,6 +6982,7 @@
         return;
       }
 
+      recordRaidTurn(skill.id, user, seconds, 0);
       const miss = () => {
         if (!skill.sprite && !melee && !volley && !slash && !meteor) playEffect('miss', '💨');
         const bossFigure = document.getElementById('battleBossFigure');
@@ -6717,7 +7027,8 @@
       if (!battle) { wrap.innerHTML = ''; return; }
 
       const chips = [];
-      if (battle.charged) chips.push('<span class="battle-buff is-danger">⚠️ 보스가 힘을 모으는 중 · 다음 공격 3배</span>');
+      if (battle.charged) chips.push(`<span class="battle-buff is-danger">⚠️ 보스가 힘을 모으는 중 · 다음 공격 ${ultimateMultiplier(battle.boss)}배</span>`);
+      if (battle.raid) chips.push(`<span class="battle-buff is-focus">🌍 이번 전투에서 준 피해 ${battle.raid.dealt.toLocaleString()}</span>`);
       if (battle.guard > 0) chips.push(`<span class="battle-buff is-guard">🛡️ 피해 경감 ${battle.guard}%</span>`);
       if (battle.evadeTurns > 0) chips.push(`<span class="battle-buff is-evade">💨 회피율 ${battle.evadePercent}% · ${battle.evadeTurns}턴</span>`);
       if (battle.focusTurns > 0) chips.push(`<span class="battle-buff is-focus">🎯 명중률 +${battle.focusPercent}% · ${battle.focusTurns}턴</span>`);
@@ -6757,6 +7068,19 @@
     function finishBattle(won) {
       if (!battle) return;
       const boss = battle.boss;
+      if (battle.raid) {
+        const raid = battle.raid;
+        battleLog(won
+          ? `🌍 ${boss.name}의 남은 체력을 모두 깎았다! 마지막 일격인지 서버에서 확인하는 중…`
+          : `💀 ${battle.partner.name}이(가) 쓰러졌다… 이번 전투에서 ${raid.dealt.toLocaleString()}의 피해를 주었다.`);
+        submitRaidReport(raid);
+        battle = null;
+        setTimeout(() => {
+          resetBattleVisuals();
+          renderBossTab();
+        }, 1600);
+        return;
+      }
       if (won) {
         const state = bossState();
         const first = !state.cleared.includes(boss.id);
@@ -6779,11 +7103,311 @@
     }
 
     function retreatFromBoss() {
+      // 월드 토벌전에서 물러나도 그때까지 준 피해는 모두의 기록에 더한다.
+      if (battle && battle.raid) submitRaidReport(battle.raid);
       battle = null;
       resetBattleVisuals();
       document.getElementById('battleQuiz').style.display = 'none';
       renderBossTab();
       showNotification('보스전에서 물러났습니다.');
+    }
+
+    // ===================== 월드 토벌전 =====================
+    function raidOpen() {
+      return !!gameState.raidTestEnabled;
+    }
+
+    function raidState() {
+      if (!gameState.raid || typeof gameState.raid !== 'object') gameState.raid = { pending: null };
+      return gameState.raid;
+    }
+
+    let raidStatus = null;        // { at, data } 서버에서 받은 보스 상태
+    let raidBoards = {};          // 시즌 → { at, data }
+    let raidBoardOpen = false;
+    let raidBoardSeason = 0;      // 0 이면 지금 시즌
+    let raidStarting = false;
+    let raidSending = null;
+
+    async function fetchRaid(query) {
+      const response = await fetchWithTimeout(`${RANKING_URL}?${query}`, {}, 12000);
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.reason || '응답 오류');
+      return data;
+    }
+
+    async function refreshRaidStatus(force) {
+      if (!raidOpen() || !rankingEnabled()) return;
+      if (!force && raidStatus && Date.now() - raidStatus.at < 20000) return;
+      raidStatus = Object.assign({}, raidStatus, { at: Date.now() });   // 받는 동안 다시 부르지 않게
+      try {
+        const data = await fetchRaid('raid=status');
+        // 서버에 아직 새 코드를 배포하지 않았으면 토벌전 대신 코인 직장 순위가 온다.
+        if (!data.season) throw new Error('랭킹 서버가 아직 월드 토벌전을 지원하지 않음');
+        raidStatus = { at: Date.now(), data };
+        checkRaidGuardian(raidStatus.data.history);
+      } catch (error) {
+        console.warn('월드 토벌전 상태 불러오기 실패:', error);
+        raidStatus.failed = true;
+      }
+      if (!battle) renderRaidCard();
+    }
+
+    // 지난 토벌 기록에 내 닉네임이 마지막 일격으로 남아 있으면 칭호를 준다.
+    // (마지막 일격 응답을 받지 못하고 창을 닫았어도 다음에 받는다)
+    function checkRaidGuardian(history) {
+      const info = rankingInfo();
+      const me = info && info.nickname;
+      if (!me || !Array.isArray(history)) return;
+      const mine = history.some(h => String(h.killer).toLowerCase() === me.toLowerCase());
+      if (mine && !gameState.raidGuardian) {
+        gameState.raidGuardian = true;
+        saveData();
+      }
+    }
+
+    async function loadRaidBoard(season) {
+      const key = season || 0;
+      const cached = raidBoards[key];
+      if (cached && Date.now() - cached.at < 30000) return cached.data;
+      const data = await fetchRaid(`raid=board&season=${key}&limit=50`);
+      raidBoards[key] = { at: Date.now(), data };
+      return data;
+    }
+
+    function raidMoveList(boss) {
+      return `<ul class="raid-moves">
+          ${boss.attacks.map(a => `<li>${a.name}</li>`).join('')}
+          <li class="is-ultimate">필살: ${boss.ultimate.name} (평소의 ${boss.ultimateMultiplier}배 · 방벽 필수!)</li>
+        </ul>`;
+    }
+
+    function raidStoryHtml(boss) {
+      return `<div class="raid-story">
+          ${boss.story.map(p => `<p>${p}</p>`).join('')}
+          <p class="raid-quote">"${boss.quote}"</p>
+        </div>`;
+    }
+
+    function renderRaidCard() {
+      const card = document.getElementById('raidEntry');
+      if (!card) return;
+      const boss = RAID_BOSS;
+
+      // 아직 열리지 않았으면 실루엣과 소개만 보여 준다.
+      if (!raidOpen()) {
+        card.innerHTML = `
+          <div class="raid-art is-silhouette">
+            <img src="${boss.silhouette}" alt="정체를 알 수 없는 그림자">
+            <div class="raid-soon">🔒 추후 업데이트 예정</div>
+          </div>
+          <div class="raid-info">
+            <p class="raid-kicker">🌍 월드 토벌전 · 파이널 보스 · 🔒 추후 업데이트 예정</p>
+            <h4>${boss.event}</h4>
+            <p><strong>${boss.title}, ${boss.name} (Discord)</strong></p>
+            ${raidStoryHtml(boss)}
+          </div>`;
+        return;
+      }
+
+      const info = rankingInfo();
+      const registered = !!(info && info.nickname);
+      const status = raidStatus && raidStatus.data;
+      let statusHtml;
+      if (status) {
+        const left = status.remaining;
+        statusHtml = `<p><strong>시즌 ${status.season}</strong> · 남은 체력</p>
+          <div class="raid-hp"><div class="raid-hp-fill" style="width:${left / status.maxHp * 100}%"></div></div>
+          <p class="raid-hp-text">${left.toLocaleString()} / ${status.maxHp.toLocaleString()} (모두가 준 피해 ${status.damage.toLocaleString()})</p>`;
+      } else if (raidStatus && raidStatus.failed) {
+        statusHtml = '<p>지금은 서버에서 디스코드의 상태를 받아 오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>';
+      } else {
+        statusHtml = '<p>디스코드의 상태를 살피는 중…</p>';
+      }
+      const pending = raidState().pending;
+
+      card.innerHTML = `
+        <div class="raid-art">
+          <img src="${boss.image}" alt="${boss.name}" class="is-zoomable" title="눌러서 크게 보기">
+        </div>
+        <div class="raid-info">
+          <p class="raid-kicker">🌍 월드 토벌전 · 파이널 보스 · 모두가 함께 싸운다</p>
+          <h4>${boss.event}</h4>
+          <p><strong>${boss.title}, ${boss.name} (Discord)</strong></p>
+          <div class="raid-panel">
+            ${statusHtml}
+            <p>모든 도전자가 준 피해가 하나로 합쳐집니다. 피해량으로 순위가 매겨지고,
+              디스코드를 쓰러뜨리는 <strong>마지막 일격</strong>을 가한 도전자는 🌍 「수학의 세계를 지킨 자」 칭호를 얻습니다.</p>
+            ${pending ? '<p>📨 지난 전투 기록을 서버에 보내는 중이에요.</p>' : ''}
+            <div class="raid-actions">
+              <button class="btn btn-primary" id="raidStartBtn" ${registered && !raidStarting ? '' : 'disabled'}>${raidStarting ? '디스코드에게 다가가는 중…' : '⚔️ 도전하기'}</button>
+              <button class="btn btn-success" id="raidBoardBtn">📜 피해량 랭킹</button>
+            </div>
+            ${registered ? '' : '<p>※ 월드 토벌전은 랭킹 닉네임을 등록해야 참여할 수 있어요. 코인 직장에서 25문제를 풀면 등록할 수 있습니다.</p>'}
+          </div>
+          <p><strong>디스코드의 공격</strong></p>
+          ${raidMoveList(boss)}
+          <details style="margin-top:8px;"><summary>디스코드 이야기</summary>${raidStoryHtml(boss)}</details>
+          <div class="raid-board" id="raidBoard" style="display:${raidBoardOpen ? 'block' : 'none'};"></div>
+        </div>`;
+
+      card.querySelector('.raid-art img').addEventListener('click', () => showImageModal(boss.image, `${boss.name} (${boss.title})`));
+      const startBtn = card.querySelector('#raidStartBtn');
+      if (startBtn) startBtn.addEventListener('click', () => startBossBattle(boss.id));
+      card.querySelector('#raidBoardBtn').addEventListener('click', () => {
+        raidBoardOpen = !raidBoardOpen;
+        renderRaidCard();
+      });
+      if (raidBoardOpen) renderRaidBoard();
+    }
+
+    async function renderRaidBoard() {
+      const box = document.getElementById('raidBoard');
+      if (!box) return;
+      const status = raidStatus && raidStatus.data;
+      const current = status ? status.season : 0;
+      const season = raidBoardSeason || current;
+      const seasons = [];
+      if (current) seasons.push(current);
+      ((status && status.history) || []).forEach(h => { if (!seasons.includes(h.season)) seasons.push(h.season); });
+
+      const options = seasons.map(n => `<option value="${n}" ${n === season ? 'selected' : ''}>시즌 ${n}${n === current ? ' (지금)' : ' (토벌 완료)'}</option>`).join('');
+      box.innerHTML = `<div class="raid-board-head"><strong>📜 디스코드 피해량 랭킹</strong>
+          ${seasons.length > 1 ? `<select id="raidSeasonSelect">${options}</select>` : ''}</div>
+        <div id="raidBoardList"><div class="rank-empty">순위를 불러오는 중…</div></div>`;
+      const select = box.querySelector('#raidSeasonSelect');
+      if (select) select.addEventListener('change', () => {
+        raidBoardSeason = Number(select.value) === current ? 0 : Number(select.value);
+        renderRaidBoard();
+      });
+
+      try {
+        const data = await loadRaidBoard(raidBoardSeason);
+        const listBox = document.getElementById('raidBoardList');
+        if (!listBox) return;
+        const info = rankingInfo();
+        const me = info && info.nickname;
+        const head = data.season === data.current
+          ? ''
+          : `<p class="boss-hint">시즌 ${data.season} 토벌 완료 · 마지막 일격: 🌍 ${escapeHtml(data.killer || '-')}</p>`;
+        if (!data.list.length) {
+          listBox.innerHTML = head + '<div class="rank-empty">아직 디스코드에게 피해를 준 도전자가 없어요.<br>첫 번째 주인공이 되어 보세요!</div>';
+          return;
+        }
+        listBox.innerHTML = head + data.list.map(row => {
+          const medal = { 1: '🥇', 2: '🥈', 3: '🥉' }[row.rank] || row.rank;
+          const isMe = me && row.nickname.toLowerCase() === me.toLowerCase();
+          return `<div class="rank-row ${row.rank <= 3 ? `top-${row.rank}` : ''} ${isMe ? 'is-me' : ''}">
+              <div class="rank-num">${medal}</div>
+              <div class="rank-name">${row.guardian ? '🌍 ' : ''}${escapeHtml(row.nickname)}${isMe ? '<small>나</small>' : ''}</div>
+              <div class="rank-value">${row.damage.toLocaleString()}<span class="rank-sub">${row.battles}번 도전</span></div>
+            </div>`;
+        }).join('');
+      } catch (error) {
+        console.warn('월드 토벌전 랭킹 불러오기 실패:', error);
+        const listBox = document.getElementById('raidBoardList');
+        if (listBox) listBox.innerHTML = '<div class="rank-empty">순위를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</div>';
+      }
+    }
+
+    async function startRaidBattle(partnerData) {
+      if (!raidOpen()) return showNotification('월드 토벌전은 추후 업데이트될 예정입니다.');
+      const info = rankingInfo();
+      if (!info || !info.nickname) {
+        return showNotification('월드 토벌전은 랭킹 닉네임을 등록한 뒤 참여할 수 있어요. 코인 직장에서 25문제를 풀어 보세요!');
+      }
+      if (raidStarting || battle) return;
+      raidStarting = true;
+      renderRaidCard();
+      try {
+        await flushRaidReport();   // 지난번에 못 보낸 기록부터 보낸다
+        // 서버가 전투 시작 시각을 재 두어야 기록을 받아 준다. 그래서 응답을 받은 뒤에 싸움을 연다.
+        const result = await rankingCall({ action: 'raidStart', nickname: info.nickname, token: info.token });
+        if (!result.ok) {
+          showNotification(result.reason === 'unknown' || result.reason === 'forbidden'
+            ? '랭킹 닉네임 정보가 서버와 맞지 않아요. 코인 직장에서 25문제를 풀어 다시 등록해 주세요.'
+            : '지금은 디스코드에게 다가갈 수 없어요. 잠시 뒤 다시 도전해 주세요.');
+          return;
+        }
+        raidStarting = false;
+        beginBattle(RAID_BOSS, partnerData, {
+          bossHp: result.remaining,
+          bossMaxHp: result.maxHp,
+          raid: { session: result.session, season: result.season, turns: [], dealt: 0 }
+        });
+      } catch (error) {
+        console.warn('월드 토벌전 시작 실패:', error);
+        showNotification('월드 토벌전 서버와 연결하지 못했어요. 잠시 뒤 다시 도전해 주세요.');
+      } finally {
+        raidStarting = false;
+        if (!battle) renderRaidCard();
+      }
+    }
+
+    // 한 번 공격(또는 보조 기술)할 때마다 어떤 문제에 어떤 답을 냈는지 적는다.
+    // 서버는 이 기록을 다시 채점해 인정할 피해를 정한다.
+    function recordRaidTurn(skillId, given, seconds, damage) {
+      if (!battle || !battle.raid || !battle.spec) return;
+      const ok = v => Number.isInteger(v) && v >= 0 && v <= 100000;
+      const n = ok(given.numerator) ? given.numerator : 0;
+      const d = ok(given.denominator) && given.denominator > 0 ? given.denominator : 1;
+      battle.raid.turns.push({ s: battle.spec, n, d, k: skillId, ms: Math.round(seconds * 1000), g: damage });
+      battle.raid.dealt += damage;
+    }
+
+    function submitRaidReport(raid) {
+      const info = rankingInfo();
+      if (!info || !info.nickname || !raid.turns.length) return;   // 한 번도 공격하지 않았으면 보낼 것이 없다
+      raidState().pending = {
+        action: 'raidEnd', nickname: info.nickname, token: info.token, session: raid.session,
+        atk: battle ? battle.atkLevel : 0, turns: raid.turns, dealt: raid.dealt
+      };
+      saveData();
+      flushRaidReport();
+    }
+
+    // 쌓여 있는 전투 기록을 보낸다. 서버가 바쁘거나 연결이 끊기면 나중에 다시 보낸다.
+    function flushRaidReport() {
+      const state = raidState();
+      const report = state.pending;
+      if (!report || !rankingEnabled()) return Promise.resolve();
+      if (raidSending) return raidSending;
+      raidSending = (async () => {
+        let retry = false;
+        try {
+          const result = await rankingCall(report);
+          if (result.reason === 'busy') { retry = true; return; }
+          if (raidState().pending === report) raidState().pending = null;
+          if (result.ok) {
+            raidStatus = null;
+            raidBoards = {};
+            if (result.killed) {
+              gameState.raidGuardian = true;
+              showNotification('🌍 마지막 일격! 디스코드를 쓰러뜨려 수학의 세계를 지켜냈습니다! 칭호 「수학의 세계를 지킨 자」 획득!');
+            } else {
+              showNotification(`🌍 디스코드에게 준 피해 ${result.applied.toLocaleString()}이(가) 모두의 기록에 더해졌어요! (이번 시즌 내 피해 ${result.myTotal.toLocaleString()})`);
+            }
+          } else if (result.reason === 'too_fast') {
+            showNotification('이번 전투 기록은 걸린 시간이 맞지 않아 반영되지 않았어요.');
+          } else if (result.reason === 'expired') {
+            showNotification('이번 전투 기록은 이미 반영되었거나, 보낼 수 있는 시간이 지났어요.');
+          } else {
+            showNotification('이번 전투 기록은 서버에서 받아들여지지 않았어요.');
+          }
+          saveData();
+        } catch (error) {
+          console.warn('월드 토벌전 기록 보내기 실패:', error);
+          retry = true;
+        } finally {
+          raidSending = null;
+          if (retry) setTimeout(flushRaidReport, 15000);
+          if (!battle) {
+            if (raidOpen() && !raidStatus) refreshRaidStatus(true);
+            else renderRaidCard();
+          }
+        }
+      })();
+      return raidSending;
     }
 
     function toggleInfiniteCoins() {
@@ -6996,6 +7620,9 @@
         resetBattleVisuals();
       }
       gameState.boss = { partner: null, skills: [], cleared: [], hpLevels: {}, atkLevels: {}, supportLevels: {} };
+      // 월드 토벌전 기록은 서버에 남는다. 이 기기의 보내지 못한 기록과 칭호만 비운다.
+      gameState.raid = null;
+      gameState.raidGuardian = false;
       
       // Restore admin settings
       gameState.isAdminLoggedIn = keepAdminLogin;
@@ -7132,7 +7759,7 @@
     const cheatButtons = {
       cheatInfiniteCoinsBtn: toggleInfiniteCoins,
       cheatShowAnswersBtn: toggleShowAnswers,
-      cheatBossTestBtn: toggleBossTest,
+      cheatRaidTestBtn: toggleRaidTest,
       cheatAddCoinsBtn: () => addCoins(1000),
       cheatAddMonsterBtn: addRandomMonster,
       cheatUnlockAllBtn: unlockAllMonsters
@@ -7161,6 +7788,12 @@
     bgm.init();
     bgm.refresh();
     updateBossTabVisibility();
+    if (saveWasRestored) {
+      saveData();
+      setTimeout(() => showNotification('⚠️ 저장 데이터가 게임 밖에서 바뀐 흔적이 있어 코인·보스전·도감 기록을 마지막으로 정상 저장된 상태로 되돌렸어요.'), 800);
+    }
+    // 지난번에 보내지 못한 월드 토벌전 기록이 있으면 보낸다.
+    setTimeout(() => { if (raidState().pending) flushRaidReport(); }, 2500);
   })();
   </script>
 </body>

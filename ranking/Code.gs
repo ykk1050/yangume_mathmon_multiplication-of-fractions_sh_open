@@ -26,6 +26,15 @@
  *
  * 선생님은 시트에서 부적절한 닉네임이나 의심스러운 기록의 줄을 지우면 된다.
  * 그 학생은 다음 25문제 때 닉네임을 다시 정하게 된다.
+ *
+ * 월드 토벌전 (디스코드)
+ *  - 모든 학생의 피해를 더해 한 보스를 함께 쓰러뜨린다. '월드보스' 시트의 마지막 줄이 지금 보스다.
+ *    체력을 바꾸고 싶으면 그 줄의 '최대 체력' 칸을 고치면 된다. (다음 보스도 그 체력으로 나온다)
+ *  - 보스가 쓰러지면 바로 다음 시즌 보스가 나오고, 지난 시즌 피해량 순위는 그대로 남는다.
+ *  - 게임이 보낸 '피해량'은 그대로 믿지 않는다. 전투마다 어떤 문제에 어떤 답을 냈는지, 어떤 기술을
+ *    썼는지를 받아 서버가 다시 채점하고, 그 답과 기술로 낼 수 있는 최대 피해까지만 인정한다.
+ *  - 전투 시작 시각을 서버가 재 두므로, 실제로 걸린 시간 안에 할 수 없는 횟수의 공격은 받지 않는다.
+ *  - 이상하지만 불가능하지는 않은 기록은 받되 '확인 필요' 칸에 표시만 한다.
  */
 
 const SHEET_NAME = '코인직장';
@@ -41,6 +50,25 @@ const FLAG_SECONDS_PER_CORRECT = 2.0; // 이보다 빠르면 '확인 필요'에 
 const FLAG_MAX_CORRECT = 3;          // 25문제 중 정답이 이 수 이하이면 '확인 필요'에 표시만 한다
 const CACHE_SECONDS = 60;
 
+// ---------- 월드 토벌전 ----------
+const RAID_STATE_SHEET = '월드보스';
+const RAID_STATE_HEADERS = ['시즌', '최대 체력', '누적 피해', '상태', '시작', '토벌 시각', '마지막 일격'];
+const RS = { season: 1, maxHp: 2, damage: 3, status: 4, started: 5, killedAt: 6, killer: 7 };
+const RAID_PLAYER_SHEET = '월드토벌전';
+const RAID_PLAYER_HEADERS = ['시즌', '닉네임', '누적 피해', '전투 수', '최고 한 판', '마지막 갱신', '확인 필요', '토큰'];
+const RP = { season: 1, nickname: 2, damage: 3, battles: 4, best: 5, updated: 6, flag: 7, token: 8 };
+const RAID_BASE_HP = 3000000;           // 첫 시즌 체력. 시트에서 바꿀 수 있다.
+// 게임의 기술 위력 (보조 기술은 피해가 없다). 게임의 BATTLE_SKILLS 와 같아야 한다.
+const RAID_SKILL_POWER = {
+  reduce_slash: 18, numerator_blast: 27, denominator_press: 20, common_beam: 24,
+  improper_storm: 34, meteor_strike: 40, reduce_guard: 0, afterimage_step: 0, denominator_scope: 0
+};
+const RAID_ATK_STEP = 2;          // 공격 단련 한 단계에 오르는 위력
+const RAID_MIN_TURN_MS = 2300;    // 내 공격과 보스 공격 연출에 드는 시간 (게임에서 이보다 짧을 수 없다)
+const RAID_MIN_ANSWER_MS = 800;   // 답을 쳐 넣는 데 드는 가장 짧은 시간
+const RAID_MAX_TURNS = 400;
+const RAID_SESSION_SECONDS = 21600;   // 전투 기록은 6시간 안에 보내야 한다
+
 // ---------- 시트 ----------
 
 function setup() {
@@ -50,6 +78,7 @@ function setup() {
   sheet.hideColumns(COL.token, 2);       // 토큰, 현재 연속
   sheet.hideColumns(COL.lastGraded, 1);  // 마지막 채점
   sheet.setFrozenRows(1);
+  setupRaid();
 }
 
 function getSheet() {
@@ -186,13 +215,15 @@ function doPost(e) {
   }
 
   if (data.action === 'check') return json(checkName(data));
-  if (data.action !== 'register' && data.action !== 'grade') return json({ ok: false, reason: 'unknown_action' });
+  if (data.action === 'raidStart') return json(raidStart(data));
+  const writes = { register: register, grade: grade, raidEnd: raidEnd };
+  if (!writes[data.action]) return json({ ok: false, reason: 'unknown_action' });
 
   // 시트에 쓰는 요청은 두 학생이 같은 순간에 쓰면 서로 덮어쓰므로 한 번에 하나씩 처리한다.
   const lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) return json({ ok: false, reason: 'busy' });
   try {
-    return json(data.action === 'register' ? register(data) : grade(data));
+    return json(writes[data.action](data));
   } finally {
     lock.releaseLock();
   }
@@ -297,6 +328,14 @@ function addFlag(sheet, row, kind, detail) {
 
 // 랭킹 읽기: ?by=attempts | correct | streak | accuracy &limit=20
 function doGet(e) {
+  const raid = e && e.parameter && e.parameter.raid;
+  if (raid === 'status') return cachedJson('raid_status', 15, raidStatus);
+  if (raid === 'board') {
+    const season = Number(e.parameter.season) || 0;
+    const limit = Math.min(100, Number(e.parameter.limit) || 30);
+    return cachedJson(`raid_board_${season}_${limit}`, 30, () => raidBoard(season, limit));
+  }
+
   const by = (e && e.parameter && e.parameter.by) || 'attempts';
   const limit = Math.min(100, Number(e && e.parameter && e.parameter.limit) || 20);
   const key = `top_${by}_${limit}`;
@@ -331,4 +370,225 @@ function doGet(e) {
 
 function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function cachedJson(key, seconds, make) {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get(key);
+  if (cached) return ContentService.createTextOutput(cached).setMimeType(ContentService.MimeType.JSON);
+  const body = JSON.stringify(make());
+  cache.put(key, body, seconds);
+  return ContentService.createTextOutput(body).setMimeType(ContentService.MimeType.JSON);
+}
+
+// ===================== 월드 토벌전 =====================
+
+function raidSheet(name, headers) {
+  const book = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = book.getSheetByName(name) || book.insertSheet(name);
+  const current = sheet.getRange(1, 1, 1, headers.length).getValues()[0];
+  if (current.join('|') !== headers.join('|')) sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  return sheet;
+}
+
+function setupRaid() {
+  const players = raidSheet(RAID_PLAYER_SHEET, RAID_PLAYER_HEADERS);
+  players.hideColumns(RP.token, 1);
+  players.setFrozenRows(1);
+  raidSheet(RAID_STATE_SHEET, RAID_STATE_HEADERS).setFrozenRows(1);
+  currentRaid();
+}
+
+// 지금 보스 (마지막 줄). 없으면 1시즌을 연다.
+function currentRaid() {
+  const sheet = raidSheet(RAID_STATE_SHEET, RAID_STATE_HEADERS);
+  let last = sheet.getLastRow();
+  if (last < 2) {
+    sheet.appendRow([1, RAID_BASE_HP, 0, '진행 중', new Date(), '', '']);
+    last = 2;
+  }
+  const r = sheet.getRange(last, 1, 1, RAID_STATE_HEADERS.length).getValues()[0];
+  return {
+    sheet: sheet, row: last,
+    season: Number(r[RS.season - 1]) || 1,
+    maxHp: Math.max(1, Number(r[RS.maxHp - 1]) || RAID_BASE_HP),
+    damage: Number(r[RS.damage - 1]) || 0
+  };
+}
+
+function raidStateRows(now) {
+  const last = now.sheet.getLastRow();
+  return last < 2 ? [] : now.sheet.getRange(2, 1, last - 1, RAID_STATE_HEADERS.length).getValues();
+}
+
+function raidStatus() {
+  const now = currentRaid();
+  const history = raidStateRows(now)
+    .filter(r => r[RS.killer - 1])
+    .map(r => ({
+      season: Number(r[RS.season - 1]),
+      killer: String(r[RS.killer - 1]),
+      killedAt: r[RS.killedAt - 1] ? new Date(r[RS.killedAt - 1]).getTime() : 0
+    }))
+    .reverse()
+    .slice(0, 20);
+  return {
+    ok: true, season: now.season, maxHp: now.maxHp, damage: Math.min(now.damage, now.maxHp),
+    remaining: Math.max(0, now.maxHp - now.damage), history: history
+  };
+}
+
+function raidBoard(season, limit) {
+  const now = currentRaid();
+  const want = season || now.season;
+  let killer = '';
+  raidStateRows(now).forEach(r => { if (Number(r[RS.season - 1]) === want) killer = String(r[RS.killer - 1] || ''); });
+  const sheet = raidSheet(RAID_PLAYER_SHEET, RAID_PLAYER_HEADERS);
+  const last = sheet.getLastRow();
+  const rows = last < 2 ? [] : sheet.getRange(2, 1, last - 1, RP.best).getValues();
+  const list = rows
+    .filter(r => Number(r[RP.season - 1]) === want && r[RP.nickname - 1] && Number(r[RP.damage - 1]) > 0)
+    .map(r => ({ nickname: String(r[RP.nickname - 1]), damage: Number(r[RP.damage - 1]), battles: Number(r[RP.battles - 1]) || 0 }))
+    .sort((a, b) => b.damage - a.damage)
+    .slice(0, limit)
+    .map((r, i) => Object.assign({ rank: i + 1, guardian: !!killer && sameName(killer, r.nickname) }, r));
+  return { ok: true, season: want, current: now.season, killer: killer, list: list };
+}
+
+// 전투를 시작할 때 부른다. 서버가 시작 시각을 재 둔다. (시트에 쓰지 않으므로 잠그지 않는다)
+function raidStart(data) {
+  const owner = ownedRow(data);
+  if (owner.error) return owner.error;
+  const now = currentRaid();
+  const session = Utilities.getUuid();
+  CacheService.getScriptCache().put(`raid_${session}`, JSON.stringify({
+    nickname: String(owner.stored[COL.nickname - 1]), token: String(data.token), startedAt: Date.now()
+  }), RAID_SESSION_SECONDS);
+  return { ok: true, session: session, season: now.season, maxHp: now.maxHp, remaining: Math.max(0, now.maxHp - now.damage) };
+}
+
+// 공격 단련 단계의 상한. 코인 직장에서 서버가 채점한 정답 수로 벌 수 있는 코인을 넉넉하게 잡는다.
+// (보스 보상·포획 보상까지 생각해 크게 더해 둔다. 정상적으로 키운 학생은 걸리지 않는다.)
+function raidMaxAtkLevel(correct) {
+  const budget = correct * 70 + 60000;
+  let level = 0;
+  while (200 * (level + 1) + 40 * (level + 1) * level <= budget) level++;
+  return level;
+}
+
+// 전투 기록을 다시 채점해 인정할 피해를 센다. 형식이 맞지 않으면 null.
+function raidCheckTurns(turns, atk) {
+  if (!Array.isArray(turns) || turns.length > RAID_MAX_TURNS) return null;
+  let total = 0;
+  let over = 0;
+  let answerMs = 0;
+  for (let i = 0; i < turns.length; i++) {
+    const t = turns[i] || {};
+    const n = Number(t.n), d = Number(t.d), g = Number(t.g) || 0, ms = Number(t.ms);
+    if (!specOk(t.s) || !isInt(n, 0, 100000) || !isInt(d, 1, 100000)) return null;
+    if (!Object.prototype.hasOwnProperty.call(RAID_SKILL_POWER, t.k)) return null;
+    if (!isFinite(ms) || ms < 0 || g < 0) return null;
+    const answer = specAnswer(t.s);
+    const given = reduce(n, d);
+    const correct = given.n === answer.n && given.d === answer.d;
+    // 게임과 같은 규칙: 정답이면 10초 안 1.5배, 20초 안 1.25배, 오답이면 절반. 흔들림은 최대 1.1배.
+    const mult = correct ? (ms <= 10000 ? 1.5 : ms <= 20000 ? 1.25 : 1) : 0.5;
+    const power = RAID_SKILL_POWER[t.k];
+    const cap = power ? Math.max(1, Math.round((power + atk) * mult * 1.1)) : 0;
+    if (g > cap) over++;
+    total += Math.min(Math.round(g), cap);
+    answerMs += Math.max(RAID_MIN_ANSWER_MS, Math.min(ms, 600000));
+  }
+  return {
+    damage: total, over: over,
+    minMs: answerMs + turns.length * RAID_MIN_TURN_MS,
+    avgMs: turns.length ? answerMs / turns.length : 0
+  };
+}
+
+function raidEnd(data) {
+  const cache = CacheService.getScriptCache();
+  const raw = cache.get(`raid_${data.session}`);
+  if (!raw) return { ok: false, reason: 'expired' };
+  const session = JSON.parse(raw);
+  if (String(session.token) !== String(data.token)) return { ok: false, reason: 'forbidden' };
+  const owner = ownedRow({ nickname: session.nickname, token: data.token });
+  if (owner.error) return owner.error;
+
+  const correct = Number(owner.stored[COL.correct - 1]) || 0;
+  const claimedAtk = Math.max(0, Math.floor(Number(data.atk) || 0));
+  const atkCap = raidMaxAtkLevel(correct);
+  const result = raidCheckTurns(data.turns, Math.min(claimedAtk, atkCap) * RAID_ATK_STEP);
+  if (!result) {
+    cache.remove(`raid_${data.session}`);
+    return { ok: false, reason: 'rejected' };
+  }
+
+  // 실제로 흐른 시간 안에 할 수 없는 횟수의 공격은 받지 않는다. 실력과는 상관없는 기준이다.
+  const elapsed = Date.now() - Number(session.startedAt);
+  if (result.minMs > elapsed + 5000) {
+    cache.remove(`raid_${data.session}`);
+    return { ok: false, reason: 'too_fast' };
+  }
+  cache.remove(`raid_${data.session}`);   // 같은 전투를 두 번 보내도 한 번만 센다
+
+  const now = currentRaid();
+  const remaining = Math.max(0, now.maxHp - now.damage);
+  const applied = Math.min(result.damage, remaining);
+  const nickname = session.nickname;
+  const stamp = new Date();
+  let killed = false;
+  if (applied > 0) {
+    now.sheet.getRange(now.row, RS.damage).setValue(now.damage + applied);
+    if (applied >= remaining) {
+      // 마지막 일격. 이 보스는 토벌되고 바로 다음 시즌 보스가 나온다.
+      killed = true;
+      now.sheet.getRange(now.row, RS.status).setValue('토벌 완료');
+      now.sheet.getRange(now.row, RS.killedAt, 1, 2).setValues([[stamp, nickname]]);
+      now.sheet.appendRow([now.season + 1, now.maxHp, 0, '진행 중', stamp, '', '']);
+    }
+  }
+
+  // 내 줄 (시즌마다 따로 둔다)
+  const sheet = raidSheet(RAID_PLAYER_SHEET, RAID_PLAYER_HEADERS);
+  const last = sheet.getLastRow();
+  let row = 0;
+  if (last >= 2) {
+    const keys = sheet.getRange(2, 1, last - 1, 2).getValues();
+    for (let i = keys.length - 1; i >= 0; i--) {
+      if (Number(keys[i][0]) === now.season && sameName(keys[i][1], nickname)) { row = i + 2; break; }
+    }
+  }
+  let myTotal = applied;
+  if (row) {
+    const r = sheet.getRange(row, 1, 1, RP.best).getValues()[0];
+    myTotal = (Number(r[RP.damage - 1]) || 0) + applied;
+    sheet.getRange(row, RP.damage, 1, 4).setValues([[myTotal, (Number(r[RP.battles - 1]) || 0) + 1,
+      Math.max(Number(r[RP.best - 1]) || 0, applied), stamp]]);
+  } else {
+    sheet.appendRow([now.season, nickname, applied, 1, applied, stamp, '', String(data.token)]);
+    row = sheet.getLastRow();
+  }
+
+  // 이상하지만 불가능하지는 않은 기록은 받되, 선생님이 볼 수 있게 표시만 한다.
+  const when = Utilities.formatDate(stamp, Session.getScriptTimeZone(), 'MM/dd HH:mm');
+  if (claimedAtk > atkCap) raidFlag(sheet, row, '공격 단련이 너무 높음', `최근 ${when}, ${claimedAtk}단계를 ${atkCap}단계로 계산`);
+  if (result.over > 0) raidFlag(sheet, row, '피해가 너무 큼', `최근 ${when}, ${result.over}번 깎음`);
+  if (data.turns.length >= 5 && result.avgMs < 2500) raidFlag(sheet, row, '매우 빠름', `최근 ${when}, 한 문제 ${(result.avgMs / 1000).toFixed(1)}초`);
+
+  cache.removeAll(['raid_status']);
+  return {
+    ok: true, season: now.season, dealt: result.damage, applied: applied, myTotal: myTotal,
+    killed: killed, remaining: killed ? 0 : remaining - applied
+  };
+}
+
+function raidFlag(sheet, row, kind, detail) {
+  const cell = sheet.getRange(row, RP.flag);
+  const parts = String(cell.getValues()[0][0] || '').split(' / ').filter(Boolean);
+  const index = parts.findIndex(p => p.indexOf(kind) >= 0);
+  const count = index >= 0 ? (Number((parts[index].match(/(\d+)회/) || [])[1]) || 0) + 1 : 1;
+  const text = `⚠️ ${kind} ${count}회 (${detail})`;
+  if (index >= 0) parts[index] = text; else parts.push(text);
+  cell.setValue(parts.join(' / '));
 }

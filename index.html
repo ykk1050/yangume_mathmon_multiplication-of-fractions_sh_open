@@ -3,6 +3,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>수학몬 마스터 - Monster RPG</title>
+    <link rel="preload" href="images/bg_mathmon_tile.webp" as="image" type="image/webp">
   <style>
         body {
             box-sizing: border-box;
@@ -18,8 +19,8 @@
         }
 
         /* 맨 뒤 배경에 수학몬을 격자로 깐다. 주황 바탕 위에 또렷하게 놓인다.
-           40마리를 미리 한 장(약 115KB)으로 합쳐 두어 그림 한 번만 불러온다.
-           화면을 다 띄운 뒤에 불러오므로 첫 화면이 늦어지지 않는다. */
+           40마리를 미리 한 장(약 110KB)으로 합쳐 두어 그림 한 번만 불러온다.
+           머리말에서 미리 불러 두어 접속하자마자 깜빡임 없이 보인다. */
         body::before {
             content: '';
             position: fixed;
@@ -27,14 +28,8 @@
             z-index: -1;
             pointer-events: none;
             background-repeat: repeat;
-            background-size: 768px auto;   /* 한 칸 96px */
-            opacity: 0;
-            transition: opacity 1.2s ease;
-        }
-
-        body.bg-tiles-ready::before {
             background-image: url('images/bg_mathmon_tile.webp');
-            opacity: 1;
+            background-size: 768px auto;   /* 한 칸 96px */
         }
 
         @media (max-width: 768px) {
@@ -898,6 +893,8 @@
         .battle-figure.is-boss img { max-height: 180px; }
         .battle-figure.is-partner img { max-height: 140px; }
         .battle-figure img { max-width: 100%; object-fit: contain; }
+        /* 보스전에서 파트너는 왼쪽에 서서 오른쪽의 보스를 본다. 왼쪽을 보는 그림은 뒤집는다. */
+        .battle-figure.is-partner img.is-flipped { transform: scaleX(-1); }
 
         .battle-figure.is-hit {
             animation: battleHit 0.5s ease-in-out;
@@ -3113,7 +3110,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.121</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.122</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -5988,6 +5985,15 @@
       renderBossTab();
     }
 
+    // 왼쪽을 보고 있는 수학몬 그림. 보스전에서만 좌우를 뒤집어 보스(오른쪽)를 보게 한다.
+    const FACING_LEFT_ART = new Set([
+      'fraction_cat.webp', 'multiplication_dog.webp', 'pattern_hamster.webp', 'saving_pig.webp',
+      'multiple_cow.webp', 'volume_duck.webp', 'mixed_number_tiger.webp', 'lcm_lion.webp',
+      'perimeter_bear.webp', 'area_deer.webp', 'net_armadillo.webp', 'perpendicular_turtle.webp',
+      'percentage_pelican.webp', 'line_graph_wolf.webp', 'equation_unicorn.webp',
+      'common_denominator_pegasus.webp', 'ratio_basilisk.webp'
+    ]);
+
     function startBossBattle(bossId) {
       const state = bossState();
       if (!state.partner) return showNotification('함께 싸울 수학몬을 먼저 고르세요!');
@@ -6026,8 +6032,9 @@
       document.getElementById('battleBossName').textContent = `${boss.name} (${boss.title})`;
       document.getElementById('battleBossFigure').innerHTML = `<img src="${boss.image}" alt="${boss.name}">`;
       const art = partnerData.imageUrl || (findMonster(partnerData.name) || {}).imageUrl;
+      const flip = art && FACING_LEFT_ART.has(art.split('/').pop()) ? ' class="is-flipped"' : '';
       document.getElementById('battlePartnerFigure').innerHTML = art
-        ? `<img src="${art}" alt="${partnerData.name}">`
+        ? `<img src="${art}" alt="${partnerData.name}"${flip}>`
         : `<div style="font-size:3rem;">${partnerData.emoji}</div>`;
       document.getElementById('battlePartnerName').textContent = partnerData.name;
       document.getElementById('battleLog').innerHTML = '';
@@ -7138,20 +7145,6 @@
       purchaseItem, resetCapture, retreatFromBoss, setBgmVolume, showAdminLogin, showBallSelection,
       startBossBattle, startExploration, submitBattleAnswer, submitCaptureAnswer, switchTab,
       toggleBgm, toggleRareFinder, trainPartnerAtk, trainPartnerHp, upgradeSupportSkill
-    });
-
-    // 배경 수학몬 타일은 게임 화면을 다 띄운 뒤, 브라우저가 한가할 때 불러온다.
-    // 데이터 절약 모드에서는 불러오지 않는다.
-    function loadBackgroundTiles() {
-      const saveData = navigator.connection && navigator.connection.saveData;
-      if (saveData) return;
-      const img = new Image();
-      img.onload = () => document.body.classList.add('bg-tiles-ready');
-      img.src = 'images/bg_mathmon_tile.webp';
-    }
-    window.addEventListener('load', () => {
-      if ('requestIdleCallback' in window) requestIdleCallback(loadBackgroundTiles, { timeout: 3000 });
-      else setTimeout(loadBackgroundTiles, 500);
     });
 
     // Initialize

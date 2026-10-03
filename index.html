@@ -17,7 +17,7 @@
             overflow-x: hidden;
         }
 
-        /* 맨 뒤 배경에 수학몬을 격자로 흐리게 깐다.
+        /* 맨 뒤 배경에 수학몬을 격자로 깐다. 주황 바탕 위에 또렷하게 놓인다.
            40마리를 미리 한 장(약 115KB)으로 합쳐 두어 그림 한 번만 불러온다.
            화면을 다 띄운 뒤에 불러오므로 첫 화면이 늦어지지 않는다. */
         body::before {
@@ -34,7 +34,7 @@
 
         body.bg-tiles-ready::before {
             background-image: url('images/bg_mathmon_tile.webp');
-            opacity: 0.22;
+            opacity: 1;
         }
 
         @media (max-width: 768px) {
@@ -3113,7 +3113,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.120</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.121</footer>
   </div>
 
   <!-- Admin Login Modal -->

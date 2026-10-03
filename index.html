@@ -3271,7 +3271,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.125</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.126</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -7239,6 +7239,7 @@
           <p class="raid-kicker">🌍 월드 토벌전 · 파이널 보스 · 모두가 함께 싸운다</p>
           <h4>${boss.event}</h4>
           <p><strong>${boss.title}, ${boss.name} (Discord)</strong></p>
+          ${raidStoryHtml(boss)}
           <div class="raid-panel">
             ${statusHtml}
             <p>모든 도전자가 준 피해가 하나로 합쳐집니다. 피해량으로 순위가 매겨지고,
@@ -7252,7 +7253,6 @@
           </div>
           <p><strong>디스코드의 공격</strong></p>
           ${raidMoveList(boss)}
-          <details style="margin-top:8px;"><summary>디스코드 이야기</summary>${raidStoryHtml(boss)}</details>
           <div class="raid-board" id="raidBoard" style="display:${raidBoardOpen ? 'block' : 'none'};"></div>
         </div>`;
 

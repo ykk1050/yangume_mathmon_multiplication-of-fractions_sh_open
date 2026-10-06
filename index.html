@@ -2910,6 +2910,114 @@
             .battle-stage.is-raid .battle-figure.is-boss img { max-height: 260px; }
             .battle-stage.is-raid .battle-hp { width: 140px; }
         }
+
+        /* ---------- 숫자 키패드 ----------
+           휴대폰·태블릿에서 칸마다 기기 자판을 띄우지 않고 화면 키패드로 답을 넣는다.
+           넓은 화면: 입력칸과 제출 단추는 왼쪽, 키패드는 오른쪽 / 좁은 화면: 위에서 아래로 */
+        .fraction-input-container.has-keypad {
+            display: grid;
+            grid-template-columns: auto auto;
+            grid-template-areas: "inputs pad" "submit pad";
+            justify-content: center;
+            align-items: center;
+            column-gap: 28px;
+            row-gap: 14px;
+        }
+
+        .has-keypad > .fraction-inputs { grid-area: inputs; }
+        .has-keypad > .keypad { grid-area: pad; }
+        .has-keypad > .btn { grid-area: submit; justify-self: center; margin: 0; }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            gap: 8px;
+            padding: 10px;
+            border-radius: 14px;
+            background: #2d3748;
+            box-shadow: 0 6px 18px rgba(26, 32, 44, 0.25);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .keypad-key {
+            height: 46px;
+            border: 1px solid #4a5568;
+            border-radius: 10px;
+            background: #2d3748;
+            color: #fff;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.1s ease, transform 0.1s ease;
+        }
+
+        .keypad-key:hover:not(:disabled) { background: #3b4658; }
+        .keypad-key:active:not(:disabled) { background: #4a5568; transform: scale(0.96); }
+
+        .keypad-key.is-clear {
+            background: #4a5568;
+            font-size: 0.78rem;
+            line-height: 1.2;
+        }
+
+        .keypad-key.is-enter {
+            border: none;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            font-size: 1.1rem;
+        }
+
+        .keypad-key:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* 키패드가 숫자를 넣을 칸 */
+        .fraction-input.is-keypad-target:not(:disabled) {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+            background: #f5f3ff;
+        }
+
+        /* 마지막 칸에서 '입력'을 누르면 제출 단추가 한 번 반짝인다. */
+        .btn.is-ready { animation: submitReady 0.7s ease; }
+
+        @keyframes submitReady {
+            0%, 100% { transform: scale(1); }
+            40% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(102, 126, 234, 0.35); }
+        }
+
+        .has-keypad > .fraction-inputs { flex-wrap: nowrap; }
+
+        /* 보스전은 칸이 좁아 키패드를 조금 작게 하고, 답 쪽에 자리를 더 준다. */
+        .battle-quiz-grid { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr); }
+        .battle-quiz-answer .fraction-input { width: 70px; }
+        .battle-quiz-answer .fraction-line { width: 70px; }
+        .battle-quiz-answer .fraction-input-container.has-keypad { column-gap: 16px; row-gap: 10px; }
+        .battle-quiz-answer .keypad { grid-template-columns: repeat(3, 48px); gap: 6px; padding: 8px; }
+        .battle-quiz-answer .keypad-key { height: 40px; font-size: 1.1rem; }
+        .battle-quiz-answer .keypad-key.is-clear { font-size: 0.68rem; }
+        .battle-quiz-answer .keypad-key.is-enter { font-size: 0.95rem; }
+
+        /* 코인 직장: 시작 전에는 시작 단추만, 시작한 뒤에는 입력칸과 키패드만 */
+        .practice-start {
+            display: block;
+            margin: 6px auto 18px;
+            padding: 14px 40px;
+            font-size: 1.25rem;
+        }
+
+        @media (max-width: 640px) {
+            .fraction-input-container.has-keypad {
+                grid-template-columns: 1fr;
+                grid-template-areas: "inputs" "pad" "submit";
+                justify-items: center;
+            }
+            .keypad { grid-template-columns: repeat(3, minmax(64px, 84px)); }
+            .keypad-key { height: 48px; }
+            .battle-quiz-answer .keypad { grid-template-columns: repeat(3, minmax(56px, 76px)); }
+            .battle-quiz-grid { grid-template-columns: 1fr; }
+            .battle-quiz-answer .keypad-key { height: 42px; }
+        }
     </style>
 </head>
 <body>
@@ -2963,7 +3071,8 @@
             <div class="stat-card"><h4>정답률(정답횟수/풀이시도*100)</h4><div class="value" id="accuracyRate">0%</div></div>
           </div>
           <div class="problem" id="problem">문제를 생성하려면 시작 버튼을 누르세요</div>
-          <div class="fraction-input-container">
+          <button class="btn btn-success practice-start" id="startBtn" onclick="generateProblem()">▶ 문제 풀기 시작</button>
+          <div class="fraction-input-container" id="practiceAnswer" style="display: none;">
             <div class="fraction-inputs">
               <input type="number" class="answer-input fraction-input" id="wholeInput" placeholder="자연수" disabled min="0">
               <div class="fraction-display">
@@ -2972,11 +3081,10 @@
                 <input type="number" class="answer-input fraction-input" id="denominatorInput" placeholder="분모" disabled min="1">
               </div>
             </div>
-            <button class="btn btn-primary" onclick="checkAnswer()" id="submitBtn" disabled>확인</button>
+            <button class="btn btn-primary" onclick="checkAnswer()" id="submitBtn" disabled>✅ 정답 제출</button>
           </div>
           <p class="instruction-text">※ 답은 기약분수 형태로 입력해주세요. (1보다 큰 답은 대분수로)</p>
           <div id="feedback" class="feedback" style="display: none;"></div>
-          <button class="btn btn-success" id="startBtn" onclick="generateProblem()">시작</button>
         </div>
       </div>
 
@@ -3069,9 +3177,9 @@
         <div id="collectionGrid" class="collection-grid"></div>
       </div>
 
-      <!-- Boss Tab (테스트) -->
+      <!-- Boss Tab -->
       <div id="bossContent" class="tab-content" style="display: none;">
-        <h2>⚔️ 보스전 <span class="boss-beta">테스트</span></h2>
+        <h2>⚔️ 보스전</h2>
 
         <div id="bossSetup">
           <div class="boss-panel">
@@ -3289,7 +3397,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.130</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.131</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -4314,8 +4422,15 @@
     }
 
     // Practice Functions
+    // 시작하기 전에는 시작 단추만 보이고, 시작한 뒤에는 입력칸과 키패드만 보인다.
+    function setPracticeStarted(started) {
+      document.getElementById('startBtn').style.display = started ? 'none' : '';
+      document.getElementById('practiceAnswer').style.display = started ? '' : 'none';
+    }
+
     function generateProblem() {
       document.getElementById('startBtn').disabled = true; // <-- 이 줄을 추가하세요
+      setPracticeStarted(true);
       const problem = generateFractionProblem();
       practiceLocked = false;   // 입력칸과 단추는 아래에서 다시 연다
       // 🌟🌟🌟 [핵심 수정] 이 위치에 코드를 추가합니다. 🌟🌟🌟
@@ -4332,6 +4447,7 @@
       document.getElementById('wholeInput').value = '';
       document.getElementById('numeratorInput').value = '';
       document.getElementById('denominatorInput').value = '';
+      resetKeypad('wholeInput');
       if (!isRankingModalOpen()) document.getElementById('wholeInput').focus();
       // --- [수정] 관리자 모드 정답 미리보기 로직 ---
       const feedbackEl = document.getElementById('feedback');
@@ -5302,6 +5418,7 @@
       document.getElementById('captureWholeInput').value = '';
       document.getElementById('captureNumeratorInput').value = '';
       document.getElementById('captureDenominatorInput').value = '';
+      resetKeypad('captureWholeInput');
       // --- [수정] 관리자 모드 정답 미리보기 로직 ---
       const feedbackEl = document.getElementById('captureQuizFeedback');
       if (gameState.showAnswers) {
@@ -5856,7 +5973,7 @@
       }
     }
 
-    // ===================== 보스전 (테스트) =====================
+    // ===================== 보스전 =====================
 
     const BOSSES = [
       {
@@ -6907,6 +7024,7 @@
         document.getElementById(id).value = '';
       });
       document.getElementById('battleQuiz').style.display = 'block';
+      resetKeypad('battleWholeInput');
       document.getElementById('battleSubmitBtn').disabled = false;
       document.getElementById('battleWholeInput').focus();
     }
@@ -7665,6 +7783,7 @@
 
       // --- 수정 시작: 버튼 및 문제 상태 초기화 ---
       document.getElementById('startBtn').disabled = false;
+      setPracticeStarted(false);
       document.getElementById('submitBtn').disabled = true;
       document.getElementById('wholeInput').disabled = true;
       document.getElementById('numeratorInput').disabled = true;
@@ -7740,6 +7859,85 @@
         titleList.classList.remove('show');
       }
     });
+
+    // ---------- 숫자 키패드 ----------
+    // 휴대폰·태블릿에서는 칸을 누를 때마다 기기 자판이 떠서 불편하므로 화면 키패드로 답을 넣는다.
+    // 숫자는 지금 고른 칸에 들어가고, '입력'을 누르면 다음 칸(자연수 → 분자 → 분모)으로 넘어간다.
+    // 답을 내는 것은 따로 있는 제출 단추가 한다. 컴퓨터 자판으로 치는 것도 그대로 된다.
+    const KEYPAD_SETS = [
+      ['wholeInput', 'numeratorInput', 'denominatorInput', 'submitBtn'],
+      ['captureWholeInput', 'captureNumeratorInput', 'captureDenominatorInput', 'captureSubmitBtn'],
+      ['battleWholeInput', 'battleNumeratorInput', 'battleDenominatorInput', 'battleSubmitBtn']
+    ];
+    const KEYPAD_MAX_DIGITS = 4;
+    const keypadResets = {};
+
+    function resetKeypad(firstId) {
+      if (keypadResets[firstId]) keypadResets[firstId]();
+    }
+
+    function setupKeypad([wholeId, numeratorId, denominatorId, submitId]) {
+      const fields = [wholeId, numeratorId, denominatorId].map(id => document.getElementById(id));
+      const submit = document.getElementById(submitId);
+      const container = submit && submit.closest('.fraction-input-container');
+      if (!container || fields.some(f => !f)) return;
+      let active = 0;
+      const mark = () => fields.forEach((f, i) => f.classList.toggle('is-keypad-target', i === active));
+
+      fields.forEach((field, i) => {
+        field.setAttribute('inputmode', 'none');   // 기기 자판을 띄우지 않는다
+        field.addEventListener('focus', () => { active = i; mark(); });
+      });
+
+      const pad = document.createElement('div');
+      pad.className = 'keypad';
+      pad.innerHTML = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'enter'].map(k => {
+        if (k === 'clear') return '<button type="button" class="keypad-key is-clear" data-key="clear">모두<br>지우기</button>';
+        if (k === 'enter') return '<button type="button" class="keypad-key is-enter" data-key="enter">입력</button>';
+        return `<button type="button" class="keypad-key" data-key="${k}">${k}</button>`;
+      }).join('');
+      // 키를 눌러도 입력칸의 깜빡이는 표시가 사라지지 않게 한다.
+      pad.addEventListener('mousedown', e => e.preventDefault());
+      pad.addEventListener('click', e => {
+        const key = e.target.closest('.keypad-key');
+        if (!key || key.disabled) return;
+        const k = key.dataset.key;
+        const field = fields[active];
+        if (k === 'clear') {
+          fields.forEach(f => { f.value = ''; });
+          active = 0;
+        } else if (k === 'enter') {
+          if (active < fields.length - 1) {
+            active++;
+          } else {
+            submit.classList.remove('is-ready');
+            void submit.offsetWidth;
+            submit.classList.add('is-ready');
+          }
+        } else if (!field.disabled && String(field.value).length < KEYPAD_MAX_DIGITS) {
+          field.value = String(field.value) === '0' ? k : String(field.value) + k;
+        }
+        mark();
+        // 깜빡이는 표시도 고른 칸으로 옮긴다. (inputmode=none 이라 기기 자판은 뜨지 않는다)
+        if (!fields[active].disabled && document.activeElement !== fields[active]) fields[active].focus({ preventScroll: true });
+      });
+      container.insertBefore(pad, submit);
+      container.classList.add('has-keypad');
+
+      // 입력칸이 잠기면 키패드도 함께 잠근다.
+      const sync = () => {
+        const off = fields.every(f => f.disabled);
+        pad.querySelectorAll('.keypad-key').forEach(b => { b.disabled = off; });
+      };
+      const watcher = new MutationObserver(sync);
+      fields.forEach(f => watcher.observe(f, { attributes: true, attributeFilter: ['disabled'] }));
+      sync();
+
+      keypadResets[wholeId] = () => { active = 0; mark(); };
+      mark();
+    }
+
+    KEYPAD_SETS.forEach(setupKeypad);
 
     document.getElementById('wholeInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') document.getElementById('numeratorInput').focus();

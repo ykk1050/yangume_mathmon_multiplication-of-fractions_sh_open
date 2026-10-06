@@ -2963,7 +2963,8 @@
         .keypad-key.is-clear {
             background: #edf2f7;
             color: #4a5568;
-            font-size: 0.78rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
             line-height: 1.2;
         }
 
@@ -3000,7 +3001,7 @@
         .battle-quiz-answer .fraction-input-container.has-keypad { column-gap: 16px; row-gap: 10px; }
         .battle-quiz-answer .keypad { grid-template-columns: repeat(3, 48px); gap: 6px; padding: 8px; }
         .battle-quiz-answer .keypad-key { height: 40px; font-size: 1.1rem; }
-        .battle-quiz-answer .keypad-key.is-clear { font-size: 0.68rem; }
+        .battle-quiz-answer .keypad-key.is-clear { font-size: 0.72rem; }
         .battle-quiz-answer .keypad-key.is-enter { font-size: 0.95rem; }
 
         /* 코인 직장: 시작 전에는 시작 단추만, 시작한 뒤에는 입력칸과 키패드만 */
@@ -3402,7 +3403,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.132</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.133</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -7867,7 +7868,8 @@
 
     // ---------- 숫자 키패드 ----------
     // 휴대폰·태블릿에서는 칸을 누를 때마다 기기 자판이 떠서 불편하므로 화면 키패드로 답을 넣는다.
-    // 숫자는 지금 고른 칸에 들어가고, '입력'을 누르면 다음 칸(자연수 → 분자 → 분모)으로 넘어간다.
+    // 숫자는 지금 고른 칸에 들어가고, '지우기'는 그 칸에서 한 글자를 지운다.
+    // '입력'을 누르면 다음 칸(자연수 → 분자 → 분모)으로 넘어간다.
     // 답을 내는 것은 따로 있는 제출 단추가 한다. 컴퓨터 자판으로 치는 것도 그대로 된다.
     const KEYPAD_SETS = [
       ['wholeInput', 'numeratorInput', 'denominatorInput', 'submitBtn'],
@@ -7894,6 +7896,7 @@
         field.setAttribute('inputmode', 'none');
         field.readOnly = true;
         field.addEventListener('focus', () => { active = i; mark(); });
+        field.addEventListener('pointerdown', () => { active = i; mark(); });   // 창에 초점이 없을 때도 고른 칸을 바꾼다
         // 컴퓨터 자판은 읽기 전용 칸에 직접 써 넣는다.
         field.addEventListener('keydown', e => {
           if (field.disabled || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -7917,7 +7920,7 @@
       const pad = document.createElement('div');
       pad.className = 'keypad';
       pad.innerHTML = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'enter'].map(k => {
-        if (k === 'clear') return '<button type="button" class="keypad-key is-clear" data-key="clear">모두<br>지우기</button>';
+        if (k === 'clear') return '<button type="button" class="keypad-key is-clear" data-key="clear">⌫ 지우기</button>';
         if (k === 'enter') return '<button type="button" class="keypad-key is-enter" data-key="enter">입력</button>';
         return `<button type="button" class="keypad-key" data-key="${k}">${k}</button>`;
       }).join('');
@@ -7929,8 +7932,8 @@
         const k = key.dataset.key;
         const field = fields[active];
         if (k === 'clear') {
-          fields.forEach(f => { f.value = ''; });
-          active = 0;
+          // 고른 칸에서 한 글자만 지운다.
+          if (!field.disabled) field.value = String(field.value).slice(0, -1);
         } else if (k === 'enter') {
           if (active < fields.length - 1) {
             active++;

@@ -2,7 +2,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>수학몬 마스터 - Monster RPG</title>
+  <title>수학몬 마스터 2: 깨어진 질서, 다시 세우는 정답</title>
+  <!-- 제목 글꼴: 검은고딕(Black Han Sans), 도현(Do Hyeon) - 모두 SIL 오픈 폰트 라이선스라 자유롭게 쓸 수 있다 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&display=swap" rel="stylesheet">
+  <link rel="preload" href="video/intro_poster.jpg" as="image">
     <link rel="preload" href="images/bg_mathmon_tile.webp" as="image" type="image/webp">
   <style>
         body {
@@ -181,12 +186,117 @@
         }
 
         .app-title {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #4a5568;
             margin: 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            line-height: 1.1;
         }
+
+        .app-title-main {
+            font-family: 'Black Han Sans', 'Segoe UI', sans-serif;
+            font-weight: normal;
+            font-size: 2.7rem;
+            letter-spacing: 0.02em;
+            background: linear-gradient(180deg, #6b46c1 0%, #4c51bf 55%, #2c5282 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            filter: drop-shadow(0 2px 0 rgba(255, 255, 255, 0.9)) drop-shadow(0 4px 8px rgba(76, 81, 191, 0.25));
+        }
+
+        .app-title-sub {
+            font-family: 'Do Hyeon', 'Segoe UI', sans-serif;
+            font-weight: normal;
+            font-size: 1.15rem;
+            letter-spacing: 0.08em;
+            color: #805ad5;
+        }
+
+        .app-title-sub::before, .app-title-sub::after {
+            content: '◆';
+            font-size: 0.6em;
+            margin: 0 8px;
+            vertical-align: 0.2em;
+            color: #d69e2e;
+        }
+
+        /* ---------- 첫 화면 영상 ---------- */
+        body.intro-open { overflow: hidden; }
+
+        .intro-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: #000 url('video/intro_poster.jpg') center / cover no-repeat;
+            cursor: pointer;
+            transition: opacity 0.5s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .intro-screen.is-closing { opacity: 0; pointer-events: none; }
+
+        /* 마지막 제목 부분(약 1초)만 따로 담은 영상. 본 영상이 끝나면 그 위에 겹쳐 계속 되풀이한다. */
+        .intro-screen video.intro-loop {
+            position: absolute;
+            inset: 0;
+            visibility: hidden;
+        }
+
+        .intro-screen video.intro-loop.is-playing { visibility: visible; }
+
+        .intro-screen video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            background: #000;
+        }
+
+        /* 세로 화면에서는 가운데의 제목이 잘리지 않도록 영상 전체를 보여 준다. */
+        @media (orientation: portrait) {
+            .intro-screen { background-size: contain; }
+            .intro-screen video { object-fit: contain; }
+        }
+
+        .intro-prompt {
+            position: absolute;
+            left: 50%;
+            bottom: max(28px, env(safe-area-inset-bottom));
+            transform: translateX(-50%);
+            color: #fff;
+            font-family: 'Do Hyeon', 'Segoe UI', sans-serif;
+            font-size: clamp(1.05rem, 2.6vw, 1.6rem);
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+            text-shadow: 0 0 12px rgba(160, 130, 255, 0.95), 0 2px 4px #000;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-prompt.is-shown { animation: introBlink 1.6s ease-in-out infinite; }
+
+        @keyframes introBlink {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 1; }
+        }
+
+        .intro-sound {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            display: none;
+            padding: 8px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.45);
+            color: #fff;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .intro-sound.is-shown { display: block; }
 
         .stats-bar {
             display: flex;
@@ -2677,7 +2787,8 @@
         }
 
         @media (max-width: 768px) {
-            .app-title { font-size: 2rem; }
+            .app-title-main { font-size: 2.1rem; }
+            .app-title-sub { font-size: 0.95rem; letter-spacing: 0.04em; }
             .problem { font-size: 1.5rem; }
             .answer-input { font-size: 1.2rem; width: 100px; }
             .practice-stats { grid-template-columns: repeat(2, 1fr); }
@@ -3010,11 +3121,18 @@
         }
     </style>
 </head>
-<body>
+<body class="intro-open">
+  <!-- 첫 화면 영상. 처음 한 번은 끝까지 본 뒤에 넘어갈 수 있고, 그다음부터는 바로 넘길 수 있다. -->
+  <div class="intro-screen" id="introScreen" role="dialog" aria-label="수학몬 마스터 2 시작 화면">
+    <video id="introVideo" src="video/intro.mp4" poster="video/intro_poster.jpg" playsinline preload="auto"></video>
+    <video id="introLoop" class="intro-loop" src="video/intro_loop.mp4" muted loop playsinline preload="auto"></video>
+    <button type="button" class="intro-sound" id="introSound">🔇 소리 켜기</button>
+    <div class="intro-prompt" id="introPrompt">아무 키나 누르거나 터치하세요.</div>
+  </div>
   <div class="app-container">
     <div class="header">
       <button class="reset-button" onclick="confirmResetGame()">🔄 초기화</button>
-      <h1 class="app-title">수학몬 마스터_분수의 곱셈</h1>
+      <h1 class="app-title"><span class="app-title-main">수학몬 마스터 2</span><span class="app-title-sub">깨어진 질서, 다시 세우는 정답</span></h1>
       <div class="title-info">
         <div class="current-title" id="currentTitle">⭐ 초보자</div>
         <div class="title-list" id="titleList">
@@ -3387,7 +3505,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.136</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.137</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -8018,7 +8136,92 @@
       toggleBgm, toggleRareFinder, trainPartnerAtk, trainPartnerHp, upgradeSupportSkill
     });
 
+    // ---------- 첫 화면 영상 ----------
+    // 접속하면 소개 영상이 나오고, 마지막 제목 부분(약 1초)은 계속 되풀이된다.
+    // 처음 한 번은 제목이 나올 때까지 본 뒤에 넘어갈 수 있고, 그다음 접속부터는 바로 넘길 수 있다.
+    const INTRO_SEEN_KEY = 'mathmonIntroSeen';
+
+    function setupIntro() {
+      const screen = document.getElementById('introScreen');
+      const video = document.getElementById('introVideo');
+      const prompt = document.getElementById('introPrompt');
+      const sound = document.getElementById('introSound');
+      if (!screen || !video) return;
+
+      let seen = false;
+      try { seen = localStorage.getItem(INTRO_SEEN_KEY) === '1'; } catch (error) { /* 저장소를 못 쓰면 처음 온 것으로 본다 */ }
+      let canSkip = seen;
+      let looping = false;
+      let closed = false;
+      if (canSkip) prompt.classList.add('is-shown');
+
+      const allowSkip = () => {
+        if (canSkip) return;
+        canSkip = true;
+        prompt.classList.add('is-shown');
+        try { localStorage.setItem(INTRO_SEEN_KEY, '1'); } catch (error) { /* 다음에 다시 보면 된다 */ }
+      };
+      // 본 영상이 끝나면 미리 불러 둔 제목 영상을 겹쳐 되풀이한다.
+      // (되감기로 반복하면 서버에 따라 처음으로 돌아가 버리는 일이 있어 따로 둔다)
+      const loop = document.getElementById('introLoop');
+      const backToTitle = () => {
+        if (looping) return;
+        looping = true;
+        allowSkip();
+        loop.classList.add('is-playing');
+        loop.play().catch(() => {});
+      };
+      video.addEventListener('ended', backToTitle);
+      // 영상을 못 불러오면 기다리게 하지 않는다.
+      video.addEventListener('error', () => { allowSkip(); });
+      // 네트워크가 느려 멈춰도 일정 시간이 지나면 넘어갈 수 있게 한다.
+      setTimeout(allowSkip, 30000);
+
+      // 소리와 함께 재생해 보고, 브라우저가 막으면 소리 없이 재생한다.
+      const start = () => video.play().catch(() => {
+        video.muted = true;
+        sound.classList.add('is-shown');
+        return video.play().catch(() => {});
+      });
+      start();
+
+      const close = () => {
+        if (closed) return;
+        closed = true;
+        allowSkip();
+        window.removeEventListener('keydown', onInput, true);
+        window.removeEventListener('click', onInput, true);
+        screen.classList.add('is-closing');
+        document.body.classList.remove('intro-open');
+        video.pause();
+        loop.pause();
+        setTimeout(() => screen.remove(), 600);
+        bgm.refresh();   // 사용자가 누른 순간이라 배경음악이 바로 나온다
+      };
+
+      // 영상이 떠 있는 동안 누른 것은 게임으로 넘기지 않는다. (배경음악이 영상과 겹치지 않게)
+      function onInput(e) {
+        if (closed) return;
+        if (e.target === sound) {
+          video.muted = false;
+          sound.classList.remove('is-shown');
+          if (video.paused) start();
+          return;
+        }
+        e.stopPropagation();
+        if (e.type === 'keydown') e.preventDefault();
+        if (video.paused && !looping && !canSkip) {
+          start();   // 자동 재생이 막혔던 기기는 첫 터치로 시작한다
+          return;
+        }
+        if (canSkip) close();
+      }
+      window.addEventListener('keydown', onInput, true);
+      window.addEventListener('click', onInput, true);
+    }
+
     // Initialize
+    setupIntro();
     loadData();
     setTimeout(() => {
       if (rankingState()) syncRanking(true);

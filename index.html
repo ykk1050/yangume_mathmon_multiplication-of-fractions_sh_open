@@ -3564,7 +3564,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.138</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.139</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -4166,6 +4166,11 @@
       play(key, retry) {
         const src = BGM_TRACKS[key];
         if (!src) return this.stop();
+        // 소개 영상이 떠 있는 동안에는 틀지 않는다. 영상을 닫을 때 다시 부른다.
+        if (document.body.classList.contains('intro-open')) {
+          this.player.pause();
+          return;
+        }
         if (!retry && this.current === key && !this.player.paused) return;
 
         if (!this.enabled) {

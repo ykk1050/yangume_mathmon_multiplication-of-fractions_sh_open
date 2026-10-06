@@ -298,6 +298,58 @@
 
         .intro-sound.is-shown { display: block; }
 
+        /* 영상 중간에 누르면 묻는 창 */
+        .intro-ask {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            min-width: 280px;
+            padding: 22px 26px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(183, 148, 244, 0.7);
+            background: rgba(20, 14, 40, 0.88);
+            box-shadow: 0 0 30px rgba(128, 90, 213, 0.6);
+            color: #fff;
+            text-align: center;
+            font-family: 'Do Hyeon', 'Segoe UI', sans-serif;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            cursor: default;
+        }
+
+        .intro-ask.is-shown {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .intro-ask p { margin: 0 0 16px; font-size: 1.35rem; letter-spacing: 0.03em; }
+
+        .intro-ask-buttons { display: flex; justify-content: center; gap: 12px; }
+
+        .intro-ask button {
+            min-width: 96px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1.15rem;
+            cursor: pointer;
+        }
+
+        .intro-ask-yes {
+            border: none;
+            color: #fff;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .intro-ask-no {
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
         .stats-bar {
             display: flex;
             justify-content: center;
@@ -3128,6 +3180,13 @@
     <video id="introLoop" class="intro-loop" src="video/intro_loop.mp4" muted loop playsinline preload="auto"></video>
     <button type="button" class="intro-sound" id="introSound">🔇 소리 켜기</button>
     <div class="intro-prompt" id="introPrompt">아무 키나 누르거나 터치하세요.</div>
+    <div class="intro-ask" id="introAsk" role="alertdialog" aria-labelledby="introAskText">
+      <p id="introAskText">인트로 영상을 스킵하시겠습니까?</p>
+      <div class="intro-ask-buttons">
+        <button type="button" class="intro-ask-yes" id="introAskYes">예</button>
+        <button type="button" class="intro-ask-no" id="introAskNo">아니요</button>
+      </div>
+    </div>
   </div>
   <div class="app-container">
     <div class="header">
@@ -3505,7 +3564,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.137</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.138</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -8153,6 +8212,7 @@
       let canSkip = seen;
       let looping = false;
       let closed = false;
+      let asking = false;   // 스킵할지 묻는 창이 떠 있는가
       if (canSkip) prompt.classList.add('is-shown');
 
       const allowSkip = () => {
@@ -8170,6 +8230,7 @@
         allowSkip();
         loop.classList.add('is-playing');
         loop.play().catch(() => {});
+        sound.classList.remove('is-shown');   // 제목 장면은 소리가 없다
       };
       video.addEventListener('ended', backToTitle);
       // 영상을 못 불러오면 기다리게 하지 않는다.
@@ -8181,6 +8242,8 @@
       const start = () => video.play().catch(() => {
         video.muted = true;
         sound.classList.add('is-shown');
+        // 그사이 스킵을 묻고 있거나 이미 넘어갔으면 다시 틀지 않는다.
+        if (asking || looping || closed) return;
         return video.play().catch(() => {});
       });
       start();
@@ -8199,22 +8262,54 @@
         bgm.refresh();   // 사용자가 누른 순간이라 배경음악이 바로 나온다
       };
 
+      // 처음 보는 중에 누르면 스킵할지 묻는다. '예'면 마지막 제목 장면으로 넘어간다.
+      const ask = document.getElementById('introAsk');
+      const openAsk = () => {
+        asking = true;
+        ask.classList.add('is-shown');
+        video.pause();
+      };
+      const answerAsk = yes => {
+        asking = false;
+        ask.classList.remove('is-shown');
+        if (yes) {
+          video.pause();
+          backToTitle();
+        } else {
+          video.play().catch(() => {});
+        }
+      };
+      // 단추를 누른 것은 여기서 끝낸다. (게임으로 넘어가 배경음악이 먼저 나오지 않게)
+      document.getElementById('introAskYes').addEventListener('click', e => { e.stopPropagation(); answerAsk(true); });
+      document.getElementById('introAskNo').addEventListener('click', e => { e.stopPropagation(); answerAsk(false); });
+      sound.addEventListener('click', e => {
+        e.stopPropagation();
+        video.muted = false;
+        sound.classList.remove('is-shown');
+        if (video.paused && !asking && !looping) start();
+      });
+
       // 영상이 떠 있는 동안 누른 것은 게임으로 넘기지 않는다. (배경음악이 영상과 겹치지 않게)
       function onInput(e) {
         if (closed) return;
-        if (e.target === sound) {
-          video.muted = false;
-          sound.classList.remove('is-shown');
-          if (video.paused) start();
-          return;
-        }
+        // 창 안의 단추는 각자 처리한다.
+        if (e.type === 'click' && (e.target.closest('#introAsk') || e.target === sound)) return;
         e.stopPropagation();
         if (e.type === 'keydown') e.preventDefault();
-        if (video.paused && !looping && !canSkip) {
+        if (asking) {
+          // 자판으로도 답할 수 있다: Enter·Y 는 예, Esc·N 은 아니요
+          if (e.type === 'keydown') {
+            if (e.key === 'Enter' || e.key === 'y' || e.key === 'Y') answerAsk(true);
+            else if (e.key === 'Escape' || e.key === 'n' || e.key === 'N') answerAsk(false);
+          }
+          return;
+        }
+        if (canSkip) { close(); return; }
+        if (video.paused && !looping && video.currentTime === 0) {
           start();   // 자동 재생이 막혔던 기기는 첫 터치로 시작한다
           return;
         }
-        if (canSkip) close();
+        openAsk();
       }
       window.addEventListener('keydown', onInput, true);
       window.addEventListener('click', onInput, true);

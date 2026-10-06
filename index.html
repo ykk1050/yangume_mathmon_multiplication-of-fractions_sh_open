@@ -1787,7 +1787,7 @@
 
         @keyframes ballThrow {
             0% { transform: translate(-50%, 0) scale(0.5) rotate(0deg); }
-            60% { transform: translate(-50%, calc(var(--ball-rise, -70px) - 40px)) scale(1.1) rotate(540deg); }
+            60% { transform: translate(-50%, calc(var(--ball-rise, -70px) - var(--ball-arc, 40px))) scale(1.1) rotate(540deg); }
             100% { transform: translate(-50%, var(--ball-rise, -70px)) scale(1) rotate(720deg); }
         }
 
@@ -3387,7 +3387,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.135</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.136</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -5561,6 +5561,21 @@
       saveData();
   }
 
+    // 포획볼이 날아오르는 높이. 무대 높이와 볼 크기로 재서 볼이 무대 위쪽으로 잘려 나가지 않게 한다.
+    //   잡을 때: 볼 가운데가 수학몬 자리(무대 가운데)에 멈춘다.
+    //   빗나갈 때: 그보다 조금 더 높이 올라가되 무대 안에 머문다.
+    function setBallFlight(stage, ball, miss) {
+      const stageH = stage.clientHeight;
+      const ballH = ball.offsetHeight || 60;
+      const bottom = 6;                       // .capture-ball 의 bottom
+      const room = Math.max(0, stageH - bottom - ballH - 6);   // 볼 위쪽이 무대 안에 남는 가장 높은 곳
+      const center = Math.max(0, stageH / 2 - bottom - ballH / 2);
+      const rise = miss ? Math.min(room, center + 30) : Math.min(room, center);
+      const arc = Math.max(0, Math.min(40, room - rise));      // 포물선 꼭대기도 무대 안에서
+      ball.style.setProperty('--ball-rise', `-${Math.round(rise)}px`);
+      ball.style.setProperty('--ball-arc', `${Math.round(arc)}px`);
+    }
+
     const captureAnim = {
       runId: 0,
       sleep: ms => new Promise(resolve => setTimeout(resolve, ms)),
@@ -5606,7 +5621,7 @@
 
         const selected = shopItems.find(item => item.id === gameState.selectedBall);
         inner.innerHTML = selected ? `<img src="${selected.image}" alt="">` : '';
-        ball.style.setProperty('--ball-rise', `-${Math.round(stage.clientHeight / 2)}px`);
+        setBallFlight(stage, ball, false);
 
         ball.classList.add('is-thrown');
         await this.sleep(550);
@@ -5658,7 +5673,7 @@
 
         const selected = shopItems.find(item => item.id === gameState.selectedBall);
         inner.innerHTML = selected ? `<img src="${selected.image}" alt="">` : '';
-        ball.style.setProperty('--ball-rise', `-${Math.round(stage.clientHeight * 0.8)}px`);
+        setBallFlight(stage, ball, true);
 
         ball.classList.add('is-thrown');
         await this.sleep(550);

@@ -2934,18 +2934,19 @@
             gap: 8px;
             padding: 10px;
             border-radius: 14px;
-            background: #2d3748;
-            box-shadow: 0 6px 18px rgba(26, 32, 44, 0.25);
+            border: 2px solid #e2e8f0;
+            background: #f7fafc;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.12);
             user-select: none;
             -webkit-user-select: none;
         }
 
         .keypad-key {
             height: 46px;
-            border: 1px solid #4a5568;
+            border: 2px solid #e2e8f0;
             border-radius: 10px;
-            background: #2d3748;
-            color: #fff;
+            background: #fff;
+            color: #553c9a;
             font-size: 1.3rem;
             font-weight: bold;
             cursor: pointer;
@@ -2954,18 +2955,22 @@
             transition: background 0.1s ease, transform 0.1s ease;
         }
 
-        .keypad-key:hover:not(:disabled) { background: #3b4658; }
-        .keypad-key:active:not(:disabled) { background: #4a5568; transform: scale(0.96); }
+        .keypad-key:hover:not(:disabled) { border-color: #b794f4; background: #faf5ff; }
+        .keypad-key.is-enter:hover:not(:disabled) { background: linear-gradient(45deg, #5a67d8, #6b46c1); }
+        .keypad-key.is-clear:hover:not(:disabled) { background: #e2e8f0; border-color: #cbd5e0; }
+        .keypad-key:active:not(:disabled) { background: #e9d8fd; transform: scale(0.96); }
 
         .keypad-key.is-clear {
-            background: #4a5568;
+            background: #edf2f7;
+            color: #4a5568;
             font-size: 0.78rem;
             line-height: 1.2;
         }
 
         .keypad-key.is-enter {
             border: none;
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            color: #fff;
+            background: linear-gradient(45deg, #667eea, #764ba2);
             font-size: 1.1rem;
         }
 
@@ -3397,7 +3402,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.131</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.132</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -7885,8 +7890,28 @@
       const mark = () => fields.forEach((f, i) => f.classList.toggle('is-keypad-target', i === active));
 
       fields.forEach((field, i) => {
-        field.setAttribute('inputmode', 'none');   // 기기 자판을 띄우지 않는다
+        // 어떤 브라우저는 inputmode=none 을 무시하고 자판을 띄운다. 읽기 전용이면 어디서나 자판이 뜨지 않는다.
+        field.setAttribute('inputmode', 'none');
+        field.readOnly = true;
         field.addEventListener('focus', () => { active = i; mark(); });
+        // 컴퓨터 자판은 읽기 전용 칸에 직접 써 넣는다.
+        field.addEventListener('keydown', e => {
+          if (field.disabled || e.ctrlKey || e.metaKey || e.altKey) return;
+          if (/^[0-9]$/.test(e.key)) {
+            e.preventDefault();
+            if (String(field.value).length < KEYPAD_MAX_DIGITS) field.value = String(field.value) === '0' ? e.key : String(field.value) + e.key;
+          } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            field.value = String(field.value).slice(0, -1);
+          } else if (e.key === 'Delete') {
+            e.preventDefault();
+            field.value = '';
+          } else if (e.key === 'Enter') {
+            e.preventDefault();   // 원래의 Enter 처리와 겹치지 않게 여기서만 처리한다
+            if (i < fields.length - 1) fields[i + 1].focus();
+            else if (!submit.disabled) submit.click();
+          }
+        });
       });
 
       const pad = document.createElement('div');

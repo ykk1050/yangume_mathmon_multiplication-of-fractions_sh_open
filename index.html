@@ -3573,7 +3573,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.141</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.142</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -3942,7 +3942,61 @@
       return guard.keep;
     }
 
+    // ---------- 여러 창 지킴이 ----------
+    // 같은 기기에서 게임 창(탭)을 둘 이상 열어 두면, 먼저 연 창은 그 뒤 다른 창에서 얻은 코인·수학몬·포획볼을 모른다.
+    // 그 창에서 무엇이든 하면 저장본 전체를 옛 상태로 덮어써 버린다. 그래서 저장할 때마다 번호를 하나씩 올리고,
+    // 저장된 번호가 이 창이 마지막으로 알던 번호와 다르면 다른 창이 먼저 저장한 것으로 보고 이 창을 멈춘다.
+    const SAVE_KEY = 'mathMonsterGame';
+    let knownSaveRev = 0;
+    let staleTab = false;
+
+    function storedSaveRev() {
+      try {
+        const saved = localStorage.getItem(SAVE_KEY);
+        return saved ? (Number(JSON.parse(saved).saveRev) || 0) : 0;
+      } catch (error) {
+        return 0;
+      }
+    }
+
+    function markStaleTab() {
+      if (staleTab) return;
+      staleTab = true;
+      const cover = document.createElement('div');
+      cover.id = 'staleTabCover';
+      cover.style.cssText = `
+        position: fixed; inset: 0; z-index: 3000; background: rgba(26, 32, 44, 0.85);
+        display: flex; align-items: center; justify-content: center; padding: 16px;
+      `;
+      cover.innerHTML = `
+        <div style="background: white; border-radius: 16px; padding: 24px; max-width: 420px; text-align: center; line-height: 1.6;">
+          <h3 style="margin-bottom: 10px;">⚠️ 다른 창에서 게임이 진행되었어요</h3>
+          <p>수학몬 마스터가 다른 창(탭)에서도 열려 있어요.<br>
+            코인·수학몬·포획볼 기록이 서로 덮어써지지 않도록 이 창은 멈췄어요.</p>
+          <p style="margin-top: 8px;">이 창에서 계속하려면 아래 단추를 눌러 최신 기록을 불러오세요.<br>
+            쓰지 않는 다른 창은 닫아 주세요.</p>
+          <button class="btn btn-primary" id="staleTabReload">🔄 최신 기록 불러오기</button>
+        </div>`;
+      document.body.appendChild(cover);
+      // 인트로 영상이 떠 있으면 인트로가 창(window)에서 클릭을 먼저 가로챈다. 그래도 눌리도록 창에서 받는다.
+      window.addEventListener('click', event => {
+        if (event.target.closest && event.target.closest('#staleTabReload')) location.reload();
+      }, true);
+    }
+
+    // 다른 창이 저장하면 이 창에 알려 준다. (저장한 창 자신에게는 오지 않는다)
+    window.addEventListener('storage', event => {
+      if (event.key === SAVE_KEY || event.key === null) markStaleTab();
+    });
+
     function saveData() {
+      // 다른 창이 먼저 저장했으면 이 창의 옛 상태로 덮어쓰지 않는다.
+      if (staleTab) return;
+      if (storedSaveRev() !== knownSaveRev) {
+        markStaleTab();
+        return;
+      }
+
       // 상태가 바뀌는 곳은 모두 저장을 거치므로, 여기서 칭호도 함께 살핀다.
       // 코인 직장과 포획에서만 살피던 탓에, 보스를 깨거나 단련을 해도 다음에
       // 문제를 풀기 전까지는 칭호가 풀리지 않았다.
@@ -3952,18 +4006,21 @@
       }
 
       // Don't save admin login status - require password every time
+      gameState.saveRev = knownSaveRev + 1;
       const dataToSave = { ...gameState };
       delete dataToSave.isAdminLoggedIn;
       const text = JSON.stringify(dataToSave);
       // 지킴이를 먼저 쓴다. 저장본 쓰기가 실패해도 지킴이에는 최신 값이 남는다.
       writeSaveGuard(text, dataToSave);
-      localStorage.setItem('mathMonsterGame', text);
+      localStorage.setItem(SAVE_KEY, text);
+      knownSaveRev = gameState.saveRev;
     }
 
     function loadData() {
-      const saved = localStorage.getItem('mathMonsterGame');
+      const saved = localStorage.getItem(SAVE_KEY);
       if (saved) {
         const loadedData = JSON.parse(saved);
+        knownSaveRev = Number(loadedData.saveRev) || 0;
         const restored = guardedValues(saved);
         if (restored) {
           Object.assign(loadedData, restored);

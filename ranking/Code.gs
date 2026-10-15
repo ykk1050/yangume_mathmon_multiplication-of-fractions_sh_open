@@ -327,17 +327,19 @@ function addFlag(sheet, row, kind, detail) {
 }
 
 // 랭킹 읽기: ?by=attempts | correct | streak | accuracy &limit=20
+// 게임은 화면에 100명을 보이고, 순위가 아무리 낮은 학생도 자기 줄을 찾도록 RANK_MAX_LIMIT 까지 받아 간다.
+const RANK_MAX_LIMIT = 1000;
 function doGet(e) {
   const raid = e && e.parameter && e.parameter.raid;
   if (raid === 'status') return cachedJson('raid_status', 15, raidStatus);
   if (raid === 'board') {
     const season = Number(e.parameter.season) || 0;
-    const limit = Math.min(100, Number(e.parameter.limit) || 30);
+    const limit = Math.min(RANK_MAX_LIMIT, Number(e.parameter.limit) || 30);
     return cachedJson(`raid_board_${season}_${limit}`, 30, () => raidBoard(season, limit));
   }
 
   const by = (e && e.parameter && e.parameter.by) || 'attempts';
-  const limit = Math.min(100, Number(e && e.parameter && e.parameter.limit) || 20);
+  const limit = Math.min(RANK_MAX_LIMIT, Number(e && e.parameter && e.parameter.limit) || 20);
   const key = `top_${by}_${limit}`;
 
   const cache = CacheService.getScriptCache();
@@ -364,7 +366,7 @@ function doGet(e) {
     .map((r, i) => Object.assign({ rank: i + 1 }, r));
 
   const body = JSON.stringify({ ok: true, by: by, list: list });
-  cache.put(key, body, CACHE_SECONDS);
+  putCache(cache, key, body, CACHE_SECONDS);
   return ContentService.createTextOutput(body).setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -372,12 +374,17 @@ function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
+// 캐시 한 칸에는 100KB까지만 들어간다. 순위표가 그보다 커지면 캐시 없이 보내기만 한다.
+function putCache(cache, key, body, seconds) {
+  try { cache.put(key, body, seconds); } catch (error) { /* 다음 요청 때 다시 만든다 */ }
+}
+
 function cachedJson(key, seconds, make) {
   const cache = CacheService.getScriptCache();
   const cached = cache.get(key);
   if (cached) return ContentService.createTextOutput(cached).setMimeType(ContentService.MimeType.JSON);
   const body = JSON.stringify(make());
-  cache.put(key, body, seconds);
+  putCache(cache, key, body, seconds);
   return ContentService.createTextOutput(body).setMimeType(ContentService.MimeType.JSON);
 }
 

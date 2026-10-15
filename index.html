@@ -3573,7 +3573,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.142</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.143</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -5125,8 +5125,8 @@
       streak: { label: '최고 연속 정답', unit: '연속', value: r => r.streak },
       accuracy: { label: '정답률', unit: '%', value: r => r.accuracy }
     };
-    const RANK_FETCH_LIMIT = 100;   // 내 순위를 찾기 위해 넉넉히 받는다
-    const RANK_SHOW = 20;           // 화면에는 위쪽 20명만 보인다
+    const RANK_FETCH_LIMIT = 1000;  // 내 순위가 아무리 낮아도 찾을 수 있게 넉넉히 받는다
+    const RANK_SHOW = 100;          // 화면에는 위쪽 100명이 보인다
     const RANK_CACHE_MS = 30000;    // 같은 순위표를 30초 안에 다시 열면 받아 둔 것을 쓴다
 
     let rankBoard = 'attempts';
@@ -5162,7 +5162,8 @@
         const mine = list.find(r => r.nickname === info.nickname);
         rankText = mine
           ? ` · ${RANK_BOARDS[rankBoard].label} <strong>${mine.rank}위</strong>`
-          : (list.length >= RANK_FETCH_LIMIT ? ` · ${RANK_BOARDS[rankBoard].label} ${RANK_FETCH_LIMIT}위 밖` : ' · 아직 순위에 오르지 않았어요');
+          // 받은 순위표에 없는데 표가 100명 이상이면 그 밖에 있는 것이다. (예전 서버는 100명까지만 보낸다)
+          : (list.length >= RANK_SHOW ? ` · ${RANK_BOARDS[rankBoard].label} ${list.length}위 밖` : ' · 아직 순위에 오르지 않았어요');
       }
       box.innerHTML = `내 닉네임 <strong>${escapeHtml(info.nickname)}</strong>${rankText}<br>
         다음 랭킹 반영까지 ${left}`;
@@ -5188,7 +5189,7 @@
       const info = rankingInfo();
       const myName = info && info.nickname;
       let html = list.slice(0, RANK_SHOW).map(r => rankRow(r, rankBoard, myName)).join('');
-      // 내가 20위 밖이면 맨 아래에 내 줄을 따로 보여 준다.
+      // 내가 100위 밖이면 맨 아래에 내 줄을 따로 보여 준다.
       const mine = myName && list.find(r => r.nickname === myName);
       if (mine && list.indexOf(mine) >= RANK_SHOW) html += rankRow(mine, rankBoard, myName, 'is-gap');
       box.innerHTML = html;
@@ -7567,7 +7568,7 @@
       const key = season || 0;
       const cached = raidBoards[key];
       if (cached && Date.now() - cached.at < 30000) return cached.data;
-      const data = await fetchRaid(`raid=board&season=${key}&limit=50`);
+      const data = await fetchRaid(`raid=board&season=${key}&limit=${RANK_FETCH_LIMIT}`);
       raidBoards[key] = { at: Date.now(), data };
       return data;
     }
@@ -7694,10 +7695,15 @@
           listBox.innerHTML = head + '<div class="rank-empty">아직 디스코드에게 피해를 준 도전자가 없어요.<br>첫 번째 주인공이 되어 보세요!</div>';
           return;
         }
-        listBox.innerHTML = head + data.list.map(row => {
+        const isMine = row => !!me && row.nickname.toLowerCase() === me.toLowerCase();
+        // 위쪽 100명을 보이고, 내가 그 밖이면 맨 아래에 내 줄을 따로 보여 준다.
+        const shown = data.list.slice(0, RANK_SHOW);
+        const mine = data.list.find(isMine);
+        if (mine && data.list.indexOf(mine) >= RANK_SHOW) shown.push(Object.assign({ gap: true }, mine));
+        listBox.innerHTML = head + shown.map(row => {
           const medal = { 1: '🥇', 2: '🥈', 3: '🥉' }[row.rank] || row.rank;
-          const isMe = me && row.nickname.toLowerCase() === me.toLowerCase();
-          return `<div class="rank-row ${row.rank <= 3 ? `top-${row.rank}` : ''} ${isMe ? 'is-me' : ''}">
+          const isMe = isMine(row);
+          return `<div class="rank-row ${row.rank <= 3 ? `top-${row.rank}` : ''} ${isMe ? 'is-me' : ''} ${row.gap ? 'is-gap' : ''}">
               <div class="rank-num">${medal}</div>
               <div class="rank-name">${row.guardian ? '🌍 ' : ''}${escapeHtml(row.nickname)}${isMe ? '<small>나</small>' : ''}</div>
               <div class="rank-value">${row.damage.toLocaleString()}<span class="rank-sub">${row.battles}번 도전</span></div>

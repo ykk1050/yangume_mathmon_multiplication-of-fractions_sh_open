@@ -3573,7 +3573,7 @@
         </div>
       </div>
     </div>
-    <footer class="app-footer">Created by gamtudyssam using AI · 1.143</footer>
+    <footer class="app-footer">Created by gamtudyssam using AI · 1.144</footer>
   </div>
 
   <!-- Admin Login Modal -->
@@ -4979,8 +4979,9 @@
       try {
         // 서버가 같은 닉네임이 있는지 확인하고, 없을 때만 등록한다.
         // 닉네임을 정하기 전에 푼 25번이 있으면 함께 보내 채점받는다.
+        // track: 'all' 은 이 게임이 포획·보스전 문제도 보내 채점받는다는 뜻이다. (월드 토벌전 코인 예산)
         const result = await rankingCall({
-          action: 'register', nickname: name, token: device.token,
+          action: 'register', nickname: name, token: device.token, track: 'all',
           attempts: first ? first.attempts : undefined
         });
         if (!result.ok) {
@@ -4991,6 +4992,7 @@
         device.nickname = result.nickname || name;
         device.first = null;
         device.pending = [];
+        device.earnPending = [];
         device.lastTry = attemptCount();
         Object.keys(rankCache).forEach(key => delete rankCache[key]);
         saveData();
@@ -5012,6 +5014,7 @@
     //   nickname : 정한 닉네임 (없으면 null)
     //   pending  : 다 채웠지만 아직 서버에 못 보낸 25번 묶음들
     //   first    : 닉네임을 정하기 전에 채운 25번 (등록할 때 함께 보낸다)
+    //   earnPending : 아직 서버에 못 보낸 포획·보스전 문제 묶음들
     function rankingState() {
       if (!rankingEnabled()) return null;
       if (!gameState.ranking) {
@@ -5020,6 +5023,7 @@
       const info = gameState.ranking;
       if (!info.token) info.token = makeRankingToken();
       if (!Array.isArray(info.pending)) info.pending = [];
+      if (!Array.isArray(info.earnPending)) info.earnPending = [];
       return info;
     }
 
@@ -5116,6 +5120,72 @@
       saveData();
       // 지난번에 보내지 못한 묶음이 있으면 다섯 문제마다 다시 해 본다.
       if (info.nickname && info.pending.length && attemptCount() - (info.lastTry || 0) >= 5) syncRanking();
+    }
+
+    // ---------- 포획·보스전 문제 채점 ----------
+    // 포획과 보스전에서 푼 문제도 서버가 채점한다. 이 정답 수로 서버가 월드 토벌전의 코인 예산을 잡는다.
+    // (코인 직장 랭킹에는 들어가지 않는다)
+    const EARN_EVERY = 10;                              // 이만큼 모이면 보낸다
+    const EARN_GAP_SECONDS = { capture: 1.3, boss: 2.1 };  // 서버가 보는 한 문제의 가장 짧은 시간보다 조금 길게
+
+    let earnRequest = null;
+    let earnTimer = null;
+
+    function earnRecord() {
+      if (!gameState.earnRecord || typeof gameState.earnRecord !== 'object') gameState.earnRecord = {};
+      return gameState.earnRecord;
+    }
+
+    // 포획볼을 던지거나 보스전에서 답을 낼 때마다 부른다. 닉네임을 정한 뒤부터 적는다.
+    function recordEarnAnswer(mode, spec, given) {
+      const info = rankingState();
+      if (!info || !info.nickname || !spec) return;
+      const record = earnRecord();
+      if (!Array.isArray(record[mode])) record[mode] = [];
+      record[mode].push({ s: spec, n: given.numerator, d: given.denominator });
+      if (record[mode].length < EARN_EVERY) return;
+      info.earnPending.push({ mode, attempts: record[mode] });
+      if (info.earnPending.length > 40) info.earnPending.shift();   // 너무 오래 못 보냈으면 오래된 것부터 버린다
+      record[mode] = [];
+      saveData();
+      syncEarn();
+    }
+
+    function scheduleEarnSync(ms) {
+      clearTimeout(earnTimer);
+      earnTimer = setTimeout(syncEarn, ms);
+    }
+
+    async function syncEarn() {
+      const info = rankingState();
+      if (!info || !info.nickname || !info.earnPending.length || earnRequest) return;
+      const batch = info.earnPending[0];
+      let retryLater = false;
+      earnRequest = rankingCall({ action: 'earn', nickname: info.nickname, token: info.token, mode: batch.mode, attempts: batch.attempts });
+      try {
+        const result = await earnRequest;
+        const now = rankingInfo();
+        if (!now || now.token !== info.token) return;   // 그사이 초기화했으면 버린다
+        if (result.reason === 'busy') {
+          retryLater = true;
+          return;
+        }
+        now.earnPending.shift();   // 받았든 거절했든 같은 묶음은 다시 보내지 않는다
+      } catch (error) {
+        console.warn('포획·보스전 문제 보내기 실패:', error);
+        retryLater = true;
+      } finally {
+        earnRequest = null;
+        saveData();
+      }
+
+      if (retryLater) {
+        scheduleEarnSync(15000);
+      } else if (info.earnPending.length) {
+        // 서버가 '사람이 푸는 속도'로 볼 수 있게 간격을 두고 보낸다.
+        const next = info.earnPending[0];
+        scheduleEarnSync((next.attempts.length * (EARN_GAP_SECONDS[next.mode] || 2.1) + 3) * 1000);
+      }
     }
 
     // ---------- 랭킹 보기 ----------
@@ -5756,6 +5826,7 @@
       // 이제 정답을 비교합니다.
       const userReduced = reduceFraction(userImproper.numerator, userImproper.denominator);
       const isCorrect = userReduced.numerator === gameState.captureAnswer.numerator && userReduced.denominator === gameState.captureAnswer.denominator;
+      recordEarnAnswer('capture', gameState.captureProblem && gameState.captureProblem.spec, userReduced);
 
       if (isCorrect) {
           const captureRate = calculateCaptureRate(gameState.currentMonster.rarity);
@@ -7296,6 +7367,7 @@
       const user = reduceFraction(improper.numerator, improper.denominator);
       const correct = user.numerator === battle.answer.numerator && user.denominator === battle.answer.denominator;
       const seconds = (Date.now() - battle.quizStart) / 1000;
+      if (!battle.raid) recordEarnAnswer('boss', battle.spec, user);   // 월드 토벌전 문제는 전투 기록으로 따로 보낸다
 
       const skill = BATTLE_SKILLS.find(s => s.id === battle.pendingSkill);
 
@@ -7787,7 +7859,9 @@
           if (result.ok) {
             raidStatus = null;
             raidBoards = {};
-            if (result.killed) {
+            if (result.held) {
+              showNotification('🌍 이번 전투 기록은 선생님 확인이 필요해서, 아직 디스코드의 체력과 순위에 반영되지 않았어요.');
+            } else if (result.killed) {
               gameState.raidGuardian = true;
               showNotification('🌍 마지막 일격! 디스코드를 쓰러뜨려 수학의 세계를 지켜냈습니다! 칭호 「수학의 세계를 지킨 자」 획득!');
             } else {
@@ -8402,7 +8476,10 @@
     setupIntro();
     loadData();
     setTimeout(() => {
-      if (rankingState()) syncRanking(true);
+      if (rankingState()) {
+        syncRanking(true);
+        syncEarn();
+      }
     }, 1500);
     updateAllUI();
     bgm.init();

@@ -18,8 +18,8 @@
  *    '어떤 문제에 어떤 답을 냈는지'를 보내고, 서버가 직접 채점해 정답 수를 센다.
  *  - 문제는 게임의 코인 직장 문제 규칙에 맞는 것만 받는다.
  *  - 게임은 정답을 맞히면 다음 문제가 1.5초 뒤에 나오고, 오답을 내면 답을 다시 쳐야 한다.
- *    지난번 채점 뒤로 서버가 잰 시간이 이보다 짧으면 사람이 할 수 없는 기록이므로 받지 않는다.
- *    실력과는 상관없는 기준이다.
+ *    정답 하나에 2초(1.5초 대기 + 답 입력)보다 빠르게 25문제를 푸는 것은 사람이 할 수 없으므로,
+ *    지난번 채점 뒤로 서버가 잰 시간이 이보다 짧으면 받지 않는다. 실력과는 상관없는 기준이다.
  *  - 아주 빠르거나 오답이 지나치게 많은 기록은 받되, '확인 필요' 칸에 표시만 한다.
  *    선생님이 보고 판단한다. 자동으로 지우지 않는다.
  *  - 문제를 내는 것은 게임이 하므로, 랭킹 서버가 느리거나 멈춰도 학생은 문제를 계속 푼다.
@@ -43,6 +43,9 @@
  *  - '코인직장' 시트의 '채점 방식' 칸
  *      비어 있음 : 예전부터 하던 학생. 포획·보스전 수입을 서버가 모르므로 코인 직장 수입의 2배를 예산으로 쳐 준다.
  *      모든 문제 : 새로 등록한 학생. 포획·보스전 문제도 서버가 채점하므로 실제 정답 수로 예산을 잡는다.
+ *  - 코인 직장에서 '매우 빠름'으로 표시된 25문제 묶음의 정답은 예산에 넣지 않는다.
+ *    (선생님이 '확인 필요' 칸의 그 표시를 지우면 다시 예산에 들어간다)
+ *  - 한 문제 평균이 1.5초보다 빠른 한 판도 보류한다.
  *  - '토벌전 예외' 시트에 적은 닉네임은 보류하지 않는다. 그 학생의 보류 피해를 반영하려면
  *    스프레드시트 위쪽 [수학몬] 메뉴 → [예외 학생의 보류 피해 반영]을 누른다.
  */
@@ -56,9 +59,9 @@ const COL = { nickname: 1, attempts: 2, correct: 3, best: 4, accuracy: 5, update
 const TRACK_ALL = '모든 문제';   // 포획·보스전 문제도 서버가 채점하는 학생
 
 const BATCH_SIZE = 25;               // 한 번에 채점하는 풀이 시도 수
-const MIN_SECONDS_PER_CORRECT = 1.2; // 게임은 정답 뒤 1.5초가 지나야 다음 문제를 낸다
+const MIN_SECONDS_PER_CORRECT = 2.0; // 게임은 정답 뒤 1.5초가 지나야 다음 문제를 내고, 답을 치는 데도 시간이 든다
 const MIN_SECONDS_PER_WRONG = 0.4;   // 오답을 내면 입력칸이 비워져 다시 쳐야 하므로 이보다 빠를 수 없다
-const FLAG_SECONDS_PER_CORRECT = 2.0; // 이보다 빠르면 '확인 필요'에 표시만 한다
+const FLAG_SECONDS_PER_CORRECT = 2.5; // 이보다 빠르면 '확인 필요'에 표시만 한다
 const FLAG_MAX_CORRECT = 3;          // 25문제 중 정답이 이 수 이하이면 '확인 필요'에 표시만 한다
 const CACHE_SECONDS = 60;
 
@@ -112,6 +115,9 @@ const RAID_HP_STEP = 20;
 const RAID_MIN_HURT_PER_ATTACK = 23;
 const RAID_ATTACK_LUCK = 2;
 const RAID_EXTRA_ATTACKS = 5;
+// 한 문제 평균이 이보다 빠른 한 판은 보류한다. 답을 쳐 넣는 데만 이만큼은 걸린다.
+const RAID_HOLD_ANSWER_MS = 1500;
+const RAID_HOLD_MIN_TURNS = 3;
 
 // ---------- 시트 ----------
 
@@ -576,7 +582,7 @@ function raidStart(data) {
 
 // 서버가 채점한 정답 수로 그 학생이 벌 수 있었던 코인을 넉넉하게 잡는다.
 function raidCoinBudget(stored) {
-  const job = Number(stored[COL.correct - 1]) || 0;
+  const job = Math.max(0, (Number(stored[COL.correct - 1]) || 0) - fastJobCorrect(stored));
   const capture = Number(stored[COL.captureCorrect - 1]) || 0;
   const boss = Number(stored[COL.bossCorrect - 1]) || 0;
   const base = RAID_BOSS_FIRST_REWARDS + RAID_BUDGET_SLACK;
@@ -585,6 +591,13 @@ function raidCoinBudget(stored) {
   if (String(stored[COL.track - 1]) === TRACK_ALL) return graded;
   // 예전부터 하던 학생은 포획·보스전 수입을 서버가 모른다. 코인 직장 수입의 몇 배를 벌었다고 쳐 준다.
   return Math.max(graded, base + job * RAID_COIN_PER_CORRECT.job * RAID_JOB_ONLY_MULTIPLIER);
+}
+
+// '매우 빠름'으로 표시된 코인 직장 묶음의 정답 수. 표시 횟수 × 25로 넉넉하게 잡는다.
+// (표시는 정답이 10개 이상인 묶음에만 붙으므로, 많아야 이만큼이다)
+function fastJobCorrect(stored) {
+  const match = String(stored[COL.flag - 1] || '').match(/매우 빠름 (\d+)회/);
+  return match ? Number(match[1]) * BATCH_SIZE : 0;
 }
 
 // 예산으로 올릴 수 있는 단련 단계. 한 단계 비용은 base + 단계 × step 이다.
@@ -672,6 +685,9 @@ function raidEnd(data) {
   if (claimedAtk > atkCap) reasons.push(`공격 단련 ${claimedAtk}단계, 예산으로는 ${atkCap}단계까지`);
   if (result.attacks > maxAttacks) reasons.push(`공격 ${result.attacks}번, 예산으로는 ${maxAttacks}번까지`);
   if (result.over > 0) reasons.push(`기술 위력보다 큰 피해 ${result.over}번`);
+  if (data.turns.length >= RAID_HOLD_MIN_TURNS && result.avgMs < RAID_HOLD_ANSWER_MS) {
+    reasons.push(`한 문제 평균 ${(result.avgMs / 1000).toFixed(1)}초`);
+  }
   const held = !exempt && reasons.length > 0;
 
   const now = currentRaid();

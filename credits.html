@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>출처와 라이선스 · 수학몬 마스터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#14213d; --card:#1d2d50; --ink:#f1f4fb; --muted:#b8c3dc; --line:#34497a; --accent:#ffcc4d; --link:#8fd3ff; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Do Hyeon', sans-serif; line-height: 1.7; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 48px; }
+.back { display: inline-block; color: var(--ink); text-decoration: none; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; }
+h1 { font-family: 'Black Han Sans', sans-serif; font-weight: 400; font-size: 30px; margin: 18px 0 4px; color: var(--accent); }
+.lead { color: var(--muted); margin: 0 0 16px; }
+section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin: 14px 0; }
+h2 { font-family: 'Black Han Sans', sans-serif; font-weight: 400; font-size: 21px; margin: 0 0 8px; color: var(--accent); }
+ul { margin: 0; padding-left: 20px; } li { margin: 5px 0; }
+.small { color: var(--muted); font-size: 14px; }
+a { color: var(--link); }
+details { margin-top: 8px; } summary { cursor: pointer; color: var(--link); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 6px; }
+td, th { border-bottom: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+.table-wrap { overflow-x: auto; }
+footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="back" id="back" href="./">← 게임으로</a>
+<h1>출처와 라이선스</h1>
+<p class="lead">이 게임을 만들 때 쓴 것들과 만든 사람을 적어 두었어요.</p>
+<section><h2>🖼️ AI로 만든 그림</h2><ul><li>수학몬·보스·배경·효과 그림: <b>선생님이 Gemini로 만든 그림</b></li></ul></section>
+<section><h2>🎬 소개 영상</h2><ul><li>처음 접속할 때 나오는 소개 영상: <b>선생님이 Gemini(Veo)로 만든 영상</b></li></ul></section>
+<section><h2>🎵 배경음악</h2><ul><li>탭·보스전·포획 배경음악 8곡: <b>Pixabay</b> (Pixabay 콘텐츠 라이선스)</li></ul></section>
+<section><h2>🔤 글꼴</h2><ul><li><b>Black Han Sans</b> — The Black Han Sans Project Authors (Zess Type), SIL Open Font License 1.1 · <a href="https://fonts.google.com/specimen/Black+Han+Sans" target="_blank" rel="noopener">Google Fonts</a></li><li><b>Do Hyeon</b> — The Do Hyeon Project Authors (우아한형제들), SIL Open Font License 1.1 · <a href="https://fonts.google.com/specimen/Do+Hyeon" target="_blank" rel="noopener">Google Fonts</a></li></ul></section>
+<section><h2>🧩 프로그램</h2><ul><li>게임 코드와 랭킹 서버(Google Apps Script): <b>직접 만듦</b></li></ul></section>
+<section><h2>📄 라이선스 전문</h2><p>글꼴 라이선스 전문과 Pixabay 라이선스 안내는 <a href="THIRD-PARTY-NOTICES.txt" target="_blank" rel="noopener">THIRD-PARTY-NOTICES.txt</a>에서 볼 수 있어요.</p></section>
+<footer>Created by gamtudyssam using AI</footer>
+</div>
+<script>
+document.getElementById('back').addEventListener('click', function (e) {
+  if (window.opener) { e.preventDefault(); window.close(); }
+  else if (history.length > 1) { e.preventDefault(); history.back(); }
+});
+</script>
+</body>
+</html>
